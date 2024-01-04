@@ -1,0 +1,1043 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>windows核心编程-进程 | Icode</title>
+<link rel="shortcut icon" href="https://hensonguo.github.io/favicon.ico?v=1704354032694">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://hensonguo.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="windows核心编程-进程 | Icode - Atom Feed" href="https://hensonguo.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="什么是进程
+（1）进程的概念
+一个进程，就是一个正在运行的程序！一个程序，可以产生多个进程。 然后进程有两个部分：
+1.一个内核对象，被系统用来管理这个进程，这个内核对象中，还包含了进程的一些策略信息。
+2.一个地址空间，这个地址空间中包含..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://hensonguo.github.io">
+  <img class="avatar" src="https://hensonguo.github.io/images/avatar.png?v=1704354032694" alt="">
+  </a>
+  <h1 class="site-title">
+    Icode
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              windows核心编程-进程
+            </h2>
+            <div class="post-info">
+              <span>
+                2023-05-31
+              </span>
+              <span>
+                57 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <h2 id="什么是进程">什么是进程</h2>
+<p>（1）进程的概念<br>
+<strong>一个进程，就是一个正在运行的程序！一个程序，可以产生多个进程。</strong> 然后进程有两个部分：<br>
+<strong>1.一个内核对象，被系统用来管理这个进程，这个内核对象中，还包含了进程的一些策略信息。</strong><br>
+<strong>2.一个地址空间，这个地址空间中包含了可执行代码，动态链接库模块代码，数据，程序动态内存分配获取的内存，也在这个内存地址空间中。</strong><br>
+在操作系统的相关书籍里是这样说的：由程序段、相关的数据段和PCB三部分构成进程，所以，其实程序段、相关的数据段就是一个地址空间，而PCB（进程控制块）就是内核对象。</p>
+<p>（2） 进程和线程的关系<br>
+<strong>进程是由“惰性“的，进程要做任何事情都必须让一个线程在它的上下文中运行。</strong> 该线程负责执行进程地址空间包含的代码。事实上，一个进程可以有多个线程，所有线程都在进程的地址空间中”同时执行代码“。…此处省略一些字…。<strong>每个进程至少要有一个线程来执行进程地址空间包含的代码。当系统创建一个进程的时候，会自动为进程创建第一个线程，这称为主线程。</strong> 然后这个主线程再创建更多的线程，后者再创建更多的线程。<strong>单个CPU，为线程分配CPU采用循环方式，为每个线程都分配时间片；多个CPU，采取更复杂的算法为线程分配CPU。</strong><br>
+怎么理解进程和线程的关系？举个例子就十分透彻了。当双击一个程序，产生了一个工厂（进程）同时也产生了第一个人----厂长（primary thread:主线程），这个厂长只做一件事就是招募（创建）员工（线程），让其他员工（线程）帮他做事。有两种方法工厂会倒闭（进程销毁），第一种是工厂里的员工（线程，包括主线程）全部退出或销毁，那么工厂自然会倒闭（进程销毁）。第二种方法是调用ExitProcess函数可以直接结束进程，第二种方法后面会讲到，现在先了解有这一方法结束进程即可。</p>
+<br>
+<h2 id="windows的入口点函数">Windows的入口点函数</h2>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span>Windows支持两种类型的应用程序：<strong>GUI程序（图形用户界面程序）和CUI程序（控制台用户界面程序）</strong>。当我们用Visual Studio来创建一个应用程序项目时，集成开发环境会设置各种链接器开关，使链接器将子系统的正确C/C++运行启动函数嵌入最终生成的可执行文件中。<strong>对于GUI程序，链接器开关是/SUBSYSTEM:WINDOWS；对于CUI程序，链接器开关是/SUBSYSTEM:CONSOLE</strong>。在学习C与C++时，当运行一个可执行文件，我们都认为系统调用的第一个函数是入口点函数（例如：main函数），但其实操作系统实际并不调用我们写的入口点函数（例如：main函数），实际最先调用的是C/C++运行库的启动函数。根据编码方式的不同以及所建立应用程序的类型不同，用程序类型和相应的入口函数：</p>
+ <table border="1" cellpadding="1" cellspacing="1" style="width:500px;"><tbody><tr><td>应用程序类型</td><td>入口函数</td><td>嵌入可执行文件的启动函数</td></tr><tr><td><strong>ANSI字符的GUI</strong></td><td><strong>WinMain</strong></td><td>WinMainCRTStartup</td></tr><tr><td><strong>Unicode字符的GUI</strong></td><td><strong>wWinMain</strong></td><td>wWinMainCRTStartup</td></tr><tr><td><strong>ANSI字符的CUI</strong></td><td><strong>main</strong></td><td>mainCRTStartup</td></tr><tr><td><strong>Unicode字符的CUI</strong></td><td><strong>wmain</strong></td><td>wmainCRTStartup</td></tr></tbody></table>
+<br>
+<h2 id="进程实例句柄可执行文件实例句柄或者dll文件实例句柄">进程实例句柄（可执行文件实例句柄或者DLL文件实例句柄）</h2>
+<p>我们经过前面的学习都了解了，当运行一个程序时，会生成一个进程，然后进程有两个部分，其中一个部分就是进程地址空间，<strong>加载到进程地址空间的每一个可执行文件或者DLL文件都被赋予一个独一无二的实例句柄。</strong> 这两种实例句柄分别来表示装入后的可执行文件，或者DLL，此时我们把这个可执行文件或者DLL叫做进程地址空间中的一个模块！**进程实例句柄的本质，就是当前模块载入进程地址空间的起始地址。**进程实例句柄的类型是HINSTANCE。学过Windows程序设计的童鞋都知道实例句柄的用处，在程序中很多地方，都被使用，尤其是在装入某一个资源的时候：</p>
+<pre><code class="language-c++">LoadIcon(
+   HINSTANCE hInstance;
+   PCTSTR pszIcon);
+</code></pre>
+<p>（1）由于经常在程序的其他地方需要使用到这个进程实例句柄，所以可以考虑将hInstance参数保存在一个全局变量，但俗话说得好，能不用全局变量就别用全局变量。为了迎合俗话，下面给出几个获取进程实例句柄的方法：</p>
+<pre><code class="language-c++">1.	(w)WinMain函数的第一个参数，可执行文件的实例句柄会在启动函数调用入口函数 (w)WinMain时传入。
+2.	GetModuleHandle()函数返回指定文件名的实例句柄
+</code></pre>
+<p>下面是<strong>GetModuleHandle()</strong> 函数签名：</p>
+<pre><code class="language-c++">HMODULE WINAPI GetModuleHandle(  
+__in_opt  LPCTSTR lpModuleName//模块名称，其实就是可执行文件或者DLL文件的名称。
+);
+</code></pre>
+<p>GetModuleHandle()函数获取的就是进程模块（可执行文件模块或DLL文件模块）在进程地址空间中的首地址！这个函数的使用注意事项：</p>
+<pre><code class="language-c++">1.	如果这个函数的参数是NULL的话，那么这个函数只返回当前可执行的模块地址！！
+2.	在DLL中，调用GetModuleHandle，参数为NULL，那么这个函数返回的不是DLL模块的地址，而是当前可执行的模块地址！
+3.	这个函数只检查本进程地址空间，不检查别的进程的地址空间。例如：如果一个ComDlg32.dll文件被载入了另一个B进程地址空间，那么 这个函数在A进程地址空间的代码中调用这个函数，这个函数不检查B的进程地址空间，所以在A进程地址空间没找到就返回NULL。
+</code></pre>
+<p>实际上，不管是(w)WinMain函数的第一个参数，还是GetModuleHandle函数获取的进程实例句柄，这个<strong>进程实例句柄都是指可执行文件或DLL文件模块载入进程地址空间的基地址。基地址默认是0x00400000</strong> ，可以在项目-&gt;属性-&gt;链接器-&gt;高级处的基址、随机基址进行调整设置，先将随机基址设为否，再在基址填写“0x00100000”，这样每次运行应用程序，可执行文件或DLL文件都在0x00100000基址处开始。<br>
+下面对GetModuleHandle函数的使用进行测试：</p>
+<pre><code class="language-c++">#include&lt;windows.h&gt;
+#include&lt;tchar.h&gt;
+int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE, PTSTR pszCmdLine, int nCmdShow)
+{
+	//(1)测试点1：GetModuleHandle函数的使用，参数是模块文件名
+	//windows程序中，一般都会有Kernel32.dll这个模块，那么现在我们就获得这个模块的句柄；
+	HMODULE hModule1 = GetModuleHandle(L&quot;Kernel32.dll&quot;);//Kernel32.dll动态链接库文件一般在程序中都会被嵌入到进程的地址空间去。
+	HMODULE hModule2 = GetModuleHandle(NULL);
+	HMODULE hModule3 = GetModuleHandle(L&quot;Win32Project28.exe&quot;);
+	//hInstance、hModule2和hModule3的值都是相等，因为GetModuleHandle(NULL)返回的是主调进程的可执行文件的实例句柄值。Win32Project28.exe是当前工程名称
+	Return 0;
+}
+</code></pre>
+<p>（2）如果要获取进程模块的文件名是什么？可以调用<strong>GetModuleFileName</strong>函数。<br>
+函数签名：</p>
+<pre><code class="language-c++">DWORD GetModuleFileName(
+	HMODULE 	hInstance,//进程句柄
+	PTSTR 		pszPath,//文件名
+	DWORD		cchPath);//pszPath指向的内存的大小
+</code></pre>
+<p>在函数签名我们可以看到，HMODULE是什么类型的数据？在16位Windows中，HINSTANCE和HMODULE代表的是不同类型的数据。而现在的VS编译器有着这样的一条语句：typedef HINSTANCE HMODULE;说明其实现在的HINSTANCE和HMODULE都是同一个东西。<br>
+下面对GetModuleFileName函数的使用进行测试：</p>
+<pre><code class="language-c++">#include&lt;windows.h&gt;
+#include&lt;tchar.h&gt;
+int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE, PTSTR pszCmdLine, int nCmdShow)
+{
+	//(2)测试点2：GetModuleFileName函数的使用，
+	//参数1是模块（加载到进程地址空间的每一个可执行文件或者DLL文件都属于一个模块）的实例句柄
+	//参数2是模块文件的名称（绝对地址）
+	//参数3是文件名的大小，可以设置为MAX_PATH-&gt;最大的路径长度
+	TCHAR path1[MAX_PATH];
+	TCHAR path2[MAX_PATH];
+	GetModuleFileName(hModule1, path1, MAX_PATH);
+	GetModuleFileName(hModule2, path2, MAX_PATH);
+	Return 0;
+}
+</code></pre>
+<p>（3）如果自己的代码位于一个DLL文件中，那么想知道这个DLL文件被装入进程空间后的模块地址怎么办？注意，下面两种方法的使用有两种情况，由于__ImageBase和GetModuleHandleEx函数都是返回当前模块（调用函数所在模块，例如下方的_tWinMain函数）的基地址，所以，如果下面两种方法在可执行文件的代码中使用，那么返回的就是可执行文件的基地址。而如果下面两种方法或函数在DLL文件的代码中使用，那么返回的就是DLL模块的基地址。举个例子：</p>
+<pre><code class="language-c++">#include&lt;windows.h&gt;
+#include&lt;tchar.h&gt;
+extern &quot;C&quot; HANDLE __ImageBase;
+int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE, PTSTR pszCmdLine, int nCmdShow)
+{
+   __ImageBase;
+   HMODULE hModule4;
+   GetModuleHandleEx(
+   	GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
+   	(PCTSTR)_tWinMain, &amp;hModule4);//获取函数_tWinMain函数在哪个模块中运行。
+   return 0;
+}
+</code></pre>
+<h2 id="测试启动函数初始化哪些全局变量">测试启动函数初始化哪些全局变量</h2>
+<p>我们知道C/C++运行库的启动函数会做一些事后再调用我们的入口函数，而入口函数的参数都是在调用前就初始化好了的。那么我就产生了一个疑问，全局变量随入口函数的不同（四种入口函数，分别是main、wmain、wWinMain、WinMain）都分别初始化了哪些全局变量？我做出了下面的测试：<br>
+（1）在CUI程序下测试Unicode字符集和多字节字符集两种情况的全局变量的初始化：</p>
+<pre><code class="language-c++">#include&lt;windows.h&gt;
+#include&lt;tchar.h&gt;
+#include&lt;iostream&gt;
+using namespace std;
+int _tmain(int argc, _TCHAR* argv[])
+{
+   //测试两次：第一次是在Unicode环境下，第二次是在多字节字符集环境下，注意输出的不同。
+   //测试_environ有无被初始化成有用的值
+   char** p1 = _environ;
+   if (p1 != NULL)
+   {
+   	while (*p1)
+   	{
+   		cout &lt;&lt; *p1 &lt;&lt; endl;
+   		p1++;
+   	}
+   	cout &lt;&lt; &quot;---------------------------上面的是_environ输出的值---------------------------------&quot; &lt;&lt; endl;
+   }
+   //测试_wenviron有无被初始化成有用的值
+   wchar_t** p2 = _wenviron;
+   if (p2 != NULL)
+   {
+   	while (*p2)
+   	{
+   		wcout &lt;&lt; *p2 &lt;&lt; endl;
+   		p2++;
+   	}
+   	cout &lt;&lt; &quot;--------------------------上面的是_wenviron输出的值--------------------------&quot; &lt;&lt; endl;
+   }
+   //测试__argv有无被初始化成有用的值
+   char** p3= __argv;
+   if (p3 != NULL)
+   {
+   	while (*p3)
+   	{
+   		cout &lt;&lt; *p3 &lt;&lt; endl;
+   		p3++;
+   	}
+   	cout &lt;&lt; &quot;-------------------------上面的是__argv输出的值----------------------------&quot; &lt;&lt; endl;
+   }
+   //测试__wargv有无被初始化成有用的值
+   wchar_t** p4 = __wargv;
+   if (p4 != NULL)
+   {
+   	while (*p4)
+   	{
+   		wcout &lt;&lt; *p4 &lt;&lt; endl;
+   		p4++;
+   	}
+   	cout &lt;&lt; &quot;-------------------------上面的是__wargv输出的值----------------------------&quot; &lt;&lt; endl;
+   }
+   system(&quot;pause&quot;);
+   return 0;
+}
+</code></pre>
+<p>测试结果：输出结果太长不好截图，这里只给出总结，运行结果可以自己运行查看。如果你写的主函数是_tmain，那么其中_environ和_wenviron全局变量，在Unicode环境下，_environ和_wenviron全局变量都被初始化成有用的值了。而在多字节字符集下，_environ全局变量被初始化成有用的值，_wenviron全局变量才被置NULL。</p>
+<h2 id="进程的命令行">进程的命令行</h2>
+<p>（1）如果是运行CUI应用程序，在C/C++运行库启动函数执行时，就已经初始化好全局变量（包括命令行参数__argc、__argv或__wargv。如果在Unicode字符集下，初始化了__argc、__argv;如果在多字符集下，初始化了__argc、__wargv。）然后调用入口点函数_tmain，将参数argc、argv或wargv传入_tmain函数。<br>
+现在对_tmain函数的参数进行测试：</p>
+<pre><code class="language-c++">#include&lt;windows.h&gt;
+#include&lt;tchar.h&gt;
+#include&lt;iostream&gt;
+using namespace std;
+int _tmain(int argc, _TCHAR* argv[])
+{
+	/*
+	有两种方式可以输入命令行参数：
+	1.属性-&gt;配置属性-&gt;调试-&gt;命令参数:例如：wo ai ni
+	2.在可执行文件目录下打开命令行窗口（cmd），输入文件名+命令行参数:例如：ConsoleApplication9 wo ai ni
+	但有一点需要注意，就是字符集问题，当项目字符集是Unicode字符集，那么在C++利用wcout输出命令行。当项目字符集是多字节字符集，那么在C++利用cout输出命令行。
+	注意，不论通过以上两种方式输入的命令行参数都会在C/C++运行库启动函数中被初始化全局变量argc、__argv、__wargv。
+	所以传入_tmain函数的argv参数也是对应字符集编码的字符串。例如：如果在Unicode下，argv数组内的元素就是宽字符串，如果在多字节字符集下，argv数组内的元素就是ANSI字符串。
+	注意第一种方式和第二种方式在输出上的区别，第一种输出的第一个文件名字符串，这个字符串也包括路径。而第二种输出只有命令行参数，因为就算没有填写命令行参数也会输出文件名，那个文件名
+	只是起到运行这个程序的象征。
+	*/
+	for (int i = 0; i &lt; argc; i++)
+	{
+		//cout只能输出ANSI字符和字符串，要想输出宽字符可以使用wcout。
+		wcout &lt;&lt; argv[i] &lt;&lt; endl;
+	}
+	system(&quot;pause&quot;);
+	return 0;
+}
+</code></pre>
+<p>（2）如果是运行CUI应用程序，在C/C++运行库启动函数执行时，会<strong>调用Windows函数GetCommandLine来获取进程的完整命令行（文件名+命令行参数，其中文件名也就是绝对路径）然后启动函数进行忽略可执行文件的名称，包括路径</strong>，接着将指向命令行剩余部分的一个指针传给WinMain的pszCmdLine参数。下面给出函数的签名：</p>
+<pre><code class="language-c++">LPTSTR WINAPI GetCommandLine(void);
+</code></pre>
+<p>例子：</p>
+<pre><code class="language-c++">#include&lt;windows.h&gt;
+#include&lt;tchar.h&gt;
+int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE, PTSTR pszCmdLine, int nCmdShow)
+{
+	LPTSTR cmdline;
+	cmdline = GetCommandLine();
+	return 0;
+}
+</code></pre>
+<p>（3）<strong>我们也可以利用CommandLinetoArgvW函数将GetCommandLineW函数获取的完整命令行分解成单独的标记。</strong><br>
+该函数原型如下：</p>
+<pre><code class="language-c++">LPWSTR* CommandLinetoArgvW(LPCWSTR,int*);
+</code></pre>
+<p>参数1是指向一个命令行字符串，通常利用GetCommandLineW获取。<br>
+参数2是获取命令行实参的个数。<br>
+返回的字符串数组所使用的内存，用LocalFree来释放！</p>
+<pre><code class="language-c++">#include&lt;windows.h&gt;
+#include&lt;tchar.h&gt;
+#include&lt;iostream&gt;
+using namespace std;
+int _tmain(int argc, _TCHAR* argv[])
+{
+	LPWSTR *szArglist;//用于
+	int nArgs;
+	int i;
+	/*
+	CommandLineToArgvW函数只有Unicode版本的，所以参数1也必须使用Unicode版本的GetCommandLineW来获取完整的命令行
+	参数2是存储完整命令行中一共有多少个命令行参数，包括文件名参数。
+	CommandLineToArgvW函数返回的是一个Unicode字符串指针数组的地址。
+	这个函数将参数1完整命令行分解成单独的标记。
+	*/
+	LPTSTR cmdLine;
+	cmdLine = GetCommandLine();
+	printf(&quot;%ws\n&quot;, cmdLine);//这个是输出完整命令行
+	szArglist = CommandLineToArgvW(GetCommandLineW(), &amp;nArgs);
+	if (NULL == szArglist)
+	{
+		wprintf(L&quot;CommandLineToArgvW failed\n&quot;);
+		return 0;
+	}
+	else for (i = 0; i&lt;nArgs; i++) printf(&quot;%d: %ws\n&quot;, i, szArglist[i]);//这个是输出分解后放到字符串数组中的内容
+	LocalFree(szArglist);
+	system(&quot;pause&quot;);
+	return 0;
+}
+</code></pre>
+<br>
+<h2 id="进程的环境变量">进程的环境变量</h2>
+<p><strong>其实每个进程被创建后都会有一个与它关联的环境块，也就是在进程地址空间内分配的一块内存</strong>，内存块包含的字符串大概长这样：</p>
+<pre><code>=::=::\ ...
+VarName1=VarValue1\0
+VarName2=VarValue2\0
+VarName3=VarValue3\0
+VarNameX=VarValueX\0
+\0
+</code></pre>
+<p>我们要注意的是等号左边的VarName1、VarName2等都是环境变量的名称，而等号右边的VarValue1、VarValue2等都是环境变量的值。还有一个更重要的一点就是每行环境变量的赋值最后都有个‘\0’，这是字符串结束符，后边GetEnvironmentStrings函数遍历完整的环境变量字符串时有用。</p>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span>我们有两种方式来获取完整的环境块，<strong>第一种方式是调用GetEnvironmentStrings函数获取完整的环境变量</strong>（还有GetEnvironmentVariable函数获取的是单个指定环境变量名的值，下面会有使用案例）得到的完整环境块的格式和前面描述的一样；<font style = "font-weight: bold"> 第二种方式是CUI程序专用的，就是通过入口函数所接收的TCHAR *envp[]参数来实现</font>。不同于GetEnvironmentStrings返回的值，GetEnvironmentStrings返回的是完整的环境块，而envp是一个字符串指针数组，每个指针都指向一个不同的环境变量（其定义采用常规的“名称=值”的格式），在数组最后一个元素是一个NULL指针，代表这是数组的末尾，那么我们就可以通过这个NULL指针作为遍历的终止处，我们需要注意的是以等号开头的那些无效字符串在我们接收到envp之前就已经被移除了，所以不必进行处理只要获取数组元素即可。<br>
+<strong>1.GetEnvironmentStrings函数用于获取所有环境变量字符串：</strong></p>
+<pre><code>LPTCH WINAPI GetEnvironmentStrings(void);
+返回值：成功时，返回指向保存环境变量的缓冲区；失败时，返回值为NULL。
+</code></pre>
+<p><strong>2.FreeEnvironmentStrings函数用来释放由GetEnvironmentStrings返回的内存块：</strong></p>
+<pre><code>BOOL WINAPI FreeEnvironmentStrings(
+  __in  LPTCH lpszEnvironmentBlock
+);
+返回值：成功时，返回非零值；失败时，返回零值，可调用GetLastError()查看进一步错误消息。
+</code></pre>
+<pre><code class="language-c++">#include &lt;windows.h&gt;
+#include &lt;tchar.h&gt;
+#include &lt;stdio.h&gt;
+#include&lt;strsafe.h&gt;
+int _tmain()
+{
+	LPTSTR lpszVariable;
+	LPTCH lpvEnv;//LPTCH就是WCHAR *数据类型，指向宽字符的指针变量
+	size_t iTarget;
+	//调用GetEnvironmentStrings函数获取完整的环境变量内存块，并让lpvEnv指向这个内存块
+	lpvEnv = GetEnvironmentStrings();
+	//如果获取的环境块为空，则该函数调用失败，并获取错误代码
+	if (lpvEnv == NULL)
+	{
+		_tprintf(TEXT(&quot;GetEnvironmentStrings failed(%d)\n&quot;), GetLastError());
+		return 0;
+	}
+	//lpvEnv指向的环境变量字符串是以NULL分隔的，即'\0'分隔，可以回去看前面我展示的环境字符串的大概格式。而字符串最后是以NULL结尾的
+	lpszVariable = (LPTSTR)lpvEnv;
+	while (*lpszVariable)
+	{
+		_tprintf(TEXT(&quot;%s\n&quot;), lpszVariable);
+		StringCchLength(lpszVariable, 1000, &amp;iTarget);//PATH的值太长，我设1000为最大允许字符数
+		lpszVariable += iTarget + 1;//移动指针，访问下一环境变量的值
+	}
+	//如果GetEnvironmentStrings函数返回的内存块不用了，记得要释放掉
+	FreeEnvironmentStrings(lpvEnv);
+	system(&quot;pause&quot;);
+	return 1;
+}
+</code></pre>
+<p>（2）下面是GetEnvironmentVariable函数的使用案例：<br>
+这里先放上GetEnvironmentVariable函数签名。<br>
+<strong>1.GetEnvironmentVariable函数用于获取指定的环境变量：</strong></p>
+<pre><code>DWORD WINAPI GetEnvironmentVariable(
+  __in_opt   LPCTSTR lpName, //环境变量名
+  __out_opt  LPTSTR lpBuffer, //指向保存环境变量值的缓冲区
+  __in       DWORD nSize //缓冲区大小（字符数）
+);
+返回值：成功时，返回真实的环境变量值大小，不包括null结束符；如果lpBuffer大小不足，则返回值是实际所需的字符数大小，lpBuffer内容就未被赋值；失败时，返回0；如果指定的环境变量找不到，GetLastError()返回ERROR_ENVVAR_NOT_FOUND。
+</code></pre>
+<pre><code class="language-c++">#include &lt;windows.h&gt;
+#include &lt;tchar.h&gt;
+#include &lt;stdio.h&gt;
+#include&lt;strsafe.h&gt;
+int _tmain()
+{
+	TCHAR szBuffer[1000];
+	DWORD dwResult = GetEnvironmentVariable(TEXT(&quot;PATH&quot;), szBuffer, 1000);
+	if (dwResult != 0)
+	{
+		_tprintf(TEXT(&quot;PATH=%s&quot;), szBuffer);
+	}
+	else
+	{
+		_tprintf(TEXT(&quot;function call falid!&quot;));
+	}
+	system(&quot;pause&quot;);
+	return 1;
+}
+</code></pre>
+<p>（2）下面是<strong>SetEnvironmentVariable</strong> 函数的使用案例：<br>
+这里先放上SetEnvironmentVariable函数签名，后面使用案例有几个注意点需要重视。<br>
+1.SetEnvironmentVariable函数用于设置指定的环境变量：</p>
+<pre><code class="language-c++">BOOL WINAPI SetEnvironmentVariable(
+  __in      LPCTSTR lpName, //环境变量名，当该值不存在且lpValue不为NULL时，将创建一个新的环境变量
+  __in_opt  LPCTSTR lpValue //环境变量值
+);
+返回值：
+成功时，返回非零值；
+失败时，返回零值，调用GetLastError()查看具体的错误信息。
+该函数对系统环境变量以及其他进程的环境变量不起作用！
+
+#include &lt;windows.h&gt;
+#include &lt;tchar.h&gt;
+#include &lt;stdio.h&gt;
+int _tmain(int argc,TCHAR *argv[],TCHAR *envp[])
+{
+	TCHAR szBuffer[1000];//用于存储获取的环境变量的值
+	DWORD dwResult1 = GetEnvironmentVariable(TEXT(&quot;MyPath&quot;), szBuffer, 1000);//先获取我们前面已经设置好的MyPath环境变量的值，如果没错应该是woaini，但如果你测试时获取不到，该函数返回0，那么就要看看后面我讲的注意点了哦。
+	if (dwResult1 != 0)
+	{
+		_tprintf(TEXT(&quot;MyPath=%s\n&quot;), szBuffer);
+	}
+	else
+	{
+		_tprintf(TEXT(&quot;function call falid!\n&quot;));
+	}
+	SetEnvironmentVariable(TEXT(&quot;MyPath&quot;), TEXT(&quot;I love you&quot;));//这里为我新建的MyPath环境变量重新修改值为I love you,注意，其实这只是修改当前进程的环境块，而未影响系统或用户的环境块
+	DWORD dwResult2 = GetEnvironmentVariable(TEXT(&quot;MyPath&quot;), szBuffer, 1000);//这里重新获取以下修改后的MyPath环境变量的值
+	if (dwResult2 != 0)
+	{
+		_tprintf(TEXT(&quot;MyPath=%s\n&quot;), szBuffer);
+	}
+	else
+	{
+		_tprintf(TEXT(&quot;function call falid!\n&quot;));
+	}
+	system(&quot;pause&quot;);
+	return 0;
+}
+</code></pre>
+<p>1.为什么要重开VS，GetEnvironmentVariable函数才能正确获取前面我们新建的环境变量MyPath?这是因为我们之前讲过每个进程在创建时就被分配了一个环境块，而这个环境块就是Windows系统赋予的，那么我们可以猜测，当运行VS，就已经在内部存好了我们将要分配的环境块内容，而我们是VS运行后再新建环境变量MyPath，那么VS保存的这块内容还没更新呢，所以函数当然获取不到，我们只能重开VS了。这也只是我的猜测，是为了更好理解GetEnvironmentVariable函数，如有其他看法的，可以留言探究哦。</p>
+<p>2.<strong>SetEnvironmentVariable函数对系统环境变量以及其他进程的环境变量不起作用，因为创建了一个进程，就已经为进程分配好环境块了，我们通过GetEnvironmentVariable函数添加、修改或删除环境块内容，也只是添加、修改或删除进程的环境块，而非Windows系统或用户的环境块。</strong></p>
+<p>（3）下面是CUI程序入口函数TCHAR *envp[]参数的使用案例：<br>
+这里就不自己写代码了，直接放上书本P76页的示例代码（修改过）。</p>
+<pre><code class="language-c++">#include &lt;windows.h&gt;
+#include &lt;tchar.h&gt;
+#include &lt;stdio.h&gt;
+int _tmain(int argc,TCHAR *argv[],TCHAR *envp[])
+{
+	int current = 0;//用于环境变量计数
+	PTSTR *pElement = (PTSTR *)envp;//创建新的指针指向CUI程序的envp数组
+	PTSTR pCurrent = NULL;//用于遍历envp数组元素的指针
+	while (pElement != NULL)
+	{
+		//取数组的元素
+		pCurrent = (PTSTR)(*pElement);
+		//前面说过数组末尾是NULL指针，所以当遍历到NULL则将pElement置NULL，接着就跳出循环了
+		if (pCurrent == NULL)
+		{
+			pElement = NULL;
+		}
+		else
+		{
+			//打印遍历到的环境变量
+			_tprintf(TEXT(&quot;[%u] %s\r\n&quot;), current, pCurrent);
+			current++;//计数+1
+			pElement++;//指向下一个数组元素
+		}
+	}
+	system(&quot;pause&quot;);
+	return 0;
+}
+</code></pre>
+<p>（4）下面是ExpandEnvironmentStrings函数的使用案例：<br>
+**通过前面注册表的了解，我们可以细心发现，有些环境变量的值含有两个百分号（%）之间的字符串，这种字符串叫做可替换字符串，顾名思义，我们可以通过函数ExpandEnvironmentStrings函数替换掉可替换字符串。**也可以发现，这种可替换字符串只有在注册表才能看到，而在我的电脑-&gt;属性-&gt;高级系统设置-&gt;环境变量或通过其他方式获取整个完整的环境变量都看不到可替换字符串这种形式。下面，我先放上ExpandEnvirnmentStrings函数的函数签名：</p>
+<pre><code class="language-c++">DWORD WINAPI ExpandEnvironmentStrings(
+  _In_      LPCTSTR lpSrc,
+  _Out_opt_ LPTSTR  lpDst,
+  _In_      DWORD   nSize
+);
+参数1：一个包含可替换字符串的字符串地址（也叫扩展字符串），例如：TEXT(&quot;PATH=%PATH%&quot;)
+参数2：用于接收扩展字符串的一个缓冲区的地址
+参数3：这个缓冲区的最大大小，用字符数来表示。
+返回值：保存扩展字符串所需的缓冲区的大小，用字符数表示，若参数3小于这个返回值，%%变量就不会扩展，而是被替换为空字符串，所以一般要调用两次ExpandEnvironmentStrings函数。
+</code></pre>
+<pre><code class="language-c++">#include &lt;windows.h&gt;
+#include &lt;tchar.h&gt;
+#include &lt;stdio.h&gt;
+int _tmain(int argc,TCHAR *argv[],TCHAR *envp[])
+{
+	//第一次调用ExpandEnvironmentStrings是为了获取保存扩展字符串所需的缓冲区大小，所以函数参数2可以为NULL，参数3为0
+	DWORD chValue = ExpandEnvironmentStrings(TEXT(&quot;USERPROFILE='%USERPROFILE%'&quot;), NULL, 0);
+	PTSTR pszBuffer = new TCHAR[chValue];//动态创建chValue大小的缓冲区，最后记得释放掉动态创建的空间
+	chValue = ExpandEnvironmentStrings(TEXT(&quot;USERPROFILE='%USERPROFILE%'&quot;), pszBuffer, chValue);//这次调用才是真正获取替换后的字符串
+	_tprintf(TEXT(&quot;%s\r\n%d&quot;), pszBuffer,chValue);//打印扩展字符串的缓冲区和字符数目
+	delete[]pszBuffer;//释放动态创建的空间
+	system(&quot;pause&quot;);
+	return 0;
+}
+</code></pre>
+<br>
+<h2 id="进程的当前驱动器和目录">进程的当前驱动器和目录</h2>
+<p>有一些Windows函数的调用需要提供路径，例如：CreateFile函数打开一个文件（未指定完整路径名，只有一个文件名），那么该函数就会在当前驱动器（例如：C、D、E磁盘）的当前目录查找文件和目录。系统在内部跟踪记录着一个进程的当前驱动器和目录，我们可以获取进程的当前驱动器和目录，也可以修改进程的当前驱动器和目录。<br>
+下面给出分别获取和设置当前驱动器和目录的函数签名：<br>
+1.<strong>GetCurrentDirectory函数获取进程当前目录</strong>：</p>
+<pre><code>DWORD WINAPI GetCurrentDirectory(
+  _In_  DWORD  nBufferLength,
+  _Out_ LPTSTR lpBuffer
+);
+nBufferLength：lpBuffer指针指向内存块的大小（单位TCHAR）；
+lpBuffer：接收当前路径的内存块。
+</code></pre>
+<p>2.<strong>SetCurrentDirectory函数设置进程当前目录</strong></p>
+<pre><code>BOOL WINAPI SetCurrentDirectory(
+  _In_ LPCTSTR lpPathName
+);
+lpPathName：需要被设置的目录路径
+</code></pre>
+<p>3.<strong>GetFullPathName函数获取指定文件的当前路径</strong>：</p>
+<pre><code>DWORD WINAPI GetFullPathName(
+  __in   LPCTSTR lpFileName,
+  __in   DWORD nBufferLength,
+  __out  LPTSTR lpBuffer,
+  __out  LPTSTR *lpFilePart
+);
+lpFileName：文件名
+nBufferLength：获取全路径的内存大小（TCHAR）
+lpBuffer：内存指针
+lpFilePart：文件名最后一个元素，在lpBuffer中的位置。
+注意：这个函数，只是将当前路径，粘贴到你给的文件上，其他什么也没有做。
+</code></pre>
+<p>下面，我给出使用案例来领会这些函数的使用：</p>
+<pre><code class="language-c++">#include &lt;windows.h&gt;
+#include &lt;tchar.h&gt;
+#include &lt;stdio.h&gt;
+int _tmain(int argc,TCHAR *argv[],TCHAR *envp[])
+{
+	TCHAR szPath[MAX_PATH];
+	GetCurrentDirectory(MAX_PATH, szPath);//获取进程当前路径  
+	_tprintf(L&quot;%s\n&quot;, szPath);
+	TCHAR *str = L&quot;D:\\360Downloads\\&quot;;//设置的当前路径  
+	SetCurrentDirectory(str);   //设置文件的当前路径,如果指定的str参数在电脑中存在这个路径，那么就设置成功，否则设置无效，还是采用前一个有效的当前进程目录
+	GetCurrentDirectory(MAX_PATH, szPath);
+	_tprintf(L&quot;%s\n&quot;, szPath);
+	TCHAR *str1 = L&quot;D:\\ddsdf\\&quot;;//设置的当前路径  
+	SetCurrentDirectory(str1);   //设置文件的当前路径,如果指定的str参数在电脑中存在这个路径，那么就设置成功，否则设置无效，还是采用前一个有效的当前进程目录
+	GetCurrentDirectory(MAX_PATH, szPath);
+	_tprintf(L&quot;%s\n&quot;, szPath);//因为&quot;D:\\ddsdf\\&quot;路径在我电脑里不存在，所以SetCurrentDirectory函数设置失败了
+	GetFullPathName(L&quot;wxf1&quot;, MAX_PATH, szPath, NULL);
+	//这个函数只是将进程当前路径（szPath）粘贴到你给的文件名（wxf1）上，其他什么也没有做，不做检查  
+	_tprintf(L&quot;%s\n&quot;, szPath);
+	system(&quot;pause&quot;);
+	return 0;
+}
+</code></pre>
+<br>
+<h2 id="判断系统版本">判断系统版本</h2>
+<p>在实际应用中，我们所开发的应用程序需要判断用户所运行的Windows系统的版本。简单来说就是在应用程序运行前先判断系统版本，若用户系统不支持我们的应用程序则提示用户系统版本不支持，接着退出程序。Windows提供了两个判断系统版本的函数，分别是GetVersion函数和GetVersionEx函数，由于GetVersion函数在获取的版本信息，其中Windows版本号的顺序颠倒了。明知有错，那么我们就只用GetVersionEx函数好了，而且这个函数更好使用。我们还可以通过VerifyVersionInfo函数确认当前系统版本是否满足应用程序版本需求。<br>
+现在放上GetVersionEx函数的函数签名：<br>
+1.<strong>GetVersionEx函数获取当前系统版本信息</strong></p>
+<pre><code>BOOL WINAPI GetVersionEx(
+  __inout  LPOSVERSIONINFO lpVersionInfo
+);
+LpVersionInfo：这个参数执行OSVERSIONINFO或者OSVERSIONINFOEX这个结构体。
+OSVERSIONIINFOEX结构体是OSVERSIONINFO结构体的扩展，所以这个函数可以传递这两个参数的任意一个，前提条件是，必须设置结构体的大小，让GetVersionEx函数能够知道你传递的是那个结构体。
+</code></pre>
+<p>2.OSVERSIONINFOEX结构体</p>
+<pre><code>typedef struct _OSVERSIONINFOEX {
+  DWORD dwOSVersionInfoSize;//结构体大小
+  DWORD dwMajorVersion;//主机系统的主版本号
+  DWORD dwMinorVersion;//主机系统的次版本号
+  DWORD dwBuildNumber;//当前系统的构建版本号
+  DWORD dwPlatformId;//平台ID
+  TCHAR szCSDVersion[128];//额外的文本
+  WORD  wServicePackMajor;//ServicePack的主版本号
+  WORD  wServicePackMinor;//ServicePack的次版本号
+  WORD  wSuiteMask;//suite掩码
+  BYTE  wProductType;//产品类型
+  BYTE  wReserved;//保留字段
+} OSVERSIONINFOEX, *POSVERSIONINFOEX, *LPOSVERSIONINFOEX;
+</code></pre>
+<p>3.OSVERSIONINFO结构体</p>
+<pre><code>typedef struct _OSVERSIONINFO {
+  DWORD dwOSVersionInfoSize;//结构体大小
+  DWORD dwMajorVersion;//主机系统的主版本号
+  DWORD dwMinorVersion;//主机系统的次版本号
+  DWORD dwBuildNumber;//当前系统的构建版本号
+  DWORD dwPlatformId;//平台ID
+  TCHAR szCSDVersion[128];//额外的文本
+} OSVERSIONINFO;
+</code></pre>
+<p>下面对GetVersionEx和OSVERSIONINFO结构体的测试案例：</p>
+<pre><code class="language-c++">#include &lt;windows.h&gt;
+#include &lt;stdio.h&gt;
+void main()
+{
+    //OSVERSIONINFOEX osvi;//如果设置的结构体是OSVERSIONINFOEX，那么下面设置结构体大小要修改为sizeof(OSVERSIONINFOEX)，还有ZeroMemory的函数参数也要相应修改
+    OSVERSIONINFO osvi;
+    BOOL bIsWindowsXPorLater;
+		//ZeroMemory(&amp;osvi, sizeof(OSVERSIONINFOEX));
+    ZeroMemory(&amp;osvi, sizeof(OSVERSIONINFO));
+		 //osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+    osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+    //GetVersionEx((LPOSVERSIONINFO)&amp;osvi);
+    GetVersionEx(&amp;osvi);
+    bIsWindowsXPorLater = 
+       ( (osvi.dwMajorVersion &gt; 5) ||
+       ( (osvi.dwMajorVersion == 5) &amp;&amp; (osvi.dwMinorVersion &gt;= 1) ));
+    if(bIsWindowsXPorLater)
+        printf(&quot;The system meets the requirements.\n&quot;);
+    else 
+        printf(&quot;The system does not meet the requirements.\n&quot;);
+    system(&quot;pause&quot;);
+}
+</code></pre>
+<p>至于所有系统版本的信息，我们可以通过在MSDN上，搜索OSVERSIONINFOEX结构体下方有系统版本号总结，官网链接为 <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/ms724832(v=vs.85).aspx">https://msdn.microsoft.com/en-us/library/windows/desktop/ms724832(v=vs.85).aspx</a></p>
+<p>4.<strong>VerifyVersionInfo函数测试主机系统的版本符不符合应用程序要求的版本</strong><br>
+VerifyVersionInfo函数的函数签名：</p>
+<pre><code>BOOL WINAPI VerifyVersionInfo(
+  __in  LPOSVERSIONINFOEX lpVersionInfo,
+  __in  DWORD dwTypeMask,
+  __in  DWORDLONG dwlConditionMask
+);
+参数1是应用程序自己定义的版本要求
+参数2是应用程序的比较测试项
+参数3是测试条件，这个测试条件是DWORDLONG类型的数据，由VER_SET_CONDITION宏来为这个DWORDLONG类型的数据添加测试条件
+</code></pre>
+<p>5.VER_SET_CONDITION宏是为了设置测试条件，例如比较什么，怎么比较。每比较一个成员就要调用一次VER_SET_CONDITION宏。</p>
+<pre><code>ULONGLONG VER_SET_CONDITION(
+   ULONGLONG dwlConditionMask,
+   DWORD     dwTypeBitMask,
+   BYTE      dwConditionMask
+);
+参数1是测试条件，DWORDLONG类型的变量，DWORDLONG类型是DWORDLONG类型的重命名。
+参数2是主机系统的比较测试项
+参数3是比较方式
+</code></pre>
+<p>下面对VerifyVersionInfo函数的测试案例：</p>
+<pre><code class="language-c++">#include &lt;windows.h&gt;
+#include &lt;tchar.h&gt;  
+#pragma warning(disable: 4996)
+int _tmain(int argc, TCHAR *argv[])
+{
+	//创建等会需要比较的版本信息，本应用程序要求的版本信息
+	OSVERSIONINFOEX infoEx;
+	ZeroMemory(&amp;infoEx, sizeof(OSVERSIONINFOEX));//清零
+	infoEx.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);//设置结构体大小
+	infoEx.dwMajorVersion = 6;//设置待会比较的主版本信息
+	infoEx.dwMinorVersion = 2;//设置待会比较的次版本信息
+	infoEx.wServicePackMajor = 0;
+	infoEx.wServicePackMinor = 0;
+	DWORDLONG dwlConditionMask = 0;//
+	VER_SET_CONDITION(dwlConditionMask, VER_MAJORVERSION, VER_GREATER_EQUAL);//用等号的方式比较VER_MAJORVERSION，并放入dwlConditionMask中，下面类似
+	VER_SET_CONDITION(dwlConditionMask, VER_MINORVERSION, VER_GREATER_EQUAL);
+	VER_SET_CONDITION(dwlConditionMask, VER_SERVICEPACKMAJOR, VER_GREATER_EQUAL);
+	VER_SET_CONDITION(dwlConditionMask, VER_SERVICEPACKMINOR, VER_GREATER_EQUAL);
+	DWORD dwTypeMaask = VER_MAJORVERSION | VER_MINORVERSION | VER_SERVICEPACKMAJOR | VER_SERVICEPACKMINOR;
+	if (VerifyVersionInfo(&amp;infoEx, dwTypeMaask, dwlConditionMask))
+	{
+		_tprintf(L&quot;this system is sufficient!\n&quot;);
+	}
+	else
+	{
+		if (ERROR_OLD_WIN_VERSION == GetLastError())
+		{
+			_tprintf(L&quot;this system is old system!\n&quot;);
+		}
+		else
+		{
+			_tprintf(L&quot;this function is error!\n&quot;);
+		}
+	}
+	system(&quot;pause&quot;);
+	return 0;
+}
+</code></pre>
+<h2 id="createprocess函数">CreateProcess函数</h2>
+<p>在了解这个创建子进程的函数之前，我们回顾一下当我们运行一个应用程序后，生成一个进程所做的事：当我们双击一个应用程序，这个程序就会被载入内存变成一个进程，也叫主调进程；系统会创建一个进程内核对象，其初始使用计数为1，而可执行文件（和所有必要的DLL文件）的代码及数据加载进进程地址空间，我们都知道进程的产生必然也会同时产生一个主线程，所以系统还创建了一个主线程内核对象，其初始使用计数也为1；当开始执行可执行文件代码时前，主线程一开始就会执行C/C++运行库的启动函数，然后做些初始化全局变量、调用构造函数等初始化工作，然后就会调用应用程序里的入口函数（WinMain，wWinMain，main或wmain函数），当执行完可执行文件和DLL文件的代码，那么这个入口函数就会返回nMainRetVal，然后传给exit函数结束进程。<br>
+回归这个CreateProcess函数，其实跟主调进程的过程差不多：<font style = "font-weight: bold">当主调进程（调用CreateProcess函数的当前进程也叫父进程）的一个线程调用CreateProcess函数就创建了一个新进程，系统将创建一个新进程内核对象，其初始使用计数为1，进程内核对象实际也只是一个分配在内核区的数据结构，它也叫PCB（进程控制块），用于管理和控制进程。系统还为这个新进程创建一个进程地址空间，并将可执行文件（和所有必要的DLL文件）的代码及数据加载进新进程地址空间。然后系统还为新进程的主线程创建一个线程内核对象（其使用计数为1），和新进程内核对象一样，也是数据结构，其实也就是操作系统领域所说的TCB（线程控制块），用于管理和控制这个线程。</font>这个主线程一开始就会调用C/C++运行库的启动函数，最终会调用应用程序的入口函数（WinMain，wWinMain，main或wmain函数），当执行完可执行文件和DLL文件的代码，那么这个入口函数就会返回nMainRetVal，然后传给exit函数结束进程。<br>
+当了解了上面的流程后，我们先放上CreateProcess函数的函数签名（函数参数很多，大概先过一遍，再慢慢深入每一个参数），再逐一剥析该函数的参数：</p>
+<pre><code>BOOL WINAPI CreateProcess(
+  __in_opt     LPCTSTR lpApplicationName,
+  __inout_opt  LPTSTR lpCommandLine,
+  __in_opt     LPSECURITY_ATTRIBUTES lpProcessAttributes,
+  __in_opt     LPSECURITY_ATTRIBUTES lpThreadAttributes,
+  __in         BOOL bInheritHandles,
+  __in         DWORD dwCreationFlags,
+  __in_opt     LPVOID lpEnvironment,
+  __in_opt     LPCTSTR lpCurrentDirectory,
+  __in         LPSTARTUPINFO lpStartupInfo,
+  __out        LPPROCESS_INFORMATION lpProcessInformation
+);
+lpApplicationName：被执行的模块的名称。这个模块可以是一个windows应用程序。也可以是其他类型的模块（例如MS-DOS或者OS/2）。
+lpCommandLine：被执行的命令行参数。这个字符串的最大长度可以达到32768个字符，包括null结尾符。如果lpApplicationName是NULL，那么lpCommandLine参数中的可执行文件的名字被限定在MAX_PATH个字符之内。
+lpProcessAttributes：一个指向SECURITY_ATTRIBUTES结构的指针，这个结构中，最重要的数据结构是一个安全描述符，他决定了新产生的进程对象，是否能被其他子进程继承，这个进程对象，可以被那些用户访问。
+lpThreadAttributes：一个指向SECURITY_ATTRIBUTES结构体的指针。如果lpThreadAttributes=NULL，那么新线程的句柄不能够被继承。
+dwCreationFlags：这个标志控制了进程的创建和优先级，例如：哪个进程先获得CPU资源。
+lpEnvironment：一个指向环境变量内存块的指针。如果这个参数是NULL，那么新进程使用父进程的环境变量。
+lpCurrentDirectory：进程的当前目录。
+lpStartupInfo：一个指向STARTUPINFO或者STARTUPINFOEX结构的指针。
+lpProcessInformation：一个指向PROCESS_INFORMATION结构的指针。
+</code></pre>
+<p>（1）pszApplicationName和pszCommandLine参数<br>
+pszApplicationName和pszCommandLine参数分别指定新进程要使用的执行体文件的名称，以及要传给新进程的命令行字符串。<br>
+注意，对于pszCommandLine参数，CreateProcess函数期望你传入的是一个非“常量字符串”的地址。在内部，CreateProcess实际上会修改你传给它的命令行字符串。但在CreateProcess返回之前，它会将这个字符串还原为原来的形式。因为如果CreateProcess函数试图修改字符串时，会引起访问违规，因为在现在版本的编译器都将常量字符串放在常量存储区，属于右值不允许修改的，这就产生矛盾了。所以，建议在调用CreateProcess之前，把常量字符串复制进一个临时缓冲区（在栈区存储），这样在内部，CreateProcess修改你传给它的命令行字符串也不会发生访问违规了。就像下面的代码一样：</p>
+<pre><code>TCHAR szCommandLine[] = TEXT(&quot;NOTEPAD&quot;);
+CreateProcess(NULL, szCommandLine, NULL, NULL,
+FALSE, 0, NULL, NULL, &amp;si, &amp;pi);
+</code></pre>
+<p>对于pszApplicationName和pszCommandLine参数值设置的不同有以下三种情况，我们一一列举：<br>
+1.如果lpApplicationName为NULL，pszCommandLine不为NULL；那么当CreateProcess函数解析pszCommandLine字符串时，它会检查第一个标记，并假定此标记是我们想运行的可执行文件的名称，如果可执行文件的名称没有扩展名，就会默认是.exe扩展名。CreateProcess函数就会按照以下顺序搜索可执行文件：</p>
+<pre><code>1.	进程可执行文件所在目录
+2.	父进程的当前目录
+3.	GetSystemDirectory函数获取的系统目录。
+4.	16位windows系统目录。没有函数可以获得这个系统目录，但这个目录确实会被搜索。这个系统目录是System。
+5.	windows目录。也就是GetWindowsDirectory函数获得的目录。
+6.	在PATH环境变量中列出的目录。注意，这个函数并不搜索App Paths注册表键定义的路径。如果想搜索这个目录下的目录，使用ShellExecute函数。
+</code></pre>
+<p>当然，如果pszCommandLine参数包含的是一个完整路径而不是只有一个可执行文件名，那么就直接利用这个完整路径搜索这个可执行文件了，就没必要按上面列举的6条搜索路径搜索了。那么CreateProcess函数使用pszCommandLine指向的字符串，就作为子进程的命令行字符串，子进程内部的线程可以调用GetCommandLine函数获取这个由父进程调用CreateProcess函数所传入的CreateProcess函数参数的命令行字符串。</p>
+<p>2.如果lpApplicationName不为NULL，lpCommandLine为NULL；那么此时，函数使用lpApplicationName指向的字符串，作为命令行字符串（后面会有测试案例证明），而若lpApplicationName包含的字符串是想要运行的可执行文件的名称（没有包含绝对路径），在这种情况下，必须指定文件扩展名，系统不会自动假定文件名有一个.exe扩展名，CreateProcess函数就会在主调进程的当前目录搜索这个文件名的可执行文件，若没有则以调用失败告终；除非lpApplicationName指向的字符串包含的是文件的绝对路径，那么就可以直接找到可执行文件了。</p>
+<p>3.如果lpApplicationName和lpCommandLine都不为NULL，那么lpApplicationName就是可执行文件的文件名，而lpCommandLine指向的就是命令行参数。新进程可以使用GetCommandLine函数，来获取完整的命令行。控制台进程使用argc和argv参数，来分析命令行。此时argv[0]代表可执行文件的名称，作为命令行的第一个参数。<br>
+现在对第一种情况（如果lpApplicationName为NULL，pszCommandLine不为NULL）进行简单测试：</p>
+<pre><code class="language-c++">//CreateProcess.exe可执行文件（作为主调进程），源文件代码如下：
+#include &lt;windows.h&gt;
+#include &lt;tchar.h&gt;  
+int _tmain(int argc, TCHAR *argv[])
+{
+	_tprintf(L&quot;this  is father process!\n&quot;);//第一个打印的文本
+	STARTUPINFO si = { sizeof(si) };//这些结构体不懂没问题，看到后面就懂了，这里先知道下就OK
+	PROCESS_INFORMATION pi;
+	TCHAR szCommandLine[] = TEXT(&quot;C:\\Users\\Administrator\\Documents\\Visual Studio 2013\\Projects\\ChildProcess\\Debug\\ChildProcess.exe&quot;);
+	CreateProcess(NULL, szCommandLine, NULL, NULL, FALSE, 0, NULL, NULL, &amp;si, &amp;pi);
+	_tprintf(L&quot;this  is exit father process!\n&quot;);//最后一个个打印的文本
+	system(&quot;pause&quot;);
+	return 0;
+}
+</code></pre>
+<pre><code class="language-c++">//ChildProcess.exe可执行文件（作为子进程），源文件代码如下：
+#include &lt;windows.h&gt;
+#include &lt;tchar.h&gt;  
+int _tmain(int argc, TCHAR *argv[])
+{
+	_tprintf(L&quot;this  is children process!\n&quot;);//第二个打印的文本
+	LPTSTR cmdLine;
+	cmdLine = GetCommandLine();
+	_tprintf(L&quot;this  is children process command line:%s\n&quot;, cmdLine);//第三个打印的文本
+	system(&quot;pause&quot;);
+	return 0;
+}
+</code></pre>
+<p>如果lpApplicationName和lpCommandLine都不为NULL，那么lpApplicationName就是可执行文件的文件名，而lpCommandLine指向的就是命令行参数。<br>
+（2）psaProcess，psaThread和bInheritHandles参数<br>
+前面讲过，内核对象自身在创建时我们是可以将安全属性（SECURITY_ATTRIBUTES）关联到内核对象。而主调进程的线程调用CreateProcess就创建了一个新子进程，系统必须创建一个进程内核对象和一个线程内核对象，那么由于这两个对象也是内核对象，那么我们就可以在调用CreateProcess函数时手动为这两个内核对象关联安全属性（SECURITY_ATTRIBUTES）。利用CreateProcess函数的psaProcess和psaThread参数就可以实现关联过程。我们都知道SECURITY_ATTRIBUTES结构有三个字段，分别是结构大小、内核对象句柄是否可被子进程继承（bInheritHandle字段）、安全描述符。如果这两个参数为NULL，那么系统将为这两个内核对象指定默认的安全描述符（设置为默认该进程或线程内核对象句柄不可被子进程继承和设置为默认安全描述符），也可以自己创建并初始化两个SECURITY_ATTRIBUTES结构（可以自主指定安全描述符和自主设置该进程或线程内核对象句柄可否被子进程继承），并将这两个自己创建的安全属性（SECURITY_ATTRIBUTES）赋予进程内核对象和线程内核对象.</p>
+<p>（3）fdwCreate参数<br>
+<strong>fdwCreate参数标志控制了进程的创建和优先级</strong>。标志太多，我就不一一列举了。链接在此，谁敢造次： https://msdn.microsoft.com/en-us/library/windows/desktop/ms684863(v=vs.85).aspx<br>
+比较有意思的标志是CREATE_NEW_CONSOLE：新的进程将使用一个新的控制台，而不是继承父进程的控制台。这个标志不能与DETACHED_PROCESS标志一起使用。前面我们测试第一、二个参数时，主调进程和子进程各自的线程执行的输出代码都呈现在一个控制台上，是因为CreateProcess函数的参数设置为0，那现在我们来测试下这个标志，代码如下：</p>
+<pre><code class="language-c++">//CreateProcess.exe可执行文件（作为主调进程），源文件代码如下：
+#include &lt;windows.h&gt;
+#include &lt;tchar.h&gt;  
+int _tmain(int argc, TCHAR *argv[])
+{
+	_tprintf(L&quot;this  is father process!\n&quot;);//第一个打印的文本
+	STARTUPINFO si = { sizeof(si) };//这些结构体不懂没问题，看到后面就懂了，这里先知道下就OK
+	PROCESS_INFORMATION pi;
+	TCHAR szCommandLine[] = TEXT(&quot;C:\\Users\\Administrator\\Documents\\Visual Studio 2013\\Projects\\ChildProcess\\Debug\\ChildProcess.exe&quot;);
+	CreateProcess(NULL, szCommandLine, NULL, NULL, FALSE, CREATE_NEW_CONSOLE, NULL, NULL, &amp;si, &amp;pi);
+	_tprintf(L&quot;this  is exit father process!\n&quot;);//最后一个个打印的文本
+	system(&quot;pause&quot;);
+	return 0;
+}
+</code></pre>
+<pre><code class="language-c++">//ChildProcess.exe可执行文件（作为子进程），源文件代码如下：
+#include &lt;windows.h&gt;
+#include &lt;tchar.h&gt;  
+int _tmain(int argc, TCHAR *argv[])
+{
+	_tprintf(L&quot;this  is children process!\n&quot;);//第二个打印的文本
+	LPTSTR cmdLine;
+	cmdLine = GetCommandLine();
+	_tprintf(L&quot;this  is children process command line:%s\n&quot;, cmdLine);//第三个打印的文本
+	system(&quot;pause&quot;);
+	return 0;
+}
+</code></pre>
+<p>（4）pvEnvironment参数<br>
+<strong>每个进程（包括主调进程、子进程等）都拥有一个环境块，这个环境块是在进程地址空间分配的一块内存</strong>。而pvEnvironment参数指向一块内存，其中包含新进程要使用的环境字符串。对于这个参数的使用有两种方式，要么传一个NULL，那么将导致子进程继承其父进程使用的一组环境字符串；要么传一个环境字符串（1.可以自己定义一个环境字符串再传入pvEnvironment参数。2.通过GetEnvironmentStrings函数获取父进程的环境字符串，再传入pvEnvironment参数，但要注意如果不再需要这块内存，那么你就要调用FreeEnvironmentStrings函数来释放它，其实当为pvEnvironment参数传入NULL，CreateProcess函数内部就是这样做的。）<br>
+实例1：在子进程创建过程中改变子进程的环境变量是一个进程改变另一个进程环境变量的唯一方式。一个进程绝不能直接改变另一个进程（非子进程）的环境变量。下面代码实现子进程继承父进程环境变量的方法。</p>
+<pre><code class="language-c++">#include &lt;windows.h&gt;
+#include &lt;tchar.h&gt;  
+#include&lt;strsafe.h&gt;
+int _tmain(int argc, TCHAR *argv[])
+{
+	STARTUPINFO si = { sizeof(si) };//这些结构体不懂没问题，看到后面就懂了，这里先知道下就OK
+	PROCESS_INFORMATION pi;
+	TCHAR szCommandLine[] = TEXT(&quot;C:\\Users\\Administrator\\Documents\\Visual Studio 2013\\Projects\\ChildProcess\\Debug\\ChildProcess.exe&quot;);
+	//CreateProcess的环境块参数为NULL，子进程默认继承父进程的环境块
+	if (!CreateProcess(NULL, szCommandLine, NULL, NULL, FALSE, CREATE_NEW_CONSOLE, NULL, NULL, &amp;si, &amp;pi))
+	{
+		_tprintf(TEXT(&quot;CreateProcess failed(%d)\n&quot;), GetLastError());
+		system(&quot;pause&quot;);
+		return FALSE;
+	}
+	system(&quot;pause&quot;);
+	return 0;
+}
+</code></pre>
+<pre><code class="language-c++">#include &lt;windows.h&gt;
+#include &lt;tchar.h&gt;  
+int _tmain(int argc, TCHAR *argv[])
+{
+	LPTSTR lpszVariable;
+	LPTCH lpvEnv;
+	//获得环境变量内存块的指针
+	lpvEnv = GetEnvironmentStrings();
+	if (lpvEnv == NULL)
+	{
+		_tprintf(TEXT(&quot;GetEnvironmentStrins failed(%d)\n&quot;), GetLastError());
+		system(&quot;pause&quot;);
+		return 0;
+	}
+	//环境变量字符串是以NULL分隔的，内存块以NULL结尾
+	lpszVariable = (LPTSTR)lpvEnv;
+	while (*lpszVariable)
+	{
+		_tprintf(TEXT(&quot;%s\n&quot;), lpszVariable);
+		lpszVariable += lstrlen(lpszVariable) + 1;   //移动指针
+	}
+	FreeEnvironmentStrings(lpvEnv);
+	system(&quot;pause&quot;);
+	return 0;
+}
+</code></pre>
+<p>（5）pszCurDir参数<br>
+pszCurDir参数允许父进程设置子进程的当前驱动器和目录。如果参数为NULL，则子进程的工作目录就是生成新进程的应用程序的当前所在目录。如果参数不为NULL，则pszCurDir必须指向一个以0结尾的字符串，并且路径必须指定一个驱动器号（D、C、E盘）。<br>
+（6）psiStartInfo参数<br>
+一个指向STARTUPINFO或者STARTUPINFOEX结构的指针。如果要设置扩展属性，那么dwCreateFlags标志中，应该包含EXTENDED_STARTUPINFO_PRESENT标志。<br>
+1.STARTUPINFO结构体：</p>
+<pre><code>typedef struct _STARTUPINFO {
+  DWORD  cb; //startupinfo结构体的大小
+  LPTSTR lpReserved;
+  LPTSTR lpDesktop;//次进程归那个桌面。
+  LPTSTR lpTitle;
+  DWORD  dwX;
+  DWORD  dwY;
+  DWORD  dwXSize;
+  DWORD  dwYSize;
+  DWORD  dwXCountChars;//对于控制台程序来说，一行有几个字符
+  DWORD  dwYCountChars;// 对于控制台程序来说，有多少行。
+  DWORD  dwFillAttribute;//对控制台程序来说，背景色和字体颜色
+  DWORD  dwFlags;
+  WORD   wShowWindow;//表示窗口是否显式。
+  WORD   cbReserved2;
+  LPBYTE lpReserved2;
+  HANDLE hStdInput;
+  HANDLE hStdOutput;
+  HANDLE hStdError;
+} STARTUPINFO, *LPSTARTUPINFO;
+</code></pre>
+<p>2.STARTUPINFOEX结构体：</p>
+<pre><code>typedef struct _STARTUPINFOEX {
+  STARTUPINFO                 StartupInfo;
+  PPROC_THREAD_ATTRIBUTE_LIST lpAttributeList;
+} STARTUPINFOEX, *LPSTARTUPINFOEX;
+</code></pre>
+<p>大多数应用程序都希望生成的应用程序只是使用默认值，因此，必须先初始化结构体成员，再将cb字段设置为对应结构体的大小，例如以下标准使用代码：</p>
+<pre><code>STARTUPINFO info;
+ZeroMemory(&amp;info,sizeof(info));//注意：如果没有把结构的内容清零，可能会造成新进程创建的失败
+info.cb=sizeof(info);
+</code></pre>
+<p>（7）ppiProcInfo参数<br>
+一个指向PROCESS_INFORMATION结构的指针，CreateProcess函数在返回之前初始化这个结构的成员。<br>
+1.PROCESS_INFORMATION结构</p>
+<pre><code>typedef struct _PROCESS_INFORMATION {
+  HANDLE hProcess;//进程句柄
+  HANDLE hThread;//主线程句柄
+  DWORD  dwProcessId;//进程ID
+  DWORD  dwThreadId;//主线程ID
+} PROCESS_INFORMATION, *LPPROCESS_INFORMATION;
+</code></pre>
+<br>
+<h2 id="终止进程的运行">终止进程的运行</h2>
+<p>若要终止进程的运行，可以使用下面四种方法：<br>
+• 主线程的进入点函数返回（最好使用这个方法），main函数返回。<br>
+• 进程中的一个线程调用ExitProcess函数（应该避免使用这种方法）。<br>
+• 另一个进程中的线程调用TerminateProcess函数（应该避免使用这种方法）。<br>
+• 进程中的所有线程自行终止运行（这种情况几乎从未发生）。<br>
+这一节将介绍所有这四种方法，并且说明进程结束时将会发生什么情况。</p>
+<p>1）主线程的进入点函数返回<br>
+始终都应该这样来设计应用程序，即只有当主线程的进入点函数返回时，它的进程才终止<br>
+运行。这是保证所有线程资源能够得到正确清除的唯一办法。<br>
+让主线程的进入点函数返回，可以确保下列操作的实现：<br>
+• 该线程创建的任何C + +对象将能使用它们的析构函数正确地撤消。<br>
+• 操作系统将能正确地释放该线程的堆栈使用的内存。<br>
+• 系统将进程的退出代码（在进程的内核对象中维护）设置为进入点函数的返回值。<br>
+• 系统将进程内核对象的返回值递减1。</p>
+<p>2）ExitProcess函数<br>
+可以让线程调用ExitThread函数，以便强制线程终止运行：</p>
+<pre><code>void ExitProcess(UNIT fuExitCode);
+</code></pre>
+<p>该函数用于终止进程的运行，并将进程的退出代码设置为 fuExitCode。ExitProcess函数并<br>
+不返回任何值，因为进程已经终止运行。如果在调用 ExitProcess之后又增加了什么代码，那么<br>
+该代码将永远不会运行。<br>
+当主线程的进入点函数（ WinMain、wWinMain、main或wmain）返回时，它将返回给<br>
+C / C + +运行期启动代码，它能正确地清除该进程使用的所有的 C运行期资源。当C运行期资源被<br>
+释放之后，C运行期启动代码就显式调用 ExitProcess，并将进入点函数返回的值传递给它。这<br>
+解释了为什么只需要主线程的进入点函数返回，就能够终止整个进程的运行。请注意，进程中<br>
+运行的任何其他线程都随着进程而一道终止运行。<br>
+Windows Platform SDK文档声明，进程要等到所有线程终止运行之后才终止运行。就操作<br>
+系统而言，这种说法是对的。但是， C / C + +运行期对应用程序采用了不同的规则，通过调用<br>
+ExitProcess，使得C / C + +运行期启动代码能够确保主线程从它的进入点函数返回时，进程便终<br>
+止运行，而不管进程中是否还有其他线程在运行。不过，如果在进入点函数中调用ExitThread，<br>
+而不是调用ExitProcess或者仅仅是返回，那么应用程序的主线程将停止运行，但是，如果进程<br>
+中至少有一个线程还在运行，该进程将不会终止运行。<br>
+注意，调用ExitProcess或ExitThread可使进程或线程在函数中就终止运行。就操作系统而<br>
+言，这很好，进程或线程的所有操作系统资源都将被全部清除。但是， C / C + +应用程序应该避<br>
+免调用这些函数，因为C / C + +运行期也许无法正确地清除。请看下面的代码：</p>
+<p>3）TerminateProcess函数<br>
+调用TerminateProcess函数也能够终止进程的运行：</p>
+<pre><code>BOOL TerminateProcess(HANDLE hProcess, UNIT fuExitCode);
+</code></pre>
+<p>该函数与TerminateProcess有一个很大的差别，那就是任何线程都可以调用 TerminateProcess来终<br>
+止另一个进程或它自己的进程的运行。 hProcess参数用于标识要终止运行的进程的句柄。当进<br>
+程终止运行时，它的退出代码将成为你作为 fuExitCode参数来传递的值。<br>
+只有当无法用另一种方法来迫使进程退出时，才应该使用TerminateProcess。终止运行的<br>
+进程绝对得不到关于它将终止运行的任何通知，因为应用程序无法正确地清除，并且不能避免<br>
+自己被撤消（除非通过正常的安全机制）。例如，进程无法将内存中它拥有的任何信息迅速送<br>
+往磁盘。</p>
+<p>虽然进程确实没有机会执行自己的清除操作，但是操作系统可以在进程之后进行全面的清<br>
+除，使得所有操作系统资源都不会保留下来。这意味着进程使用的所有内存均被释放，所有打<br>
+开的文件全部关闭，所有内核对象的使用计数均被递减，同时所有的用户对象和 G D I对象均被<br>
+撤消。<br>
+一旦进程终止运行（无论采用何种方法），系统将确保该进程不会将它的任何部分遗留下<br>
+来。绝对没有办法知道该进程是否曾经运行过。进程一旦终止运行，它绝对不会留下任何蛛丝<br>
+马迹。希望这是很清楚的。<br>
+注意TerminateProcess函数是个异步运行的函数，也就是说，它会告诉系统，你想要<br>
+进程终止运行，但是当函数返回时，你无法保证该进程已经终止运行。因此，如果想<br>
+要确切地了解进程是否已经终止运行，必须调用WaitForSingleObject函数（第9章介绍）<br>
+或者类似的函数，并传递进程的句柄。<br>
+进程中的线程何时全部终止运行<br>
+如果进程中的所有线程全部终止运行（因为它们调用了 ExitThread函数，或者因为它们已<br>
+经用TerminateProcess函数终止运行），操作系统就认为没有理由继续保留进程的地址空间。这<br>
+很好，因为在地址空间中没有任何线程执行任何代码。当系统发现没有任何线程仍在运行时，<br>
+它就终止进程的运行。出现这种情况时，进程的退出代码被设置为与终止运行的最后一个线程<br>
+相同的退出代码。</p>
+<h2 id="子进程">子进程</h2>
+<p>当你设计应用程序时，可能会遇到这样的情况，即想要另一个代码块来执行操作。通过调用函数或子例程，你可以一直象这样分配工作。当调用一个函数时，在函数返回之前，代码将无法继续进行操作。大多数情况下，需要实施这种单任务同步。让另一个代码块来执行操作的另一种方法是在进程中创建一个新线程，并让它帮助进行操作。这样，当其他线程在执行需要的操作时，代码就能继续进行它的处理。这种方法很有用，不过，当线程需要查看新线程的结果时，它会产生同步问题。</p>
+<p>另一个解决办法是生成一个新进程，即子进程，以便帮助你进行操作。比如说，需要进行的操作非常复杂。若要处理该操作，只需要在同一个进程中创建一个新线程。你编写一些代码，对它进行测试，但是得到一些不正确的结果。也许你的算法存在错误，也可能间接引用的对象不正确，并且不小心改写了地址空间中的某些重要内容。进行操作处理时，如果要保护地址空间，方法之一是让一个新进程来执行这项操作。然后，在继续进行工作之前，可以等待新进程终止运行，或者可以在新进程工作时，继续进行工作。</p>
+<p>不过，新进程可能需要对地址空间中包含的数据进行操作。这时最好让进程在它自己的地址空间中运行，并且只让它访问父进程地址空间中的相关数据，这样就能保护与手头正在执行的任务无关的全部数据。Windows提供了若干种方法，以便在不同的进程中间传送数据，比如动态数据交换（DDE）、OLE、管道和邮箱等。共享数据最方便的方法之一是，使用内存映射文件（关于内存映射文件的详细说明请参见第1 7章）。</p>
+<p><font style="font-weight:bold">系统在创建一个新的进程的时侯，系统会建立一个进程内核对象和线程内核对象，内核对象都有一个使用计数，系统会为这个对象赋以一个初始的计数1，在CreateProcess（）函数返回之前，这个函数会打开线程对象和进程对象，并将每个对象的与进程相关的句柄放入到结构体PROCESS_INFORMATION中的hProcess和hThread成员中，当CreateProcess在内部打开这些对象的时候，每个对象的使用计数就变为2了，如果我们在父进程当中不需要这两个句柄就可以先将其关闭，系统就会为子进程的进程内核对象和线程内核对象的使用计数减1，当子进程终止运行的时候，系统会再将使用计数减1，至此，子进程的内核对象的使用计数变为0，这两个对象就会被释放掉。注意：必须关闭子进程和它的主线程的句柄，以避免在应用程序运行时泄漏资源。当然，当进程终止运行时，系统会自动消除这些泄漏现象，但是，当进程不再需要访问子进程和它的线程时，如果编写得较好的软件，最好显式关闭这些句柄（通过调用CloseHandle函数来关闭）。</font>不能关闭这些句柄是开发人员最常犯的错误之一。由于某些原因，许多开发人员认为，关闭进程或线程的句柄，会促使系统撤消该进程或线程。实际情况并非如此。关闭句柄只是告诉系统，你对进程或线程的统计数据不感兴趣。进程或线程将继续运行，直到它自己终止运行。关闭进程或线程句柄不等于关闭进程或线程。</p>
+<p>之前我们都学过内核对象有公有部分（使用计数、安全描述符）和特有部分（ID就是其中之一），当进程内核对象创建后，系统赋予该对象一个独一无二的标识号，系统中的其他任何进程内核对象都不能使用这个相同的ID号。线程内核对象的情况也一样。当一个线程内核对象创建时，该对象被赋予一个独一无二的、系统范围的ID号。为什么独一无二？因为进程ID和线程ID共享相同的号码池。Windows任务管理器将进程ID0与“System Idle Process”（系统空闲进程）相关联。CreateProcess返回之前，它会将这些ID填充到PROCESS_INFORMATION结构的dwProcessId和dwThreadId成员中。对于获取当前进程ID前面章节已经讲了，这里不再赘述，而获取当前线程ID也差不多，通过GetCurrentThreadId获取，而GetThreadId函数通过指定线程句柄来获取对应的线程ID。</p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#%E4%BB%80%E4%B9%88%E6%98%AF%E8%BF%9B%E7%A8%8B">什么是进程</a></li>
+<li><a href="#windows%E7%9A%84%E5%85%A5%E5%8F%A3%E7%82%B9%E5%87%BD%E6%95%B0">Windows的入口点函数</a></li>
+<li><a href="#%E8%BF%9B%E7%A8%8B%E5%AE%9E%E4%BE%8B%E5%8F%A5%E6%9F%84%E5%8F%AF%E6%89%A7%E8%A1%8C%E6%96%87%E4%BB%B6%E5%AE%9E%E4%BE%8B%E5%8F%A5%E6%9F%84%E6%88%96%E8%80%85dll%E6%96%87%E4%BB%B6%E5%AE%9E%E4%BE%8B%E5%8F%A5%E6%9F%84">进程实例句柄（可执行文件实例句柄或者DLL文件实例句柄）</a></li>
+<li><a href="#%E6%B5%8B%E8%AF%95%E5%90%AF%E5%8A%A8%E5%87%BD%E6%95%B0%E5%88%9D%E5%A7%8B%E5%8C%96%E5%93%AA%E4%BA%9B%E5%85%A8%E5%B1%80%E5%8F%98%E9%87%8F">测试启动函数初始化哪些全局变量</a></li>
+<li><a href="#%E8%BF%9B%E7%A8%8B%E7%9A%84%E5%91%BD%E4%BB%A4%E8%A1%8C">进程的命令行</a></li>
+<li><a href="#%E8%BF%9B%E7%A8%8B%E7%9A%84%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F">进程的环境变量</a></li>
+<li><a href="#%E8%BF%9B%E7%A8%8B%E7%9A%84%E5%BD%93%E5%89%8D%E9%A9%B1%E5%8A%A8%E5%99%A8%E5%92%8C%E7%9B%AE%E5%BD%95">进程的当前驱动器和目录</a></li>
+<li><a href="#%E5%88%A4%E6%96%AD%E7%B3%BB%E7%BB%9F%E7%89%88%E6%9C%AC">判断系统版本</a></li>
+<li><a href="#createprocess%E5%87%BD%E6%95%B0">CreateProcess函数</a></li>
+<li><a href="#%E7%BB%88%E6%AD%A2%E8%BF%9B%E7%A8%8B%E7%9A%84%E8%BF%90%E8%A1%8C">终止进程的运行</a></li>
+<li><a href="#%E5%AD%90%E8%BF%9B%E7%A8%8B">子进程</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://hensonguo.github.io/post/windows-he-xin-bian-cheng-nei-he-dui-xiang/">
+              <h3 class="post-title">
+                windows核心编程-内核对象
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://hensonguo.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

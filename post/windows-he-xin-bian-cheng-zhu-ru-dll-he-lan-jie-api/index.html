@@ -1,0 +1,700 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Windows核心编程-注入DLL和拦截API | Icode</title>
+<link rel="shortcut icon" href="https://hensonguo.github.io/favicon.ico?v=1704354032694">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://hensonguo.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="Windows核心编程-注入DLL和拦截API | Icode - Atom Feed" href="https://hensonguo.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="进程之间空间独立，每个进程最大2G地址空间，只有内存映像文件和系统组件才能映射到这个区域。
+有些情况下，必须打破进程的界限，访问另一个进程的地址空间，这些情况包括：
+
+当你想要为另一个进程创建的窗口建立子类时。
+当你需要调试帮助时（例如，当..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://hensonguo.github.io">
+  <img class="avatar" src="https://hensonguo.github.io/images/avatar.png?v=1704354032694" alt="">
+  </a>
+  <h1 class="site-title">
+    Icode
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              Windows核心编程-注入DLL和拦截API
+            </h2>
+            <div class="post-info">
+              <span>
+                2023-07-10
+              </span>
+              <span>
+                29 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <p><font color=red>进程之间空间独立，每个进程最大2G地址空间</font>，只有内存映像文件和系统组件才能映射到这个区域。<br>
+有些情况下，必须打破进程的界限，访问另一个进程的地址空间，这些情况包括：</p>
+<ul>
+<li>当你想要为另一个进程创建的窗口建立子类时。</li>
+<li>当你需要调试帮助时（例如，当你需要确定另一个进程正在使用哪个 DLL时）。</li>
+<li>当你想要挂接其他进程时。</li>
+</ul>
+<br>
+<h2 id="1-插入dll一个例子">1、插入DLL：一个例子</h2>
+<p><font color=red>GetWindowLongPtr</font>函数是在指定的窗口中获取信息。也可以在指定window内存偏移量的情况下获取值。</p>
+<pre><code class="language-c++">LONG_PTR GetWindowLongPtr(
+	HWND hWnd,
+	int nIndex
+);
+</code></pre>
+<p>hWnd：欲获取信息的窗口（或属于窗口的类）的句柄。<br>
+nIndex：为欲获取的信息指定值。<br>
+如果函数执行成功，将返回读取的值。<br>
+如果执行失败，将返回零，要获取更多扩展信息，请调用GetLastError.</p>
+<p>窗口过程是如何接受消息的：</p>
+<ol>
+<li>文件 User32.dll被映射到进程A的地址空间中。对User32.dll文件的映射是为了接收和发送在进程 A中运行的任何线程创建的任何窗口中发送和显示的消息。</li>
+<li>当User32.dll的映像发现一个消息时，它首先要确定窗口的WndProc的地址，然后调用该地址，传递窗口的句柄、消息和wParam和lParam值。</li>
+<li>当WndProc处理该消息后，User32 .dll便循环运行，并等待另一个窗口消息被处理。</li>
+</ol>
+<p>进程A：<br>
+EXE file：</p>
+<pre><code class="language-c++">LRESUlT WndProc(HWND hend,UNIT uMsg,…){…}
+</code></pre>
+<p>USER32.DLL file：</p>
+<pre><code class="language-c++">LONG DispatchMessage(CONST MSG*msg)
+{
+    LONG lRet;
+    WNDPROC lpfnWndProc=
+    (WNDPROC)GetWindowLongPtr(msg,hwnd,GWLP_WNDPROC);
+    lRet=lpfnWndProc(msg.hwnd,msg.message,msg.wParam,mag.lParam);
+    return lRet;
+}
+</code></pre>
+<p>进程B：<br>
+EXE file：</p>
+<pre><code class="language-c++">void Somefunc(void)
+{
+    HWND hwnd=Findwindow(“class A”,NULL);
+    SetWindowLongPtr(hwnd,GWLP_WNDPROC,MySubclassProc);
+}
+</code></pre>
+<p>USER32.DLL file：</p>
+<pre><code class="language-c++">LONG DispatchMessage(CONST MSG*msg)
+{
+    LONG lRet;
+    WNDPROC lpfnWndProc=
+    (WNDPROC)GetWindowLongPtr(msg,hwnd,GWLP_WNDPROC);
+    lRet=lpfnWndProc(msg.hwnd,msg.message,msg.wParam,mag.lParam);
+    return lRet;
+} 
+</code></pre>
+<p>现在假设你的进程是进程B，你想为进程A中的线程创建的窗口建立子类：</p>
+<p>你在进程 B中的代码必须首先确定你想要建立子类的窗口的句柄。这个操作使用的方法很多。上图 显示的例子只是调用FindWindow函数来获得需要的窗口。<br>
+进程B中的线程调用<font color=red>SetWindowLongPtr</font>函数，试图改变窗口的WndProc的地址。（SetWindowLongPtr函数中的代码要查看是否有一个进程正在试图改变另一个进程创建的窗口的WndProc地址，然后将忽略这个函数的调用。 本节末尾会讲到，微软内部实现限制的）</p>
+<p>如果SetWindowLongPtr函数能够改变窗口的 WndProc，那将出现什么情况呢？<br>
+系统将把MySubclassProc的地址与特定的窗口关联起来。然后，当有一条消息被发送到这个窗口中时，进程A中的User32.dll代码将检索该消息，获得 MySubclassProc的地址，并试图调用这个地址。但是，这时可能遇到一个大问题。MySubclassProc将位于进程B的地址空间中，而进程 A却是个活动进程。<br>
+显然，如果User32想要调用该地址，它就要调用进程 A的地址空间中的一个地址，这就可能造成内存访问的违规。<br>
+<strong>为了避免这个问题的产生，应该让系统知道 MySubclassProc是在进程B的地址空间中，然后，在调用子类的过程之前，让系统执行一次上下文转换（即切换到进程B地址空间）。</strong></p>
+<p>Microsoft没有实现这个辅助函数功能，原因是：</p>
+<ul>
+<li>应用程序很少需要为其他进程的线程创建的窗口建立子类。大多数应用程序只是为它们自己创建的窗口建立子类，Windows的内存结构并不阻止这种创建操作。</li>
+<li>切换活动进程需要占用许多CPU时间。</li>
+<li>进程B中的线程必须执行MySubclassProc中的代码。系统究竟应该使用哪个线程呢？是现有的线程，还是新线程呢？</li>
+<li>-User32.dll怎样才能说明与窗口相关的地址是用于另一个进程中的过程，还是用于同一个进程中的过程呢？</li>
+<li>由于对这个问题的解决并没有什么万全之策，因此 Microsoft决定不让 Set WindowsLongPtr改变另一个进程创建的窗口过程。</li>
+<li>不过仍然可以为另一个进程创建的窗口建立子类—只需要用另一种方法来进行这项操作。这并不是建立子类的问题，而是进程的地址空间边界的问题。</li>
+</ul>
+<p>如果能将你的子类过程的代码放入进程A的地址空间，就可以方便地调用SetWindowLongPtr函数，将进程A的地址传递给MySubclassProc函数。我将这个方法称为将DLL“插入”进程的地址空间。有若干种方法可以用来进行这项操作。下面将逐个介绍它们。</p>
+<br>
+<h2 id="2-使用注册表来插入dll">2、使用注册表来插入DLL</h2>
+<p>在插入DLL时所用的所有方法中，这是最容易的一种方法。要做的工作只是将一个值添加到一个已经存在的注册表关键字中。然后，当User32.dll库被映射到进程中时，它将接收到一个 DLL_PROC ESS_ATTACH通知。</p>
+<p>当这个通知被处理时，User32.dll便检索保存的这个关键字中的值，并且为字符串中指定的每个 DLL调用LoadLibrary函数。当每个库被加载时，便调用与该库相关的 DllMain函数（fdwReason为DLL_PROCESS_ATTACH）这样，每个库就能够对自己进行初始化。</p>
+<p>不足：</p>
+<ul>
+<li>
+<p><font color=green>修改值后必须重新启动你的计算机</font>： 由于系统在初始化时要读取这个关键字的值，因此在修改这个值后必须重新启动你的计算机—即使退出后再登录，也不行。当然，如果从这个关键字的值中删除 D L L，那么在计算机重新启动之前，系统不会停止对库的映射操作。</p>
+</li>
+<li>
+<p><font color=green>你的DLL只会映射到使用User32.dll的进程中</font>： 所有基于GUI的应用程序均使用User32.dll，不过大多数基于 <font color=green>CUI的应用程序并不使用它</font>。因此，如果需要将 DLL插入编译器或链接程序，这种方法将不起作用。</p>
+</li>
+<li>
+<p><font color=green>你的DLL将被映射到每个基于 GUI的应用程序中，但是必须将你的库插入一个或几个进程中</font>。 你的DLL映射到的进程越多，“容器”进程崩溃的可能性就越大。毕竟在这些进程中运行的线程是在执行你的代码。如果你的代码进入一个无限循环，或者访问的内存不正确，就会影响代码运行时所在进程的行为特性和健壮性。因此，最好将你的库插入尽可能少的进程中。</p>
+</li>
+<li>
+<p>你的D L L将被映射到每个基于 GUI的应用程序中。这与上面的问题相类似。在理想的情况下，你的DLL只应该映射到需要的进程中，同时，它应该以尽可能少的时间映射到这些进程中。假设在用户调用你的应用程序时你想要建立 WordPad的主窗口的子类。在用户调用你的应用程序之前，你的 DLL不必映射到WordPad的地址空间中。如果用户后来决定终止你的应用程序的运行，那么你必须撤消 WordPad的主窗口。在这种情况下，你的D L L将不再需要被插入WordPad的地址空间。最好是仅在必要时保持DLL的插入状态。</p>
+</li>
+</ul>
+<br>
+<h2 id="3-使用windows挂钩来插入dll">3、使用Windows挂钩来插入DLL</h2>
+<p>钩子(Hook)，是Windows消息处理机制的一个平台，应用程序可以在上面设置子程以监视指定窗口的某种消息，而且所监视的窗口可以是其他进程所创建的。当消息到达后，在目标窗口处理函数之前处理它。钩子机制允许应用程序截获处理window消息或特定事件。</p>
+<p>钩子实际上是一个处理消息的 程序段，通过 系统调用，把它挂入系统。每当特定的消息发出，在没有到达目的窗口前， 钩子程序就先捕获该消息，亦即 钩子函数先得到控制权。这时钩子函数即可以加工处理（改变）该消息，也可以不作处理而继续传递该消息，还可以强制结束消息的传递。</p>
+<p><strong>3.1 SetWindowsHookEx函数</strong><br>
+该函数将一个应用程序定义的挂钩处理过程安装到挂钩链中去,你可以通过安装挂钩处理过程来对系统的某些类型事件进行监控,这些事件与某个特定的线程或系统中的所有事件相关。</p>
+<pre><code>HHOOK WINAPI SetWindowsHookEx(
+ 	int idHook, \\钩子类型
+	HOOKPROC lpfn, \\回调函数地址
+	HINSTANCE hMod, \\实例句柄
+	DWORD dwThreadId \\线程ID
+); 
+</code></pre>
+<p>idHook： 指明要安装的挂钩的类型。<br>
+lpfn： 指明窗口准备处理一个消息时系统应该调用的函数的地址。<br>
+hMod：包含GetMsgProc函数的D L L实例句柄。<br>
+dwThreadId ：线程ID，0用于指明要挂接所有 GUI线程。<br>
+返回值:<br>
+若此函数执行成功,则返回值就是该挂钩处理过程的句柄;若此函数执行失败,则返回值为NULL(0).若想获得更多错误信息,请调用GetLastError函数.</p>
+<p>钩子用SetWindowsHookEx安装，放在DDL中，有全局钩子的，比如键盘，鼠标等，也可以是线程的，指定窗口的（不是很准确，但实用）。是全局还是指定，主要是看SetWindowsHookEx中的参数设置：</p>
+<ul>
+<li>全局时：第三个参数为DLL的hInstance，第四个参数为NULL。</li>
+<li>线程时：第三个参数NULL。</li>
+<li>指定时：第三个参数为DLL的hInstance，第四个参数为为dwThreadId是指定窗口线程ID，这样你就能获得指定窗口的消息了。</li>
+</ul>
+<p>DLL怎么注入的疑问?<br>
+原理就是我们的窗口程序. 直接使用DLL里面的SetWindowsHookEx设置了一个回调. 而这个API是给全局所有应用程序（如果是全局设置）都设置了这个回调.那么如果有32位程序会触发回调.那么我们的DLL就会注入到里面去了。</p>
+<p><font color=red>注意：如果电脑安装有杀毒程序，会注入失败。</font></p>
+<p><strong>3.2 UnhookWindowsHookEx函数</strong><br>
+删除挂钩链中安装的钩子。</p>
+<pre><code>BOOL WINAPI UnhookWindowsHookEx( __in HHOOK hhk);
+</code></pre>
+<p>hhk：要删除的钩子的句柄。这个参数是上一个函数SetWindowsHookEx的返回值.</p>
+<p><strong>3.3 GetWindowThreadProcessId函数</strong><br>
+找出某个窗口的创建者（线程或进程），返回创建者的标志符。</p>
+<pre><code>DWORD GetWindowThreadProcessId(
+	HWND hWnd,
+	LPDWORD lpdwProcessId
+);
+</code></pre>
+<p>hWnd： （向函数提供的）被查找窗口的句柄.<br>
+lpdwProcessId：[out] 进程号的存放地址（变量地址）<br>
+返回值：返回线程号，注意，lpdwProcessId 是存放进程号的变量。返回值是线程号，lpdwProcessId 是进程号存放处。</p>
+<p><strong>3.4 PostThreadMessage函数</strong>*<br>
+将一个队列消息放入（寄送）到指定线程的消息队列里，不等待线程处理消息就返回。</p>
+<pre><code>BOOL PostThreadMessage(
+	DWORDidThread,
+	UINTMsg,
+	WPARAMwParam,
+	LPARAMIParam
+);
+</code></pre>
+<p>idThread：其消息将被寄送的线程的线程标识符。如果线程没有消息队列，此函数将失败。当线程第一次调用一个Win 32 USER或GDI函数时，系统创建线程的消息队列。要得到更多的信息，参见备注。<br>
+Msg：指定将被寄送的消息的类型。<br>
+wParam：指定附加的消息特定信息。<br>
+IParam：指定附加的消息特定信息。</p>
+<p><strong>3.5 GetMessage函数</strong><br>
+<strong>从调用线程的消息队列里取得一个消息并将其放于指定的结构。</strong> 此函数可取得与指定窗口联系的消息和由PostThreadMessage寄送的线程消息。此函数接收一定范围的消息值。GetMessage不接收属于其他线程或应用程序的消息。获取消息成功后，线程将从消息队列中删除该消息。函数会一直等待直到有消息到来才有返回值。</p>
+<pre><code>GetMessage(
+	LPMSG lpMsg,
+	HWND hWnd,
+	UINT wMsgFilterMin,
+	UINT wMsgFilterMax
+)
+</code></pre>
+<p>lpMsg：指向MSG结构的指针，该结构从线程的消息队列里接收消息信息。<br>
+hWnd：取得其消息的窗口的句柄。当其值取NULL时，GetMessage为任何属于调用线程的窗口检索消息，线程消息通过PostThreadMessage寄送给调用线程。<br>
+wMsgFilterMin：指定被检索的最小消息值的整数。<br>
+wMsgFilterMax：指定被检索的最大消息值的整数。</p>
+<p>返回值：如果函数取得WM_QUIT之外的其他消息，返回非零值。如果函数取得WM_QUIT消息，返回值是零。如果出现了错误，返回值是-1。例如，当hWnd是无效的窗口句柄或lpMsg是无效的指针时。若想获得更多的错误信息，请调用GetLastError函数。</p>
+<p><strong>3.6 SendMessage函数</strong><br>
+将指定的消息发送到一个或多个窗口。此函数为指定的窗口调用窗口程序，直到窗口程序处理完消息再返回。</p>
+<pre><code>LRESULT SendMessage(
+		HWND hWnd,
+		UINT Msg,
+		WPARAM wParam,
+		LPARAM IParam
+)
+</code></pre>
+<p>hWnd：指定要接收消息的窗口的句柄。如果此参数为HWND_BROADCAST，则消息将被发送到系统中所有顶层窗口，包括无效或不可见的非自身拥有的窗口、被覆盖的窗口和弹出式窗口，但消息不被发送到子窗口。<br>
+Msg：指定被发送的消息。<br>
+wParam：指定附加的消息特定信息。<br>
+IParam：指定附加的消息特定信息。<br>
+返回值：返回值指定消息处理的结果，依赖于所发送的消息。</p>
+<p><strong>3.7 GetFirstChild宏</strong><br>
+GetFirstChild()函数其实是一个宏定义：</p>
+<pre><code>#define GetFirstChild(hwnd) GetTopWindow(hwnd)\
+</code></pre>
+<p><strong>3.8 GetTopWindow函数</strong><br>
+GetTopWindow函数检查与特定父窗口相联的子窗口z序，并返回在z序顶部的子窗口的句柄。</p>
+<pre><code>HWND GetTopWindow(HWND hWnd);
+</code></pre>
+<p>hWnd:被查序的父窗口的句柄。如果该参数为NULL，函数返回Z序顶部的窗口句柄。<br>
+返回值；如果函数成功，返回值为在Z序顶部的子窗口句柄。如果指定的窗口无子窗口，返回值为NULL。</p>
+<p><strong>3.9  FindWindow函数</strong><br>
+FindWindow这个函数检索处理顶级窗口的类名和窗口名称匹配指定的字符串。这个函数不搜索子窗口。</p>
+<pre><code>HWND FindWindow(LPCSTR lpClassName,LPCSTR lpWindowName);
+</code></pre>
+<br>
+<h2 id="3-使用远程线程来插入dll">3、使用远程线程来插入DLL</h2>
+<p><font color=green>这种方法具有更大的灵活性</font>。它要求你懂得若干个Windows特性、如进程、线程、线程同步、虚拟内存管理、 DLL和Unicode等。Windows的大多数函数允许进程只对自己进行操作。这是很好的一个特性，因为它能够防止一个进程破坏另一个进程的运行。但是，有些函数却允许一个进程对另一个进程进行操作。这些函数大部分最初是为调试程序和其他工具设计的。不过任何函数都可以调用这些函数。</p>
+<p>此这种解决方案要求我们在目标进程中创建一个新线程。由于是自己创建这个线程，因此我们能够控制它执行什么代码。幸好，Windows提供了一个称为CreateRemoteThread的函数，使我们能够非常容易地在另一个进程中创建线程：</p>
+<pre><code class="language-c++">HANDLE CreateRemoteThread(
+     HANDLE hProcess,
+     LPSECURITY_ATTRIBUTES lpThreadAttributes,
+     SIZE_T dwStackSize,
+     LPTHREAD_START_ROUTINE lpStartAddress,
+     LPVOID lpParameter,
+     DWORD dwCreationFlags,
+     LPDWORD lpThreadId
+);
+</code></pre>
+<p><font color=green>CreateRemoteThread与CreateThread很相似，差别在于它增加了一个参数hProcess。该参数指明拥有新创建线程的进程</font>。参数lpStartAddress指明线程函数的内存地址。当然，该内存地址与远程进程是相关的。线程函数的代码不能位于你自己进程的地址空间中。</p>
+<p>如何才能让该线程加载我们的DLL呢？答案很简单，那就是需要该线程调用LoadLibrary函数：</p>
+<pre><code class="language-c++">HINSTANCE LoadLibrary(PCTSR pszLibFile);
+</code></pre>
+<p>如果观察WinBase. h文件中的LoadLibrary函数，你将会发现下面的代码：</p>
+<pre><code class="language-c++">WINBASEAPI
+_Ret_maybenull_
+HMODULE
+WINAPI
+LoadLibraryA(
+    _In_ LPCSTR lpLibFileName
+    );
+
+WINBASEAPI
+_Ret_maybenull_
+HMODULE
+WINAPI
+LoadLibraryW(
+    _In_ LPCWSTR lpLibFileName
+    );
+#ifdef UNICODE
+#define LoadLibrary  LoadLibraryW
+#else
+#define LoadLibrary  LoadLibraryA
+#endif // !UNICODE
+</code></pre>
+<p>我们必须进行的操作是执行类似下面的一行代码：</p>
+<pre><code class="language-c++">HANDLE hThread = CreateRemoteThread(hProcessRemote, NULL, 0, LoadLibraryA, &quot;C:\\MyLib.dll&quot;, 0, NULL);
+
+HANDLE hThread = CreateRemoteThread(hProcessRemote, NULL, 0, LoadLibraryW, L&quot;C:\\MyLib.dll&quot;, 0, NULL);
+</code></pre>
+<p>当在远程进程中创建新线程时，该线程将立即调用LoadLibraryA（或LoadLibraryW）函数，并将D L L的路径名的地址传递给它。这是非常容易的。但是这里存在另外两个问题。</p>
+<p>1、CreateRemoteThread的调用中使用一个对LoadLibraryA的直接引用，这将在你的模块的输入节中转换成LoadLibraryA的形实替换程序的地址。将形实替换程序的地址作为远程线程的起始地址来传递，会导致远程线程开始执行一些令人莫名其妙的东西。其结果很可能造成访问违规。若要强制直接调用LoadLibraryA函数，避开形实替换程序，必须通过调用GetProcAddress函数，获取LoadLibraryA的准确内存位置。</p>
+<pre><code class="language-c++">HMODULE hK32 = GetModuleHandle(TEXT(&quot;KERNEL32&quot;));
+FARPROC procAddress = (FARPROC)GetProcAddress(hK32, &quot;LoadLibraryW&quot;);
+HANDLE hThread = CreateRemoteThread(hProcessRemote, NULL, 0, procAddress, L&quot;C:\\MyLib.dll&quot;, 0, NULL);
+</code></pre>
+<p>2、第二个问题与 DLL路径名字符串有关。字符串“C:\MyLib.dll”是在调用进程的地址空间中。该字符串的地址已经被赋予新创建的远程线程，该线程将它传递给LoadLibraryA。但是，当LoadLibraryA取消对内存地址的引用时， DLL路径名字符串将不再存在，远程进程的线程就可能引发访问违规；</p>
+<p>为了解决这个问题，必须将 DLL的路径名字符串放入远程进程的地址空间中。然后，当CreateRemoteThread函数被调用时，我们必须将我们放置该字符串的地址（相对于远程进程的地址）传递给它。同样，Windows提供了一个函数，即VirtualAllocEx，使得一个进程能够分配另一个进程的地址空间中的内存：</p>
+<pre><code class="language-c++">LPVOID VirtualAllocEx( 
+   HANDLE hProcess,  //  申请内存所在的进程句柄 
+   LPVOID lpAddress,  //  保留页面的内存地址；一般用NULL自动分配 
+   SIZE_T dwSize,  //  欲分配的内存大小，字节单位；注意实际分 配的内存大小是页内存大小的整数倍 
+   DWORD flAllocationType, 
+   DWORD flProtect 
+);
+</code></pre>
+<p>另一个函数则使我们能够释放该内存：</p>
+<pre><code class="language-c++">BOOL VirtualFreeEx(
+  [in] HANDLE hProcess,
+  [in] LPVOID lpAddress,
+  [in] SIZE_T dwSize,
+  [in] DWORD  dwFreeType
+);
+</code></pre>
+<p>这两个函数与它们的非E x版本的函数（第1 5章已经做了介绍）是类似的。唯一的差别是这两个函数需要一个进程的句柄作为其第一个参数。这个句柄用于指明执行操作时所在的进程。</p>
+<p>一旦为该字符串分配了内存，我们还需要一种方法将该字符串从我们的进程的地址空间拷贝到远程进程的地址空间中。 Windows提供了一些函数，使得一个进程能够从另一个进程的地址空间中读取数据，并将数据写入另一个进程的地址空间。</p>
+<pre><code class="language-c++">BOOL ReadProcessMemory(
+  [in]  HANDLE  hProcess,
+  [in]  LPCVOID lpBaseAddress,
+  [out] LPVOID  lpBuffer,
+  [in]  SIZE_T  nSize,
+  [out] SIZE_T  *lpNumberOfBytesRead
+);
+
+BOOL WriteProcessMemory(
+  [in]  HANDLE  hProcess,
+  [in]  LPVOID  lpBaseAddress,
+  [in]  LPCVOID lpBuffer,
+  [in]  SIZE_T  nSize,
+  [out] SIZE_T  *lpNumberOfBytesWritten
+);
+</code></pre>
+<p>远程进程由hProcess参数来标识。参数lpBaseAddress用于指明远程进程中的地址，参数lpBuffer是本地进程中的内存地址，参数nSize是需要传送的字节数，lpNumberOfBytesRead和lpNumberOfBytesWritten用于指明实际传送的字节数。当函数返回时，可以查看这两个参数的值。</p>
+<p>既然已经知道了要进行操作，下面让我们将必须执行的操作步骤做一个归纳：</p>
+<ol>
+<li>使用Vi rtualAllocEx函数，分配远程进程的地址空间中的内存。</li>
+<li>使用WriteProcessMemory函数，将DLL的路径名拷贝到第一个步骤中已经分配的内存<br>
+中。</li>
+<li>使用GetProcAddress函数，获取LoadLibraryA或LoadLibraryW函数的实地址（在<br>
+Kernel32.dll中）。</li>
+<li>使用CreateRemoteThread函数，在远程进程中创建一个线程，它调用正确的 LoadLibrary<br>
+函数，为它传递第一个步骤中分配的内存的地址。这时， DLL已经被插入远程进程的地址空间中，同时DLL的DllMain函数接收到一个DLL_PROCESS_ATTACH通知，并且能够执行需要的代码。当 DllMain函数返回时，远程线程从它对 LoadLibrary的调用返回到 BaseThreadStart函数（第 6章中已经介绍）。然后BaseThreadStart调用ExitThread，使远程线程终止运行。现在远程进程拥有第一个步骤中分配的内存块，而 DLL则仍然保留在它的地址空间中。若要将它删除，需要在远程线程退出后执行下面的步骤：</li>
+<li>使用VirtualFreeEx函数，释放第一个步骤中分配的内存。</li>
+<li>使用GetProcAddress函数，获得FreeLibrary函数的实地址（在Kernel32.dll中）。</li>
+<li>使用CreateRemoteThread函数，在远程进程中创建一个线程，它调用 FreeLibrary函数，传递远程DLL的HINSTANCE。</li>
+</ol>
+<p>示例：</p>
+<pre><code class="language-c++">#include &quot;..\CommonFiles\CmnHdr.h&quot;     /* See Appendix A. */
+#include &lt;windowsx.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;tchar.h&gt;
+#include &lt;malloc.h&gt;        // For alloca
+#include &lt;TlHelp32.h&gt;
+#include &quot;Resource.h&quot;
+#include &lt;StrSafe.h&gt;
+
+#ifdef UNICODE
+   #define InjectLib InjectLibW
+   #define EjectLib  EjectLibW
+#else
+   #define InjectLib InjectLibA
+   #define EjectLib  EjectLibA
+#endif   // !UNICODE
+
+BOOL WINAPI InjectLibW(DWORD dwProcessId, PCWSTR pszLibFile) {
+
+   BOOL bOk = FALSE; // Assume that the function fails
+   HANDLE hProcess = NULL, hThread = NULL;
+   PWSTR pszLibFileRemote = NULL;
+
+   __try {
+      // Get a handle for the target process.
+      hProcess = OpenProcess(
+         PROCESS_QUERY_INFORMATION |   // Required by Alpha
+         PROCESS_CREATE_THREAD     |   // For CreateRemoteThread
+         PROCESS_VM_OPERATION      |   // For VirtualAllocEx/VirtualFreeEx
+         PROCESS_VM_WRITE,             // For WriteProcessMemory
+         FALSE, dwProcessId);
+      if (hProcess == NULL) __leave;
+
+      // Calculate the number of bytes needed for the DLL's pathname
+      int cch = 1 + lstrlenW(pszLibFile);
+      int cb  = cch * sizeof(wchar_t);
+
+      // Allocate space in the remote process for the pathname
+      pszLibFileRemote = (PWSTR) 
+         VirtualAllocEx(hProcess, NULL, cb, MEM_COMMIT, PAGE_READWRITE);
+      if (pszLibFileRemote == NULL) __leave;
+
+      // Copy the DLL's pathname to the remote process' address space
+      if (!WriteProcessMemory(hProcess, pszLibFileRemote, 
+         (PVOID) pszLibFile, cb, NULL)) __leave;
+
+      // Get the real address of LoadLibraryW in Kernel32.dll
+      PTHREAD_START_ROUTINE pfnThreadRtn = (PTHREAD_START_ROUTINE)
+         GetProcAddress(GetModuleHandle(TEXT(&quot;Kernel32&quot;)), &quot;LoadLibraryW&quot;);
+      if (pfnThreadRtn == NULL) __leave;
+
+      // Create a remote thread that calls LoadLibraryW(DLLPathname)
+      hThread = CreateRemoteThread(hProcess, NULL, 0, 
+         pfnThreadRtn, pszLibFileRemote, 0, NULL);
+      if (hThread == NULL) __leave;
+
+      // Wait for the remote thread to terminate
+      WaitForSingleObject(hThread, INFINITE);
+
+      bOk = TRUE; // Everything executed successfully
+   }
+   __finally { // Now, we can clean everything up
+
+      // Free the remote memory that contained the DLL's pathname
+      if (pszLibFileRemote != NULL) 
+         VirtualFreeEx(hProcess, pszLibFileRemote, 0, MEM_RELEASE);
+
+      if (hThread  != NULL) 
+         CloseHandle(hThread);
+
+      if (hProcess != NULL) 
+         CloseHandle(hProcess);
+   }
+
+   return(bOk);
+}
+
+BOOL WINAPI InjectLibA(DWORD dwProcessId, PCSTR pszLibFile) {
+
+   // Allocate a (stack) buffer for the Unicode version of the pathname
+   SIZE_T cchSize = lstrlenA(pszLibFile) + 1;
+   PWSTR pszLibFileW = (PWSTR) 
+      _alloca(cchSize * sizeof(wchar_t));
+
+   // Convert the ANSI pathname to its Unicode equivalent
+   StringCchPrintfW(pszLibFileW, cchSize, L&quot;%S&quot;, pszLibFile);
+
+   // Call the Unicode version of the function to actually do the work.
+   return(InjectLibW(dwProcessId, pszLibFileW));
+}
+
+BOOL WINAPI EjectLibW(DWORD dwProcessId, PCWSTR pszLibFile) {
+
+   BOOL bOk = FALSE; // Assume that the function fails
+   HANDLE hthSnapshot = NULL;
+   HANDLE hProcess = NULL, hThread = NULL;
+
+   __try {
+      // Grab a new snapshot of the process
+      hthSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, dwProcessId);
+      if (hthSnapshot == INVALID_HANDLE_VALUE) __leave;
+
+      // Get the HMODULE of the desired library
+      MODULEENTRY32W me = { sizeof(me) };
+      BOOL bFound = FALSE;
+      BOOL bMoreMods = Module32FirstW(hthSnapshot, &amp;me);
+      for (; bMoreMods; bMoreMods = Module32NextW(hthSnapshot, &amp;me)) {
+         bFound = (_wcsicmp(me.szModule,  pszLibFile) == 0) || 
+                  (_wcsicmp(me.szExePath, pszLibFile) == 0);
+         if (bFound) break;
+      }
+      if (!bFound) __leave;
+
+      // Get a handle for the target process.
+      hProcess = OpenProcess(
+         PROCESS_QUERY_INFORMATION |   
+         PROCESS_CREATE_THREAD     | 
+         PROCESS_VM_OPERATION,  // For CreateRemoteThread
+         FALSE, dwProcessId);
+      if (hProcess == NULL) __leave;
+
+      // Get the real address of FreeLibrary in Kernel32.dll
+      PTHREAD_START_ROUTINE pfnThreadRtn = (PTHREAD_START_ROUTINE)
+         GetProcAddress(GetModuleHandle(TEXT(&quot;Kernel32&quot;)), &quot;FreeLibrary&quot;);
+      if (pfnThreadRtn == NULL) __leave;
+
+      // Create a remote thread that calls FreeLibrary()
+      hThread = CreateRemoteThread(hProcess, NULL, 0, 
+         pfnThreadRtn, me.modBaseAddr, 0, NULL);
+      if (hThread == NULL) __leave;
+
+      // Wait for the remote thread to terminate
+      WaitForSingleObject(hThread, INFINITE);
+
+      bOk = TRUE; // Everything executed successfully
+   }
+   __finally { // Now we can clean everything up
+
+      if (hthSnapshot != NULL) 
+         CloseHandle(hthSnapshot);
+
+      if (hThread     != NULL) 
+         CloseHandle(hThread);
+
+      if (hProcess    != NULL) 
+         CloseHandle(hProcess);
+   }
+   return(bOk);
+}
+
+BOOL WINAPI EjectLibA(DWORD dwProcessId, PCSTR pszLibFile) {
+
+   // Allocate a (stack) buffer for the Unicode version of the pathname
+   SIZE_T cchSize = lstrlenA(pszLibFile) + 1;
+   PWSTR pszLibFileW = (PWSTR) 
+      _alloca(cchSize * sizeof(wchar_t));
+
+   // Convert the ANSI pathname to its Unicode equivalent
+      StringCchPrintfW(pszLibFileW, cchSize, L&quot;%S&quot;, pszLibFile);
+
+   // Call the Unicode version of the function to actually do the work.
+   return(EjectLibW(dwProcessId, pszLibFileW));
+}
+</code></pre>
+<br>
+<h2 id="4-使用特洛伊dll来插入dll">4、使用特洛伊DLL来插入DLL</h2>
+<p><font color=red>利用自己伪造的同名DLL取代软件内的将要加载的Xyz.DLL。</font><br>
+在你的Xyz.dll中，输出的全部符号必须与原始的Xyz.dll输出的符号相同。使用函数转发器（第2 0章做了介绍），很容易做到这一点。虽然函数转发器使你能够非常容易地挂接某些函数，你应该避免使用这种方法，因为它不具备版本升级能力。例如，如果你取代了一个系统 DLL，而Microsoft在将来增加了一些新函数，那么你的 DLL将不具备它们的函数转发器。引用这些新函数的应用程序将无法加载和执行。</p>
+<br>
+<h2 id="5-将dll作为调试程序来插入">5、将DLL作为调试程序来插入</h2>
+<p>调试程序能够对被调试的进程执行特殊的操作。当被调试进程加载时，在被调试进程的地址空间已经作好准备，但是被调试进程的主线程尚未执行任何代码之前，系统将自动将这个情况通知调试程序。这时，调试程序可以强制将某些代码插入被调试进程的地址空间中（比如使用WriteProcessMemory函数来插入），然后使被调试进程的主线程执行该代码。</p>
+<p>这种方法要求你对被调试线程的 CONTEXT结构进行操作，意味着必须编写特定 CPU的代码。必须修改你的源代码，使之能够在不同的 CPU平台上正确地运行。另外，必须对你想让被调试进程执行的机器语言指令进行硬编码。而且调试程序与它的被调试程序之间必须存在固定的关系。如果调试程序终止运行，Wi ndows将自动撤消被调试进程。而你则无法阻止它。</p>
+<br>
+<h2 id="6-用createprocess插入代码">6、用CreateProcess插入代码</h2>
+<p><strong>通过当前进程来生成目标进程，在目标进程作为子进程启动之前先将其挂起。同时会得到其主线程的句柄。通过这个句柄可以对线程执行的代码进行修改。</strong></p>
+<p>让一个进程对其子进程的主线程进行控制的一种方法：</p>
+<ol>
+<li>让进程生成一个被挂起的子进程</li>
+<li>从exe模块的文件头中得到主线程的起始内存地址</li>
+<li>将位于该内存地址处的机器指令保存起来</li>
+<li>强制将一些手动编写的机器指令写入到该内存地址处。这些指令应该调用一个LoadLibrary来载入一个DLL</li>
+<li>让子进程的主线程恢复运行，从而让这些指令得到执行。</li>
+<li>把保存起来的原始指令恢复到起始地址处</li>
+<li>让进程从起始地址继续执行，就好像什么都没发生一样。</li>
+</ol>
+<p>优点：</p>
+<ul>
+<li>它在应用程序执行之前就能得到地址空间</li>
+<li>它既能在Windows 98上使用，也能在Windows 2000上使用</li>
+<li>由于你不是调试者，因此能够很容易使用插入的D L L来调试应用程序</li>
+<li>这种方法可以同时用于控制台和 G U I应用程序。</li>
+</ul>
+<p>缺点：</p>
+<ul>
+<li>只有当你的代码在父进程时，才能插入 DLL。</li>
+<li>不能跨越不同的CPU来运行，必须对不同的C P U平台进行相应的修改。</li>
+</ul>
+<br>
+<h2 id="7-挂接api的一个示例">7、挂接API的一个示例</h2>
+<p><strong>7.1 通过改写代码来拦截API</strong><br>
+原理：<br>
+用汇编代码JUMP覆盖需要拦截目标函数。</p>
+<p>步骤：</p>
+<ol>
+<li>在内存中，对想要拦截的函数（假设是Kernel32.dll中的ExitProcess）进行定位，从而得到它的内存地址。</li>
+<li>把这个函数起始的几个字节保存到自己的内存中</li>
+<li>用CPU的一条JUMP指令来覆盖这个函数的起始几个字节，这条JUMP指令用来跳转到我们替代函数的内存地址。所有替代函数的签名必须要与拦截函数的签名完全相同：所有参数必须相同，返回值必须相同，调用约定也必须相同。</li>
+<li>当线程调用被拦截函数（hooked function）的时候，跳转指令实际上会跳转到我们的替代函数。这是可以执行自己想要执行的代码。</li>
+<li>为了撤销对该函数的拦截，必须把步骤2）中保存下来的直接放回被拦截函数的起始字节。</li>
+<li>我们调用被拦截函数，让该函数正常处理</li>
+<li>当原来的函数返回时，再次执行步骤2和步骤3，这样我们的代替函数将来还好被调用到。</li>
+</ol>
+<p>特点：</p>
+<ol>
+<li>它对cpu有依赖性x86， x64， ia-64其他cpu的JUMP指令各不相同，为了让这种方法工作必须手工编写机器指令。</li>
+<li>其次，这种方法在抢占式，多线程环境下根本不能工作。一个线程覆盖一个函数起始位置的代码是需要时间的，这个过程如果另一个线程试图调用同一个函数，结果是灾难性的。（除非保证任何时候只有一个线程会调用该函数）</li>
+</ol>
+<p><strong>7.2 通过操作模块的输入节来拦截API</strong><br>
+一个模块的导入段包含一组DLL，为了让模块能够运行，这些DLL是必须的。此外导入段还包含一个符号表，列出了该模块从各DLL中导入的符号。当该模块调用一个导入函数的时候，实际上是先从该模块的导入表中得到相应的导入函数的地址，然后再跳转到那个地址。</p>
+<p>原理：<br>
+修改特点函数在模块的输入节（导入段）中的地址。</p>
+<p>特点：<br>
+• 完全不存在对cpu的依赖性。<br>
+• 而且并不需要修改函数的代码，<br>
+• 也不用担心线程同步问题。</p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#1-%E6%8F%92%E5%85%A5dll%E4%B8%80%E4%B8%AA%E4%BE%8B%E5%AD%90">1、插入DLL：一个例子</a></li>
+<li><a href="#2-%E4%BD%BF%E7%94%A8%E6%B3%A8%E5%86%8C%E8%A1%A8%E6%9D%A5%E6%8F%92%E5%85%A5dll">2、使用注册表来插入DLL</a></li>
+<li><a href="#3-%E4%BD%BF%E7%94%A8windows%E6%8C%82%E9%92%A9%E6%9D%A5%E6%8F%92%E5%85%A5dll">3、使用Windows挂钩来插入DLL</a></li>
+<li><a href="#3-%E4%BD%BF%E7%94%A8%E8%BF%9C%E7%A8%8B%E7%BA%BF%E7%A8%8B%E6%9D%A5%E6%8F%92%E5%85%A5dll">3、使用远程线程来插入DLL</a></li>
+<li><a href="#4-%E4%BD%BF%E7%94%A8%E7%89%B9%E6%B4%9B%E4%BC%8Adll%E6%9D%A5%E6%8F%92%E5%85%A5dll">4、使用特洛伊DLL来插入DLL</a></li>
+<li><a href="#5-%E5%B0%86dll%E4%BD%9C%E4%B8%BA%E8%B0%83%E8%AF%95%E7%A8%8B%E5%BA%8F%E6%9D%A5%E6%8F%92%E5%85%A5">5、将DLL作为调试程序来插入</a></li>
+<li><a href="#6-%E7%94%A8createprocess%E6%8F%92%E5%85%A5%E4%BB%A3%E7%A0%81">6、用CreateProcess插入代码</a></li>
+<li><a href="#7-%E6%8C%82%E6%8E%A5api%E7%9A%84%E4%B8%80%E4%B8%AA%E7%A4%BA%E4%BE%8B">7、挂接API的一个示例</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://hensonguo.github.io/post/windows-he-xin-bian-cheng-xian-cheng-ben-di-cun-chu-qi-tls/">
+              <h3 class="post-title">
+                Windows核心编程-线程本地存储器TLS
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://hensonguo.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

@@ -1,0 +1,306 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>windows核心编程-虚拟内存 | Icode</title>
+<link rel="shortcut icon" href="https://hensonguo.github.io/favicon.ico?v=1704354032694">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://hensonguo.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="windows核心编程-虚拟内存 | Icode - Atom Feed" href="https://hensonguo.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="物理内存
+\qquadPC上有三条总线：数据总线、地址总线和控制总线。 32位CPU的寻址能力是4GB个字节，用户最多可以使用4GB的真实物理内存。PC中很多设备都提供了自己的设备内存，例如显卡就提供了自己的显存。这部分内存会映射到PC的物..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://hensonguo.github.io">
+  <img class="avatar" src="https://hensonguo.github.io/images/avatar.png?v=1704354032694" alt="">
+  </a>
+  <h1 class="site-title">
+    Icode
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              windows核心编程-虚拟内存
+            </h2>
+            <div class="post-info">
+              <span>
+                2023-06-07
+              </span>
+              <span>
+                25 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <h2 id="物理内存">物理内存</h2>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span><strong>PC上有三条总线：数据总线、地址总线和控制总线。</strong> 32位CPU的寻址能力是4GB个字节，用户最多可以使用4GB的真实物理内存。PC中很多设备都提供了自己的设备内存，例如显卡就提供了自己的显存。这部分内存会映射到PC的物理内存上，也就是读写这段物理地址，其实会读写的设备内存地址，而不会读写物理内存地址。</p>
+<br>
+<h2 id="虚拟空间">虚拟空间</h2>
+<p>很久很久以前的存储管理技术必须将作业全部装入内存才能执行且作业常驻内存直到运行结束，难以满足较大作业或较多作业进入内存执行。 为了能让作业的一部分装入就可以运行的存储管理技术叫做虚拟内存管理技术。</p>
+<p><strong>现代操作系统中的进程在使用内存的时候，都不是直接访问内存物理地址的，进程访问的都是虚拟内存地址，然后虚拟内存地址再转化为内存物理地址。<font color=red>虚拟内存就是硬盘中的一块区域，它用来存放内存里使用频率不高的页面文件,让使用频率高的页面文件活动在内存区域中，提高CPU对数据操作的速度。 </font></strong></p>
+<p>进程看到的所有地址组成的空间，就是虚拟空间。虚拟空间是某个进程对分配给它的所有物理地址（已经分配的和将会分配的）的重新映射。 在Linux中，这个区域叫做swap,一般大小应设置为物理内存的2倍。</p>
+<br>
+<h2 id="进程的虚拟地址空间">进程的虚拟地址空间</h2>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span> <strong>每个进程都被赋予它自己的虚拟地址空间。对于 32位进程来说，这个地址空间是4GB，因为32位指针可以拥有从0x00000000至0xFFFFFFFF之间的任何一个值。</strong> 这使得一个指针能够拥有4 294 967 296个值中的一个值，它覆盖了一个进程的4GB虚拟空间的范围。对于64位进程来说，这个地址空间是16GB（10的18次方字节），因为64位指针可以拥有从0x0000000000000000至0xFFFFFFFFFFFFFFFF之间的任何值。这使得一个指针可以拥有18 446 744 073 709 551 616个值中的一个值，它覆盖了一个进程的16EB虚拟空间的范围。这是相当大的一个范围。</p>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span><strong>这是个虚拟地址空间，不是物理地址空间。该地址空间只是内存地址的一个范围。在你能够成功地访问数据而不会出现违规访问之前，必须赋予物理存储器，或者将物理存储器映射到各个部分的地址空间。</strong></p>
+<br>
+<h2 id="虚拟地址空间如何分区">虚拟地址空间如何分区</h2>
+<p>每个进程的虚拟地址空间都要划分成各个分区。地址空间的分区是根据操作系统的基本实现方法来进行的。不同的Windows内核，其分区也略有不同。下表显示了每种平台是如何对进程的地址空间进行分区的。<br>
+<img src="https://hensonguo.github.io/post-images/1686132009300.jpg" alt="" loading="lazy"></p>
+<p>1） <strong>NULL指针分配的分区</strong><br>
+进程地址空间的这个分区的设置是为了帮助程序员掌握 NULL指针的分配情况。如果你的进程中的线程试图读取该分区的地址空间的数据，或者将数据写入该分区的地址空间，那么CPU就会引发一个访问违规。保护这个分区是极其有用的，它可以帮助你发现 N U L L指针的分配情况。<br>
+C/C + +程序中常常不进行严格的错误检查。例如，下面这个代码就没有进行任何错误检查：</p>
+<pre><code class="language-c++">int* pnSomeInteger = (int *) maclloc(sizeof(int));
+*pnSomeInteger = 5;
+</code></pre>
+<p><strong>如果malloc不能找到足够的内存来满足需要，它就返回 NULL。但是，该代码并不检查这种可能性，它认为地址的分配已经取得成功，并且开始访问 0x00000000地址的内存。由于这个分区的地址空间是禁止进入的，因此就会发生内存访问违规现象，同时该进程将终止运行。这个特性有助于编程员发现应用程序中的错误。</strong></p>
+<p>2）<strong>用户方式分区</strong><br>
+<strong>这个分区是进程的私有（非共享）地址空间所在的地方。</strong> 一个进程不能读取、写入、或者以任何方式访问驻留在该分区中的另一个进程的数据。对于所有应用程序来说，该分区是维护进程的大部分数据的地方。由于每个进程可以得到它自己的私有的、非共享分区，以便存放它的数据，因此，应用程序不太可能被其他应用程序所破坏，这使得整个系统更加健壮。</p>
+<p><strong>所有的.exe和DLL模块均加载这个分区。每个进程可以将这些DLL加载到该分区的不同地址中（不过这种可能性很小）。系统还可以在这个分区中映射该进程可以访问的所有内存映射文件。</strong></p>
+<p>3）<strong>内核方式分区</strong><br>
+<strong>这个分区是存放操作系统代码的地方。用于线程调度、内存管理、文件系统支持、网络支持和所有设备驱动程序的代码全部在这个分区加载。驻留在这个分区中的一切均可被所有进程共享。</strong> 在Windows 2000中，这些组件是完全受到保护的。如果你试图访问该分区中的内存地址，你的线程将会产生访问违规，导致系统向用户显示一个消息框，并关闭你的应用程序。</p>
+<br>
+<h2 id="地址空间中的区域">地址空间中的区域</h2>
+<p><strong>当进程被创建并被赋予它的地址空间时，该可用地址空间的主体是空闲的，即未分配的。若要使用该地址空间的各个部分，必须通过调用VirtualAlloc函数来分配它里边的各个区域。对一个地址空间的区域进行分配的操作称为保留 (reserving)。</strong></p>
+<p>每当你保留地址空间的一个区域时，系统要确保该区域从一个分配粒度的边界开始。对于不同的CPU平台来说，分配粒度是各不相同的。但是，截止到撰写本书时，<strong>所有的 CPU平台（x86、32位Alpha、64位Alpha和IA-64）都使用64KB这个相同的分配粒度。</strong></p>
+<p>当你保留地址空间的一个区域时，系统还要确保该区域的大小是系统的页面大小的倍数。页面是系统在管理内存时使用的一个内存单位。与分配粒度一样，不同的 CPU，其页面大小也是不同的。x86使用的页面大小是4KB，而Alpha（当既能运行32位Windows 2000也能运行64位Windows 2000时）使用的页面大小则是 8KB。</p>
+<p>注意 有时系统能够代表你的进程来保留地址空间的区域。例如，系统可以分配一个地址空间区域，以便存放进程环境块（FEB）。FEB是由系统创建、操作和撤消的一个小型数据结构。当创建一个进程时，系统就FEB分配一个地址空间区域。</p>
+<p>系统也需要创建一个线程环境块（TEB），以便管理进程中当前存在的所有线程。用于这些TEB的区域将根据进程中的线程被创建和撤消等情况而保留和释放。</p>
+<p>虽然系统规定，要求保留的地址空间区域均从分配粒度边界（目前所有平台上均为64KB）开始，但是系统本身并不受这个规定的限制。为你的进程的 PEB和TEB保留的地址空间区域很可能不是从 64 KB这个边界开始的。不过这些保留区域仍然必须是CPU的页面大小的倍数。</p>
+<p>如果想保留一个10KB的地址空间区域，系统将自动对你的请求进行四舍五入，使保留的地址空间区域的大小是页面大小的倍数。这意味着，在 x86平台上，系统将保留一个12KB的区域，在Alpha平台上，系统将保留一个16KB的区域。</p>
+<p>当你的程序算法不再需要访问已经保留的地址空间区域时，该区域应该被释放。这个过程称为释放地址空间的区域，它是通过调用VirtualFree函数来完成的。</p>
+<br>
+<h2 id="提交地址空间区域中的物理存储器">提交地址空间区域中的物理存储器</h2>
+<p><strong>若要使用已保留的地址空间区域，必须分配物理存储器，然后将该物理存储器映射到已保留的地址空间区域。这个过程称为提交物理存储器。物理存储器总是以页面的形式来提交的。若要将物理存储器提交给一个已保留的地址空间区域，也要调用VirtualAlloc函数。</strong></p>
+<p>当将物理存储器提交给地址空间区域时，不必将物理存储器提交给整个区域。例如，可以保留一个64KB的区域，然后将物理存储器提交给该区域中的第二和第四个页面。下图显示了进程的地址空间是个什么样子。注意，根据运行的CPU平台的不同，地址空间是各有差别的。左边的地址空间显示了x86计算机（它的页面大小是4 KB）上的情况，而右边的地址空间则显示了Alpha计算机（它的页面大小是 8KB）上发生的情况。<br>
+<img src="https://hensonguo.github.io/post-images/1686305770685.jpg" alt="" loading="lazy"></p>
+<p>当你的程序算法不再需要访问保留的地址空间区域中已提交的物理存储器时，该物理存储器应该被释放。这个过程称为回收物理存储器，它是通过VirtualFree函数来完成的。</p>
+<br>
+<h2 id="物理存储器与页文件">物理存储器与页文件</h2>
+<p>在较老的操作系统中，物理存储器被视为计算机拥有的RAM的容量。换句话说，如果计算机拥有16MB的RAM，那么加载和运行的应用程序最多可以使用16MB的RAM。今天的操作系统能够使得磁盘空间看上去就像内存一样。磁盘上的文件通常称为页文件，它包含了可供所有进程使用的虚拟内存。</p>
+<p>当然，若要使虚拟内存能够运行，需要得到 CPU本身的大量帮助。当一个线程试图访问一个字节的内存时，CPU必须知道这个字节是在RAM中还是在磁盘上。</p>
+<p>从应用程序的角度来看，页文件透明地增加了应用程序能够使用的 RAM（即内存）的数量。如果计算机拥有64MB的RAM，同时在硬盘上有一个100 MB的页文件，那么运行的应用程序就认为计算机总共拥有164MB的RAM。</p>
+<p>当然，实际上并不拥有164M B的RAM。相反，操作系统与CPU相协调，共同将RAM的各个部分保存到页文件中，当运行的应用程序需要时，再将页文件的各个部分重新加载到 RAM。由于页文件增加了应用程序可以使用的RAM的容量，因此页文件的使用是视情况而定的。如果没有页文件，那么系统就认为只有较少的 RAM可供应用程序使用。但是，我们鼓励用户使用页文件，这样他们就能够运行更多的应用程序，并且这些应用程序能够对更大的数据集进行操作。最好将物理存储器视为存储在磁盘驱动器（通常是硬盘驱动器）上的页文件中的数据。这样，当一个应用程序通过调用VirtualAlloc函数，将物理存储器提交给地址空间的一个区时，<br>
+地址空间实际上是从硬盘上的一个文件中进行分配的。系统的页文件的大小是确定有多少物理存储器可供应用程序使用时应该考虑的最重要的因素， RAM的容量则影响非常小。<br>
+<img src="https://hensonguo.github.io/post-images/1686317015670.jpg" alt="" loading="lazy"></p>
+<p>现在，当你的进程中的一个线程试图访问进程的地址空间中的一个数据块时，将会发生两种情况之一，参见图13-2中的流程图。</p>
+<p>在第一种情况中，线程试图访问的数据是在 RAM中。在这种情况下， CPU将数据的虚拟内存地址映射到内存的物理地址中，然后执行需要的访问。</p>
+<p>在第二种情况中，线程试图访问的数据不在 RAM中，而是存放在页文件中的某个地方。这时，试图访问就称为页面失效， CPU将把试图进行的访问通知操作系统。这时操作系统就寻找RAM中的一个内存空页。如果找不到空页，系统必须释放一个空页。如果一个页面尚未被修改，系统就可以释放该页面。但是，如果系统需要释放一个已经修改的页面，那么它必须首先将该页面从 RAM拷贝到页交换文件中，然后系统进入该页文件，找出需要访问的数据块，并将数据加载到空闲的内存页面。然后，操作系统更新它的用于指明数据的虚拟内存地址现在已经映射到 RAM中的相应的物理存储器地址中的表。这时 CPU重新运行生成初始页面失效的指令，但是这次CPU能够将虚拟内存地址映射到一个物理 RAM地址，并访问该数据块。</p>
+<p>系统需要将内存页面拷贝到页文件并反过来将页文件拷贝到内存页面的次数越多，你的硬盘倒腾的次数就越多，系统运行得越慢（倒腾意味着操作系统要花费更多的时间将页面从内存中转出转进，而不是将时间用于程序的运行）。因此，通过给你的计算机增加更多的 R A M，就可以减少运行应用程序所需的倒腾次数，这就必然可以大大提高系统的运行速度。所以必须遵循一条基本原则，那就是要让你的计算机运行得更块，增加更多的 RAM。实际上，在大多数情况下，若要提高系统的运行性能，增加R A M比提高C P U的速度所产生的效果更好。</p>
+<p>2）不在页文件中维护的物理存储器<br>
+当阅读了上一节后，你必定会认为，如果同时运行许多文件的话，页文件就可能变得非常大，而且你会认为，每当你运行一个程序时，系统必须为进程的代码和数据保留地址空间的一些区域，将物理存储器提交给这些区域，然后将代码和数据从硬盘上的程序文件拷贝到页文件中已提交的物理存储器中。</p>
+<p>实际上系统并不进行上面所说的这些操作。如果它进行这些操作的话，就要花费很长的时间来加载程序并启动它运行。相反，当启动一个应用程序的时候，系统将打开该应用程序的. exe文件，<strong>确定该应用程序的代码和数据的大小。然后系统要保留一个地址空间的区域，并指明与该区域相关联的物理存储器是在 . exe文件本身中</strong>。即系统并不是从页文件中分配地址空间，而是将. exe文件的实际内容即映像用作程序的保留地址空间区域。当然，这使应用程序的加载非常迅速，并使页文件能够保持得非常小。</p>
+<p>当硬盘上的一个程序的文件映像（这是个 . exe文件或DLL文件）用作地址空间的区域的物理存储器时，它称为内存映射文件。当一个 . exe文件或DLL文件被加载时，系统将自动保留一个地址空间的区域，并将该文件映像映射到该区域中。但是，系统也提供了一组函数，使你能够将数据文件映射到一个地址空间的区域中。关于内存映射文件的详细说明，将在第 1 7章中介绍。</p>
+<br>
+<h2 id="保护属性">保护属性</h2>
+<p>已经分配的物理存储器的各个页面可以被赋予不同的保护属性。表 1 3 - 2显示了这些保护属性。<br>
+x86和Alpha CPU不支持“执行”保护属性，不过操作系统软件却支持这个属性。这些 CPU将读访问视为执行访问。这意味着如果将 PAGE_EXECUTE保护属性赋予内存，那么该内存也将拥有读优先权。当然，不应该依赖这个行为特性，因为在其他 CPU上的Windows实现代码很可能将“执行”保护视为“仅为执行”保护。<br>
+<img src="https://hensonguo.github.io/post-images/1686323137246.jpg" alt="" loading="lazy"></p>
+<p>1）Copy-On-Write 访问<br>
+表13-2列出的保护属性都是非常容易理解的，不过最后两个属性需要作一些说明。一个是<br>
+PAGE_WRITECOPY，另一个是PAGE_EXECUTE_WRITECOPY。这两个属性的作用是为了节省RAM的使用量和页文件的空间。Windows支持一种机制，使得两个或多个进程能够共享单个内存块。因此，如果 10个Notepad实例正在运行，那么所有实例可以共享应用程序的代码和数据页面。让所有实例共享同样的内存页面将能够大大提高系统的性能，但是这要求所有实例都将该内存视为只读或只执行的内存。如果一个实例中的线程将数据写入内存修改它，那么其他实例看到的这个内存也将被修改，从而造成一片混乱。</p>
+<p>为了防止出现这种混乱，操作系统给共享内存块赋予了Copy-On-Write保护属性。当一个.exe或DLL模块被映射到一个内存地址时，系统将计算有多少页面是可以写入的（通常包含代码的页面标为 PAGE_EXECUTE_READ，而包含数据的页面则标为 PAGE_READWRITE）。然后，系统从页文件中分配内存，以适应这些可写入的页面的需要。除非该模块的可写入页面是实际的写入模块，否则这些页文件内存是不使用的。</p>
+<p>此外，当使用 VirtualAlloc函数来保留地址空间或者提交物理存储器时，不应该传递PAGE_WRITECOPY或PAGE_EXECUTE_WRITECOPY。如果传递的话，将会导致VirtualAlloc调用的失败。GetLastErro的调用将返回ERROR_INVALID_PARAMETER。当操作系统映射. exe或DLL文件映像时，这两个属性将被操作系统使用。</p>
+<p>2）特殊的访问保护属性的标志<br>
+除了上面介绍的保护属性外，还有 3个保护属性标志，即 PAGE_NOCACHE，PAGE_WRITECOMBINE和PAGE_GUARD。可以用OR逐位将它们连接，以便将这 3个标志用于任何一个保护属性（PAGE_NOCACHE除外）。<br>
+第一个保护属性标志PAGE_NOCACHE用于停用已提交页面的高速缓存。一般情况下最好不要使用该标志，因为它主要是供需要处理内存缓冲区的硬件设备驱动程序的开发人员使用的。<br>
+第二个保护属性PAGE_WRITECOMBINE也是供设备驱动程序开发人员使用的。它允许把单个设备的多次写入合并在一起，以便提高运行性能。<br>
+最后一个保护属性标志PAGE_GUARD可以在页面上写入一个字节时使应用程序收到一个通知（通过一个异常条件）。该标志有一些非常巧妙的用法。 Windows 2000在创建线程堆栈时使用该标志。关于该标志的详细说明，参见第1 6章。</p>
+<br>
+<h2 id="综合使用所有的元">综合使用所有的元</h2>
+<p>在32位x86计算机上的Windows 2000下运行VMMap时，下表中的地址空间表显示了进程的地址空间中的各个不同区域:</p>
+<p>基地址          类型            大小块          保护属性       描 述<br>
+00000000    空闲            65536<br>
+00010000    私有            40961           -RW<br>
+00011000    空闲            61440<br>
+00020000    私有            40961           -RW<br>
+00021000    空闲            61440<br>
+00030000    私有            10485763     -RW-           线程堆栈<br>
+00130000    私有            10485762     -RW-<br>
+00230000    映射            655362         -RW-<br>
+00240000    映射            901121         -RW- \Device\HarddiskVolume1\WINNT\system32\unicode. nls<br>
+00256000    空闲            40960<br>
+00260000    映射            2088961       -R-- \Device\HarddiskVolume1\WINNT\system32\locale.nls<br>
+...<br>
+00300000    映射            8192004         ER--<br>
+003C8000    空闲            229376<br>
+00400000    映像            1064965         ERWC        C:\CD\x86\Debug\14\VMMap.exe<br>
+0041A000    空闲            24576<br>
+...<br>
+699D0000    映像            450564          ERWC    C:\WINNT\System32\PSAPI.dll<br>
+...<br>
+78000000    映像             2908166        ERWC    C:\WINNT\System32\MSVCR.dll<br>
+78047000    空闲            24424192<br>
+7F6F0000    映射            10485762        ER--<br>
+7F7F0000    空闲            8126464<br>
+7FFB0000    映射            1474561          -R--<br>
+7FFD4000    空闲            40960<br>
+7FFDE000    私有            40961              ERW-<br>
+7FFDF000    私有            40961              ERW-<br>
+7FFE0000    私有            655362             - R - -</p>
+<p><strong>第一列，即最左边的一列显示了区域的基地址。你会发现我们是从地址为 0x00000000的区域开始观察进程的地址空间的，</strong> 并在可用地址空间的最后一个区域结束，该区域的起始地址是0x7FFE0000 。所有区域都是相邻的。你也会注意到，<strong>非空闲区域的所有基地址几乎都是从64KB的倍数上开始的</strong> 。这是由系统采用的保留地址空间的分配粒度所决定的。不是从分配粒度边界开始的区域，表示该区域是由操作系统代码代表你的进程来分配的。</p>
+<p>第二列显示了区域的类型。区域类型共有 4个值，即空闲，私有，映像或映射。</p>
+<ul>
+<li>空闲：该区域的虚拟地址不受任何内存的支持。该地址空间没有被保留。应用程序既可以将一个区域保留在显示的基地址上，也可以保留在空闲区域中的任何位置上</li>
+<li>私有：该区域的虚拟地址将受系统的页文件的支持。</li>
+<li>映像：该区域的虚拟地址原先受内存映射的映像文件（如 . exe或DLL文件）的支持，但也许不再受映像文件的支持。例如，当写入模块映像中的全局变量时，“写入时拷贝”的机制将由页文件来支持特定的页面，而不是受原始映像文件的支持</li>
+<li>映射：该区域的虚拟地址原先是受内存映射的数据文件的支持，但也许不再受数据文件的支持。例如，数据文件可以使用“写入时拷贝”的保护属性来映射。对文件的任何写入操作都将导致页文件而不是原始数据支持特定的页面</li>
+</ul>
+<p>我的VMMap应用程序计算这一列的方法可能产生错误的结果。当地址空间区域不空闲时，VNNap示例应用程序就要猜测剩余的 3个值中哪一个可以使用。没有一个函数可以调用，以便确定该区域的准确用途。这一列的值的方法是，对区域中的所有内存块进行扫描，然后进行合乎逻辑的推测。可以参考第14章中的代码，以便更好地了解计算方法。</p>
+<p>第三列显示了为该区域保留的字节数量。例如，系统将 User. DLL的映像映射到内存地址0x77E20000。当系统为该映像保留地址空间时，它必须保留 401 408个字节。第三列中的数字，总是CPU的页面大小的倍数（x86CPU为4096字节）。</p>
+<p>第四列显示了保留区域中的块的数量。所谓块是指一组相邻的页面，它们拥有相同的保护属性，并且都是受相同类型的物理存储器支持的。下一节将要详细介绍这个问题。对于空闲区域来说，这个值始终都是 0，因为在空闲区域中不能提交任何内存（在第四列中空闲区域不显示任何信息）。对于非空闲区域来说，这个值可以是 1到区域大小/页面大小的最大数字之间的任何值。例如，从内存地址 0x77E20000开始的区域，它的区域大小是 401 408个字节。由于该进程是在x86 CPU上运行的（x86 CPU的页面大小是4 0 9 6个字节），因此提交的各种不同的块的最大数量是9 8（401 408/4096）。表中显示该区域中的块的数量是4。</p>
+<p>第五列显示了区域的保护属性。各个字母所代表的含义是： E=执行，R=读取，W=写入，C=写入时拷贝。如果一个区域没有显示任何保护属性，那么该区域就没有访问保护。空闲区域没有显示任何保护属性，因为未保留区域不拥有与其相关联的保护属性。这里决不会出现第13章Windows的内存结构计计311 下载GUARD保护属性标志或NO-CACHE保护属性标志。只有当这些标志与物理存储器相关联，而不是与保留的地址空间相关联时，它们才具有意义。给一个区域赋予保护属性的目的只是为了提高效率，并且总是会被赋予物理存储器的保护属性所取代。</p>
+<p>第六列即最后一列显示了区域中的信息的文字描述。如果是空闲区域，那么这一列总是空的。如果是私有区域，它通常也是空的，因为 VMMap没有办法知道应用程序为什么要保留这个私有地址空间区域。但是，VMMap能够识别包含线程堆栈的私有区域。VMMap通常能够发现线程堆栈，因为它们通常拥有一个具有 GUARD保护属性的物理存储器块。不过，当线程堆栈满了的时候，它就不再拥有一个保护属性为GUARD的物理存储器块，同时VMMap将无法发现它。</p>
+<p>对于映像区域来说， VMMap将显示映射到该区域中的文件的全路径名。使用 ToolHelp函数，VMMap就可以获得该信息。在 Windows 2000中，通过调用 GetMappedFileName函数（Windows 98中没有这个函数），VMMap就能够显示受数据文件支持的区域。</p>
+<br>
+<h2 id="数据对齐的重要性">数据对齐的重要性</h2>
+<p><strong>数据对齐并不是操作系统的内存结构的一部分，而是CPU结构的一部分。</strong></p>
+<p>**当CPU访问正确对齐的数据时，它的运行效率最高。**当数据大小的数据模数的内存地址是0时，数据是对齐的。例如，WORD值应该总是从被2除尽的地址开始，而DWORD值应该总是从被4除尽的地址开始，如此等等。当 CPU试图读取的数据值没有正确对齐时， CPU可以执行两种操作之一。即它可以产生一个异常条件，也可以执行多次对齐的内存访问，以便读取完整的未对齐数据值。</p>
+<p>显然，如果CPU执行多次内存访问，应用程序的运行速度就会放慢。<strong>在最好的情况下，系统访问未对齐的数据所需要的时间将是访问对齐数据的时间的两倍</strong> ，不过在有些情况下，访问时间可能更长。为了使应用程序获得最佳的运行性能，编写的代码必须使数据正确地对齐。</p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#%E7%89%A9%E7%90%86%E5%86%85%E5%AD%98">物理内存</a></li>
+<li><a href="#%E8%99%9A%E6%8B%9F%E7%A9%BA%E9%97%B4">虚拟空间</a></li>
+<li><a href="#%E8%BF%9B%E7%A8%8B%E7%9A%84%E8%99%9A%E6%8B%9F%E5%9C%B0%E5%9D%80%E7%A9%BA%E9%97%B4">进程的虚拟地址空间</a></li>
+<li><a href="#%E8%99%9A%E6%8B%9F%E5%9C%B0%E5%9D%80%E7%A9%BA%E9%97%B4%E5%A6%82%E4%BD%95%E5%88%86%E5%8C%BA">虚拟地址空间如何分区</a></li>
+<li><a href="#%E5%9C%B0%E5%9D%80%E7%A9%BA%E9%97%B4%E4%B8%AD%E7%9A%84%E5%8C%BA%E5%9F%9F">地址空间中的区域</a></li>
+<li><a href="#%E6%8F%90%E4%BA%A4%E5%9C%B0%E5%9D%80%E7%A9%BA%E9%97%B4%E5%8C%BA%E5%9F%9F%E4%B8%AD%E7%9A%84%E7%89%A9%E7%90%86%E5%AD%98%E5%82%A8%E5%99%A8">提交地址空间区域中的物理存储器</a></li>
+<li><a href="#%E7%89%A9%E7%90%86%E5%AD%98%E5%82%A8%E5%99%A8%E4%B8%8E%E9%A1%B5%E6%96%87%E4%BB%B6">物理存储器与页文件</a></li>
+<li><a href="#%E4%BF%9D%E6%8A%A4%E5%B1%9E%E6%80%A7">保护属性</a></li>
+<li><a href="#%E7%BB%BC%E5%90%88%E4%BD%BF%E7%94%A8%E6%89%80%E6%9C%89%E7%9A%84%E5%85%83">综合使用所有的元</a></li>
+<li><a href="#%E6%95%B0%E6%8D%AE%E5%AF%B9%E9%BD%90%E7%9A%84%E9%87%8D%E8%A6%81%E6%80%A7">数据对齐的重要性</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://hensonguo.github.io/post/windows-he-xin-bian-cheng-xian-cheng-chi-de-shi-yong/">
+              <h3 class="post-title">
+                windows核心编程-线程池的使用和纤程
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://hensonguo.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

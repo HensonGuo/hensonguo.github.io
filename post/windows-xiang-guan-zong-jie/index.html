@@ -1,0 +1,208 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>windows相关总结 | Icode</title>
+<link rel="shortcut icon" href="https://hensonguo.github.io/favicon.ico?v=1704354032694">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://hensonguo.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="windows相关总结 | Icode - Atom Feed" href="https://hensonguo.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="
+
+工作原理中心思想
+中心思想就是“动态链接”的概念。windows自带有一套函数，应用程序就是通过调用这些函数来实现它的用户界面和屏幕上显示的文本与图形的。这些函数都是在动态链接库里实现的。
+主要分为3个动态库：
+内核(kernel)：负..." />
+    <meta name="keywords" content="windows" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://hensonguo.github.io">
+  <img class="avatar" src="https://hensonguo.github.io/images/avatar.png?v=1704354032694" alt="">
+  </a>
+  <h1 class="site-title">
+    Icode
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              windows相关总结
+            </h2>
+            <div class="post-info">
+              <span>
+                2022-08-26
+              </span>
+              <span>
+                4 min read
+              </span>
+              
+                <a href="https://hensonguo.github.io/tag/_UJRJUqWs/" class="post-tag">
+                  # windows
+                </a>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <ol>
+<li>
+<p><strong>工作原理中心思想</strong><br>
+中心思想就是“<font color=red>动态链接</font>”的概念。windows自带有一套函数，应用程序就是通过调用这些函数来实现它的用户界面和屏幕上显示的文本与图形的。这些函数都是在动态链接库里实现的。<br>
+主要分为3个动态库：<br>
+<strong>内核(kernel)：负责操作系统的传统工作，包括内存管理、输入输出、任务管理等<br>
+用户(user)：指的是用户界面，负责管理所有的窗口管理。<br>
+GDI：就是图形设备接口，负责再显示器或打印机上显示文本与图形。</strong></p>
+</li>
+<li>
+<p><strong>windows函数与调用C语义的库函数（如strlen）区别</strong><br>
+单纯从调用角度看，无区别。最主要的区别是C语言库函数的机器代码会直接链接到你的程序代码中（嵌入）；而windows则是放在你的程序之外的dll里（动态链接）。</p>
+</li>
+<li>
+<p><strong>windows产生dumps的原理</strong><br>
+Windows历史上BUG比较多，无故宕机、程序卡死的例子较多，为了避免无迹象可循的情况，Microsoft 推出 Dump机制在宕机时先进行蓝屏收集宕机前状态，并且可以捕获到导致异常的关键错误，当Windows出现异常Crash时Windows会调用Dump系统来形成一个转储文件（*.dmp），通过特殊工具可以进行分析。</p>
+<p>如何确保有Dump文件？</p>
+<p>1、 要清楚，Dump文件是Windows启动的一个保险机制，而蓝屏主要是用做给系统争取时间进行收集Dump文件所用，所以一个逻辑是必然会有的，那就是如果蓝屏必然触发Dump机制，Dump机制会根据系统设置进行Mini或Full的收集。</p>
+<p>2、 关于Dump文件的大小，如果Dump设置的存放位置不满足Dump文件大小也是不会产生Dump文件：</p>
+<p>a) MiniDump文件大小：取决于Windows 运行时内存页大小，比如当前CVM跑的是数据库，那么产生的Dump文件大小就是数据库交换内存的概要信息，比如说16G内存有20%被使用，宕机时所产生的Dump文件就是3.2g的概要信息（即涉及到的进程的大概地址）</p>
+<p>b) FullDump文件大小：取决于Windows物理内存大小，FullDump即完整收集模式，将整个系统在宕机时的整个内存运行态进行记录，通常该文件的大小是物理大小的1.0 ~ 1.5倍左右（倍数的浮动取决于虚拟内存交换设置的大小）</p>
+</li>
+<li>
+<p><strong>window下调试C++内存泄漏的几种方法</strong></p>
+<ol>
+<li>VS2019自带的诊断工具，可在程序运行时打开诊断工具窗口-----》勾选内存使用率----》启用堆栈快照，<font color=red>通过内存快照比较分配和释放的数量和位置</font>。<br>
+<img src="https://hensonguo.github.io/post-images/1662623813577.jpg" alt="" loading="lazy"><br>
+<img src="https://hensonguo.github.io/post-images/1662623839626.jpg" alt="" loading="lazy"></li>
+<li>windows CRT调试（Find memory leaks with the CRT library）官方有详细使用描述：官网链接：<a href="https://docs.microsoft.com/en-us/visualstudio/debugger/finding-memory-leaks-using-the-crt-library?view=vs-2019#enable-memory-leak-detection">Find memory leaks with the CRT Library - Visual Studio (Windows) | Microsoft Docs</a></li>
+<li><strong>重载new和delete操作符</strong>：在C++中，可以通过重载new和delete操作符来跟踪内存的分配和释放情况。通过在重载函数中添加打印语句或者断点，可以在程序运行时跟踪内存的分配和释放情况，从而找到内存泄漏的位置。</li>
+<li><strong>使用智能指针</strong>：使用智能指针可以避免忘记释放内存的问题，智能指针会在对象不再被使用时自动释放内存。使用智能指针可以减少内存泄漏的风险。</li>
+<li>养成良好的c++编码习惯、合理利用RAII机制</li>
+</ol>
+</li>
+</ol>
+
+              </div>
+              <div class="toc-container">
+                
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://hensonguo.github.io/post/ascii-ma-zhong-x-zai-biao-shi-shi-me-yi-si/">
+              <h3 class="post-title">
+                ASCII码中\X在表示什么意思
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://hensonguo.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

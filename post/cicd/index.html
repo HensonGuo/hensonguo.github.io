@@ -1,0 +1,220 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CI/CD | Icode</title>
+<link rel="shortcut icon" href="https://hensonguo.github.io/favicon.ico?v=1704354032694">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://hensonguo.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="CI/CD | Icode - Atom Feed" href="https://hensonguo.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="CI/CD 是一种通过在应用开发阶段引入自动化来频繁向客户交付应用的方法。
+CI/CD 的核心概念是持续集成、持续交付和持续部署。它是作为一个面向开发和运营团队的解决方案，主要针对在集成新代码时所引发的问题（也称为：“集成地狱”）。
+CI/..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://hensonguo.github.io">
+  <img class="avatar" src="https://hensonguo.github.io/images/avatar.png?v=1704354032694" alt="">
+  </a>
+  <h1 class="site-title">
+    Icode
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              CI/CD
+            </h2>
+            <div class="post-info">
+              <span>
+                2023-08-25
+              </span>
+              <span>
+                4 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <p>CI/CD 是一种通过在应用开发阶段引入自动化来频繁向客户交付应用的方法。</p>
+<p>CI/CD 的核心概念是<strong>持续集成、持续交付和持续部署</strong>。它是作为一个面向开发和运营团队的解决方案，主要针对在集成新代码时所引发的问题（也称为：“集成地狱”）。</p>
+<p>CI/CD 可让持续自动化和持续监控贯穿于应用的整个生命周期（从集成和测试阶段，到交付和部署）。</p>
+<p>这些关联的事务通常被统称为** CI/CD 管道**，由开发和运维团队以敏捷方式协同支持。<br>
+<br></p>
+<h2 id="ci-持续集成continuous-integration">CI 持续集成（Continuous Integration）</h2>
+<p>如果企业计划在同一天，将所有开发分支代码集成在一起，最终可能会花费很多时间和进行很多重复劳动，费事费力。因为代码冲突是难以避免的。</p>
+<p>如果开发人员本地的环境和线上不一致的话，那么这个问题就更加复杂了。</p>
+<p>持续集成（CI）可以帮助开发者更加方便地将代码更改合并到主分支。</p>
+<p>一旦开发人员将改动的代码合并到主分支，系统就会通过自动构建应用，并运行不同级别的自动化测试（通常是单元测试和集成测试）来验证这些更改，确保这些更改没有对应用造成破坏。</p>
+<p>如果自动化测试发现新代码和现有代码之间存在冲突，CI 可以更加轻松地快速修复这些错误。<br>
+<br></p>
+<h2 id="cd-持续交付continuous-delivery">CD 持续交付（Continuous Delivery）</h2>
+<p>CI 在完成了构建、单元测试和集成测试这些自动化流程后，持续交付可以自动把已验证的代码发布到企业自己的存储库。</p>
+<p>持续交付旨在建立一个可随时将开发环境的功能部署到生产环境的代码库。</p>
+<p>在持续交付过程中，每个步骤都涉及到了测试自动化和代码发布自动化。</p>
+<p>在流程结束时，运维团队可以快速、轻松地将应用部署到生产环境中。<br>
+<br></p>
+<h2 id="cd-持续部署continuous-deployment">CD 持续部署（Continuous Deployment）</h2>
+<p>对于一个完整、成熟的 CI/CD 管道来说，最后的阶段是持续部署。</p>
+<p>它是作为持续交付的延伸，持续部署可以自动将应用发布到生产环境。</p>
+<p>实际上，持续部署意味着开发人员对应用的改动，在编写完成后的几分钟内就能及时生效（前提是它通过了自动化测试）。这更加便于运营团队持续接收和整合用户反馈。</p>
+<p>总而言之，所有这些 CI/CD 的关联步骤，都极大地降低了应用的部署风险。</p>
+<p>CI/CD 其实就是一个流程（通常形象地表述为管道），用于实现应用开发中的高度持续自动化和持续监控。</p>
+<br>
+<h2 id="gitlab之cicd">gitlab之CI/CD</h2>
+<p>原理：</p>
+<ol>
+<li>将代码托管到Git存储库。</li>
+<li>在项目根目录创建ci文件.gitlab-ci.yml ，在文件中指定构建，测试和部署脚本。</li>
+<li>GitLab将检测到它并使用名为GitLab Runner的工具运行脚本。</li>
+<li>脚本被分组为作业，它们共同组成了一个管道。</li>
+</ol>
+<p>GitLab CI/CD 下载安装：<br>
+<a href="https://docs.gitlab.com/ee/install/">https://docs.gitlab.com/ee/install/</a><br>
+<a href="https://blog.csdn.net/summer_fish/article/details/124716205">https://blog.csdn.net/summer_fish/article/details/124716205</a><br>
+自己安装gitlab service的话需要好像至少需要四核8G的服务器，可以购买按量计费的云体验一下。<br>
+之后我觉得用gitlab.com就可以了，runner也有提供，当然也可以自己安装配置。<br>
+这是两个不同的服务，runner相对不需要太大的资源。</p>
+<p><a href="https://blog.csdn.net/weixin_49131823/article/details/131117090">详细介绍</a></p>
+<br>
+<h2 id="gitlab之webhook">gitlab之webhook</h2>
+<p>当需要做jenkins的自动化触发构建时，就需要配置gitlab的webhook功能，<a href="https://blog.csdn.net/ApexPredator/article/details/132040785">详细参考</a></p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#ci-%E6%8C%81%E7%BB%AD%E9%9B%86%E6%88%90continuous-integration">CI 持续集成（Continuous Integration）</a></li>
+<li><a href="#cd-%E6%8C%81%E7%BB%AD%E4%BA%A4%E4%BB%98continuous-delivery">CD 持续交付（Continuous Delivery）</a></li>
+<li><a href="#cd-%E6%8C%81%E7%BB%AD%E9%83%A8%E7%BD%B2continuous-deployment">CD 持续部署（Continuous Deployment）</a></li>
+<li><a href="#gitlab%E4%B9%8Bcicd">gitlab之CI/CD</a></li>
+<li><a href="#gitlab%E4%B9%8Bwebhook">gitlab之webhook</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://hensonguo.github.io/post/mongodb-shi-yong-zong-jie/">
+              <h3 class="post-title">
+                mongodb使用总结
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://hensonguo.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

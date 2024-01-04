@@ -1,0 +1,328 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>windows核心编程-用户方式中线程的同步 | Icode</title>
+<link rel="shortcut icon" href="https://hensonguo.github.io/favicon.ico?v=1704354032694">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://hensonguo.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="windows核心编程-用户方式中线程的同步 | Icode - Atom Feed" href="https://hensonguo.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="线程需要在下面两种情况下互相进行通信：
+• 当有多个线程访问共享资源而不使资源被破坏时。
+• 当一个线程需要将某个任务已经完成的情况通知另外一个或多个线程时。
+原子访问：互锁的函数家族
+线程同步问题在很大程度上与原子访问有关，所谓原子访问，..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://hensonguo.github.io">
+  <img class="avatar" src="https://hensonguo.github.io/images/avatar.png?v=1704354032694" alt="">
+  </a>
+  <h1 class="site-title">
+    Icode
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              windows核心编程-用户方式中线程的同步
+            </h2>
+            <div class="post-info">
+              <span>
+                2023-06-01
+              </span>
+              <span>
+                15 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <p>线程需要在下面两种情况下互相进行通信：<br>
+• 当有多个线程访问共享资源而不使资源被破坏时。<br>
+• 当一个线程需要将某个任务已经完成的情况通知另外一个或多个线程时。</p>
+<h2 id="原子访问互锁的函数家族">原子访问：互锁的函数家族</h2>
+<p>线程同步问题在很大程度上与原子访问有关，所谓原子访问，是指线程在访问资源时能够，确保所有其他线程都不在同一时间内访问相同的资源。</p>
+<pre><code class="language-c++">// Define a global variable.
+long g_x = 0;
+
+DWORD WINAPI ThreadFunc1(PVOID pvParam) 
+{
+   g_x++;
+   return(0);
+}
+
+DWORD WINAPI ThreadFunc2(PVOID pvParam) 
+{
+     g_x++;
+   return(0);
+}
+</code></pre>
+<p>在这个代码中，声明了一个全局变量 g_x，并将它初始化为0。现在，假设创建两个线程，一个线程执行ThreadFunc1，另一个线程执行ThreadFunc2。这两个函数中的代码是相同的，它们都将1添加给全局变量g_x。因此，当两个线程都停止运行时，你可能希望在 g _ x中看到2这个值。但是你真的看到了吗？回答是，也许看到了。根据代码的编写方法，你无法说明 g_x中最终包含了什么东西。下面我们来说明为什么会出现这种情况。假设编译器生成了下面这行代码，以便将g_x递增1：</p>
+<pre><code>MOV EAX. [g_x]              :Move the value in g_x into a register.
+INC EAX                          :Increment the value in the register.
+MOV [g_x]. EAX              :Store the new value back in g_x.
+</code></pre>
+<p>两个线程不可能在完全相同的时间内执行这个代码。因此，如果一个线程在另一个线程的后面执行这个代码，那么下面就是实际的执行情况：</p>
+<pre><code>MOV EAX. [g_x]              :Thread 1: Move 0 into a register.
+INC EAX                          :Thread 1: Increment the register to 1.
+MOV [g_x]. EAX              :Thread 1: Store 1 back in g_x.
+
+MOV EAX. [g_x]              :Thread 2: Move 1 into a register.
+INC EAX                          :Thread 2: Increment the register to 2.
+MOV [g_x]. EAX              :Thread 2: Store 2 back in g_x.
+</code></pre>
+<p>当两个线程都将g _ x的值递增之后，g _ x中的值就变成了2。这很好，并且正是我们希望的：即取出零（0），两次将它递增1，得出的值为2。太好了。不过不要急，Windows是个抢占式多线程环境。一个线程可以随时中断运行，而另一个线程则可以随时继续执行。这样，上面的代码就无法完全按编写的那样来运行。它可能按下面的形式运行：</p>
+<pre><code>MOV EAX. [g_x]              :Thread 1: Move 0 into a register.
+INC EAX                          :Thread 1: Increment the register to 1.
+
+MOV EAX. [g_x]              :Thread 2: Move 0 into a register.
+INC EAX                          :Thread 2: Increment the register to 1.
+MOV [g_x]. EAX              :Thread 2: Store 1 back in g_x.
+
+MOV [g_x]. EAX              :Thread 1: Store 1 back in g_x.
+</code></pre>
+<p>如果代码按这种形式来运行， g _ x中的最后值就不是2，而是你预期的1。<br>
+为了解决上面的问题，需要某种比较简单的方法。我们需要一种手段来保证值的递增能够以原子操作方式来进行，也就是不中断地进行。</p>
+<pre><code class="language-c++">// Define a global variable.
+long g_x = 0;
+
+DWORD WINAPI ThreadFunc1(PVOID pvParam) 
+{
+   InterlockedExchangeAdd(&amp;g_x, 1);
+   return(0);
+}
+
+DWORD WINAPI ThreadFunc2(PVOID pvParam) 
+{
+   InterlockedExchangeAdd(&amp;g_x, 1);
+   return(0);
+}
+</code></pre>
+<p>通过这个小小的修改，g _ x就能以原子操作方式来递增，因此可以确保 g _ x中的值最后是2。互锁函数是如何运行的呢？答案取决于运行的是何种 CPU平台。对于x 8 6家族的C P U来说，互锁函数会对总线发出一个硬件信号，防止另一个 C P U访问同一个内存地址。在Alpha平台上，互锁函数能够执行下列操作：</p>
+<ol>
+<li>打开C P U中的一个特殊的位标志，并注明被访问的内存地址。</li>
+<li>将内存的值读入一个寄存器。</li>
+<li>修改该寄存器。</li>
+<li>如果C P U中的特殊位标志是关闭的，则转入第二步。否则，特殊位标志仍然是打开的，<br>
+寄存器的值重新存入内存。</li>
+</ol>
+<p><strong>所谓原子访问，是指线程在访问资源时能够确保所有其他线程都不在同一时间内访问相同的资源</strong>。编译器生成代码的方法，哪个CPU在执行这个代码，以及主计算机中安装了多少个CPU等因素，决定了产生的结果可能是不同的。</p>
+<p>InterlockedExchangeAdd函数能够保证值的递增以原子操作方式来完成。所有线程都应该设法通过调用这些函数来修改共享的长变量，任何线程都不应该通过调用简单的C语句来修改共享的变量。还必须保证传递给这些函数的变量地址正确地对齐，否则这些函数就会运行失败。</p>
+<h2 id="高速缓存行">高速缓存行</h2>
+<p>当一个CPU从内存读取一个字节时，它不只是取出一个字节，它要取出足够的字节来填入高速缓存行。高速缓存行由32或64个字节组成（视CPU而定），并且始终在第32个字节或第64个字节的边界上对齐。</p>
+<p>但是，在多处理器环境中，高速缓存行使得内存的更新更加困难，下面这个例子就说明了这一点：</p>
+<ol>
+<li>CPU1读取一个字节，使该字节和它的相邻字节被读入CPU1的高速缓存行。</li>
+<li>CPU2读取同一个字节，使得第一步中的相同的各个字节读入CPU2的高速缓存行。</li>
+<li>CPU1修改内存中的该字节，使得该字节被写入CPU1的高速缓存行。但是该信息尚未写入RAM。</li>
+<li>CPU2再次读取同一个字节。由于该字节已经放入CPU2的高速缓存行，因此它不必访问内存。但是CPU2将看不到内存中该字节的新值。</li>
+</ol>
+<p>这种情况会造成严重的后果。当然，芯片设计者非常清楚这个问题，并且设计它们的芯片来处理这个问题。尤其是，当一个CPU修改高速缓存行中的字节时，计算机中的其他CPU会被告知这个情况，它们的高速缓存行将变为无效。因此，在上面的情况下，CPU2的高速缓存在CPU1修改字节的值时变为无效。在第4步中，CPU1必须将它的高速缓存内容迅速转入内存，CPU2必须再次访问内存，重新将数据填入它的高速缓存行。如你所见，高速缓存行能够帮助提高运行的速度，但是它们也可能是多处理器计算机上的一个不利因素。</p>
+<p>这一切意味着你应该将高速缓存行存储块中的和高速缓存行边界上的应用程序数据组合在一起。这样做的目的是确保不同的CPU能够访问至少由高速缓存行边界分开的不同的内存地址。还有，应该将只读数据（或不常读的数据）与读写数据分开。同时，应该将同一时间访问的数据组合在一起。</p>
+<p>最好是始终都让单个线程来访问数据（函数参数和局部变量是确保做到这一点的最好方法），或者始终让单个CPU访问这些数据（使用线程亲缘性）。如果采取其中的一种方法，就能够完全避免高速缓存行的各种问题。</p>
+<p>下面是设计得很差的数据结构的例子：</p>
+<pre><code class="language-c++">struct CUSTINFO {
+    DWORD dwCustomerID; // Mostly read-only
+    int nBalanceDue; // Read-write
+    wchar_t szName[100]; // Mostly read-only
+    FILETIME ftLastOrderDate; // Read-write
+};
+</code></pre>
+<p>获取CPU的Cache Line的方法是：调用GetLogicalProcessorInformation函数，该函数返回一个SYSTEM_LOGICAL_PROCESSOR_INFORMATION结构体，再通过结构体内的Cache域，其指向CACHE_DESCRIPTOR结构体，在该结构体内有一个域：LineSize。一旦你有了这个域值就可以用如下相似的代码进行程序优化：</p>
+<pre><code class="language-c++">#define CACHE_ALIGN 64  
+  
+//Force each structure to be in a different cache line.  
+struct__declspec(align(CACHE_ALIGN)) CUSTINFO {  
+        DWORD dwCustomerID; // Mostly read-only  
+        wchar_ts zName[100]; // Mostly read-only  
+
+        //Force the following members to be in a different cache line.  
+        __declspec(align(CACHE_ALIGN))  
+        intnBalanceDue; // Read-write  
+
+        FILETIMEftLastOrderDate; // Read-write  
+
+}  
+</code></pre>
+<h2 id="高级线程同步">高级线程同步</h2>
+<p><strong>volatile限定词会告诉编译器，不要对该变量进行任何优化，并且总是重新加载来自该变量的内存单元的值。</strong> 当将一个变量地址传递给一个函数时，该函数必须从内存读取该值。优化程序不会对它产生任何影响。</p>
+<h2 id="关键代码段">关键代码段</h2>
+<p>关键代码段是指一个小代码段，在代码能够执行前，它必须独占对某些共享资源的访问权。这是让若干行代码能够“以原子操作方式”来使用资源的一种方法。</p>
+<p><strong>关键代码段的优点在于它们的使用非常容易，它们在内部使用互锁函数，这样它们就能够迅速运行。关键代码的主要缺点是无法用它们对多个进程中的各个线程进行同步。</strong></p>
+<p>它只有两个要求，第一个要求是，需要访问该资源的所有线程都必须知道负责保护资源的CRITICAL_SECTION结构的地址，你可以使用你喜欢的任何机制来获得这些线程的这个地址；第二个要求是，CRITICAL_SECTION结构中的成员应该在任何线程试图访问被保护的资源之前初始化。</p>
+<p>EnterCriticalSection负责进行下列测试：</p>
+<ul>
+<li>如果没有线程访问该资源，EnterCriticalSection便更新成员变量，以指明调用线程已被赋予访问权并立即返回，使该线程能够继续运行（访问该资源）。</li>
+<li>如果成员变量指明，调用线程已经被赋予对资源的访问权，那么EnterCriticalSection便更新这些变量，以指明调用线程多少次被赋予访问权并立即返回，使该线程能够继续运行。这种情况很少出现，并且只有当线程在一行中两次调用EnterCriticalSection而不影响对LeaveCriticalSection的调用时，才会出现这种情况。</li>
+<li>如果成员变量指明，一个线程（除了调用线程之外）已被赋予对资源的访问权，那么EnterCriticalSection将调用线程置于等待状态。</li>
+</ul>
+<p>TryEnterCriticalSection函数决不允许调用线程进入等待状态。相反，它的返回值能够指明调用线程是否能够获得对资源的访问权。因此，如果TryEnterCriticalSection发现该资源已经被另一个线程访问，它就返回FALSE。在其他所有情况下，它均返回TRUE。</p>
+<p>LeaveCriticalSection要查看该结构中的成员变量。该函数每次计数时要递减1，以指明调用线程多少次被赋予对共享资源的访问权。如果该计数大于0，那么LeaveCriticalSection不做其他任何操作，只是返回而已。如果该计数变为0，它就要查看在调用EnterCriticalSection中是否有别的线程正在等待。如果至少有一个线程正在等待，它就更新成员变量，并使等待线程中的一个线程（“公正地”选定）再次处于可调度状态。如果没有线程正在等待，LeaveCriticalSection函数就更新成员变量，以指明没有线程正在访问该资源。</p>
+<h2 id="关键代码段与循环锁">关键代码段与循环锁</h2>
+<p>当线程试图进入另一个线程拥有的关键代码段时，调用线程就立即被置于等待状态。这意味着该线程必须从用户方式转入内核方式（大约1000个CPU周期）。为了提高关键代码段的运行性能，Microsoft将循环锁纳入了这些代码段。因此，当EnterCriticalSection函数被调用时，它就使用循环锁进行循环，以便设法多次取得该资源。只有当为了取得该资源的每次试图都失败时，该线程才转入内核方式，以便进入等待状态。</p>
+<p>若要将循环锁用于关键代码段，应该调用下面的函数，以便对关键代码段进行初始化：</p>
+<pre><code>BOOL InitializeCriticalSectionAndSpinCount(
+    PCRITICAL_SECTION pcs,
+    DWORD dwSpinCount;
+)
+</code></pre>
+<p>InitializeCriticalSectionAndSpinCount的第一个参数是关键代码段结构的地址。但是在第二个参数dwSpinCount中，传递的是在使线程等待之前它试图获得资源时想要循环锁循环迭代的次数。这个值可以是0至0x00FFFFFF之间的任何数字。如果在单处理器计算机上运行时调用该函数，dwSpinCount参数将被忽略，它的计数始终被置为0。</p>
+<p>通过调用下面的函数，就能改变关键代码段的循环次数：</p>
+<pre><code>BOOL SetCriticalSectionAndSpinCount(
+    PCRITICAL_SECTION pcs,
+    DWORD dwSpinCount;
+)
+</code></pre>
+<p>同样，如果主计算机只有一个处理器，那么 dwSpinCount的值将被忽略。我认为，始终都应该将循环锁用于关键代码段，因为这样做有百利而无一害。难就难在确定为dwSpinCount参数传递什么值。为了实现最佳的性能，只需要调整这些数字，直到对性能结果满意为止。作为一个指导原则，保护对进程的堆栈进行访问的关键代码段使用的循环次数是4000次。</p>
+<h2 id="关键代码段与错误处理">关键代码段与错误处理</h2>
+<p>InitializeCriticalSection函数的运行可能失败。如果该内存的分配失败，就会出现一个STATUS_NO_MEMORY异常情况。可以使用结构化异常处理来跟踪代码中的这种异常情况。使用更新的InitializeCriticalSectionAndSpinCount函数，就能够更加容易地跟踪这个问题。该函数也为调试信息分配了内存块，如果内存无法分配，那么它就返回FALSE。</p>
+<p>当使用关键代码段时还会出现另一个问题。从内部来说，如果两个或多个线程同时争用关键代码段，那么关键代码段将使用一个事件内核对象。由于争用的情况很少发生，因此，在初次需要之前，系统将不创建事件内核对象。这可以节省大量的系统资源，因为大多数关键代码段从来不被争用。在内存不足的情况下，关键代码段可能被争用，同时系统可能无法创建必要的事件内核对象。这时EnterCriticalSection函数将会产生一个EXCEPTION_INVALID_HANDLE异常。可以使用结构化异常处理方法来跟踪错误。另一种选择是使用InitializeCriticalSectionAndSpinCount函数创建关键代码段，确保设置了dwSpinCount参数的高信息位。当该函数发现高信息位已经设置时，它就创建该事件内核对象，并在初始化时将它与关键代码段关联起来。如果事件无法创建，该函数返回FALSE。</p>
+<p>如果总是预先分配事件内核对象，就会浪费系统资源。只有当你的代码不能容许EnterCriticalSection运行失败，或者你有把握会出现争用现象，或者你预计进程将在内存非常短缺的环境中运行时，你才能预先分配事件内核对象。</p>
+<h2 id="非常有用的提示和技巧">非常有用的提示和技巧</h2>
+<ol>
+<li>每个共享资源使用一个CRITICAL_SECTION变量。如果应用程序中拥有若干个互不相干的数据结构，应该为每个数据结构创建一个CRITICAL_SECTION变量。这比只有单个CRITICAL_SECTION结构来保护对所有共享资源的访问要好。</li>
+<li>同时访问多个资源时，必须始终按照完全相同的顺序请求对资源的访问，否则会产生死锁。当调用LeaveCriticalSection函数时，按照什么顺序访问资源是没有关系的，因为该函数决不会使线程进入等待状态。</li>
+<li>不要长时间运行关键代码段。当一个关键代码段长时间运行时，其他线程就会进入等待状态，这会降低应用程序的运行性能。</li>
+</ol>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#%E5%8E%9F%E5%AD%90%E8%AE%BF%E9%97%AE%E4%BA%92%E9%94%81%E7%9A%84%E5%87%BD%E6%95%B0%E5%AE%B6%E6%97%8F">原子访问：互锁的函数家族</a></li>
+<li><a href="#%E9%AB%98%E9%80%9F%E7%BC%93%E5%AD%98%E8%A1%8C">高速缓存行</a></li>
+<li><a href="#%E9%AB%98%E7%BA%A7%E7%BA%BF%E7%A8%8B%E5%90%8C%E6%AD%A5">高级线程同步</a></li>
+<li><a href="#%E5%85%B3%E9%94%AE%E4%BB%A3%E7%A0%81%E6%AE%B5">关键代码段</a></li>
+<li><a href="#%E5%85%B3%E9%94%AE%E4%BB%A3%E7%A0%81%E6%AE%B5%E4%B8%8E%E5%BE%AA%E7%8E%AF%E9%94%81">关键代码段与循环锁</a></li>
+<li><a href="#%E5%85%B3%E9%94%AE%E4%BB%A3%E7%A0%81%E6%AE%B5%E4%B8%8E%E9%94%99%E8%AF%AF%E5%A4%84%E7%90%86">关键代码段与错误处理</a></li>
+<li><a href="#%E9%9D%9E%E5%B8%B8%E6%9C%89%E7%94%A8%E7%9A%84%E6%8F%90%E7%A4%BA%E5%92%8C%E6%8A%80%E5%B7%A7">非常有用的提示和技巧</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://hensonguo.github.io/post/windows-he-xin-bian-cheng-xian-cheng-de-diao-du-you-xian-ji-he-qin-yuan-xing/">
+              <h3 class="post-title">
+                windows核心编程-线程的调度、优先级和亲缘性
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://hensonguo.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

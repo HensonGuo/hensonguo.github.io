@@ -1,0 +1,250 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>面试题汇总3 | Icode</title>
+<link rel="shortcut icon" href="https://hensonguo.github.io/favicon.ico?v=1704354032694">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://hensonguo.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="面试题汇总3 | Icode - Atom Feed" href="https://hensonguo.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="1.C++源代码到可执行文件的过程
+预处理--&gt;编译--&gt;汇编--&gt;链接
+
+预处理：删除又有的宏定义#define；处理所有的预编译指令#include”、&quot;#if&quot;”、“#endif”、“#ifdef..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://hensonguo.github.io">
+  <img class="avatar" src="https://hensonguo.github.io/images/avatar.png?v=1704354032694" alt="">
+  </a>
+  <h1 class="site-title">
+    Icode
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              面试题汇总3
+            </h2>
+            <div class="post-info">
+              <span>
+                2023-10-08
+              </span>
+              <span>
+                8 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <h3 id="1c源代码到可执行文件的过程">1.C++源代码到可执行文件的过程</h3>
+<p>预处理--&gt;编译--&gt;汇编--&gt;链接</p>
+<ol>
+<li>预处理：删除又有的宏定义#define；处理所有的预编译指令#include”、&quot;#if&quot;”、“#endif”、“#ifdef”、“#elif”和“#else”等；删除所有的注释，“//”和“/**/”。</li>
+<li>编译：把预编译之后生成的xxx.i或xxx.ii文件，进行一系列词法分析、语法分析、语义分析及优化后，生成相应的汇编代码文件。</li>
+<li>汇编：将汇编代码转变成机器可以执行的指令(机器码文件)。</li>
+<li>链接：将不同的源文件产生的目标文件进行链接，从而形成一个可以执行的程序。</li>
+</ol>
+<h3 id="2深浅拷贝">2.深浅拷贝</h3>
+<ol>
+<li>在未定义拷贝构造函数的情况下，系统会调用默认的拷贝函数——即浅拷贝（不用自己构造），它能够完成成员的简单的值的拷贝一一复制。当数据成员中没有指针时，浅拷贝是可行的；但当数据成员中有指针时，如果采用简单的浅拷贝，则两类中的两个指针将指向同一个地址（同一个堆区），当对象快结束时，<strong>会调用两次析构函数（析构函数也无需自己构造，但想要知道析构函数的工作可以自己构造析构函数用输出来记录），而导致指针悬挂现象</strong>，所以，此时，必须采用深拷贝。</li>
+<li>深拷贝与浅拷贝的区别就在于深拷贝会在堆内存中另外申请空间来储存数据（新的堆区空间进行拷贝），从而也就解决了指针悬挂的问题。</li>
+</ol>
+<h3 id="3为什么通常要把析构函数设置为虚的">3.为什么通常要把析构函数设置为虚的</h3>
+<p><strong>虚析构函数 为了避免内存泄露，基类的析构函数一般都是虚函数。</strong><br>
+如果基类析构函数不是虚函数：基类指针指向子类对象，delete基类指针，调用基类析构函数，不会调用子类析构函数，造成内存泄露。</p>
+<h3 id="4-什么是回调函数">4. 什么是回调函数</h3>
+<p>回调函数是一种在程序运行期间通过函数指针调用的函数，它通常用于实现事件驱动、异步通信、消息传递等功能。</p>
+<h3 id="5什么是粘包解决办法">5.什么是粘包，解决办法</h3>
+<p>粘包是指在网络传输过程中，多个数据包被合并成一个数据包的现象。这种现象可能会导致数据传输的错误或者数据丢失。<br>
+解决粘包问题的办法包括：</p>
+<ol>
+<li>使用定长包，即每个包的长度固定，这样就不会出现多个包合并成一个包的情况。</li>
+<li>使用分隔符，即在每个包的结尾添加一个特定的分隔符，接收方根据分隔符来判断每个包的结束位置。</li>
+<li>使用消息头和消息体的方式，即在每个包的开头添加一个消息头，消息头中包含消息体的长度信息，接收方根据消息头中的长度信息来正确地分割每个包。</li>
+</ol>
+<h3 id="6进程和线程的关系">6.进程和线程的关系</h3>
+<p>一个进程，就是一个正在运行的程序！一个程序，可以产生多个进程。然后进程有两个部分：</p>
+<ol>
+<li>一个内核对象，被系统用来管理这个进程，这个内核对象中，还包含了进程的一些策略信息。</li>
+<li>一个地址空间，这个地址空间中包含了可执行代码，动态链接库模块代码，数据，程序动态内存分配获取的内存，也在这个内存地址空间中。</li>
+</ol>
+<p>线程也是由两个部分组成的：</p>
+<ol>
+<li>一个是线程的内核对象，操作系统用它来对线程实施管理。内核对象也是系统用来存放<br>
+线程统计信息的地方。</li>
+<li>另一个是线程堆栈，它用于维护线程在执行代码时需要的所有函数参数和局部变量</li>
+</ol>
+<p>进程是由“惰性“的，进程要做任何事情都必须让一个线程在它的上下文中运行。该线程负责执行进程地址空间包含的代码。事实上，一个进程可以有多个线程，所有线程都在进程的地址空间中”同时执行代码“。当系统创建一个进程的时候，会自动为进程创建第一个线程，这称为主线程。</p>
+<h3 id="7mfc消息机制">7.MFC消息机制</h3>
+<p>MFC框架中的消息机制实现了Windows消息的处理和分发。在MFC应用程序中，每个窗口都有一个消息队列，用于存储接收到的消息。当应用程序运行时，MFC框架会不断地从消息队列中取出消息，并将其分发给相应的窗口进行处理。每个窗口都可以通过重载相应的消息处理函数来处理不同类型的消息。例如，OnMouseMove函数可以处理鼠标移动消息，OnPaint函数可以处理窗口重绘消息等。</p>
+<p>MFC消息机制的核心是消息映射表（Message Map），它是一个用于存储消息处理函数的表格。消息映射表中的每一行对应一个消息处理函数，其中包含了消息的类型、消息处理函数的名称等信息。当应用程序收到一个消息时，MFC框架会根据消息的类型在消息映射表中查找相应的消息处理函数，并调用它来处理消息。</p>
+<h3 id="7什么是void指针">7.什么是void指针</h3>
+<p>void指针是C++语言中的一种特殊指针类型，也称为无类型指针。与其他指针类型不同的是，void指针可以指向任何类型的数据，包括基本数据类型、结构体、类、数组等等。<br>
+在使用void指针时，需要注意以下几点：</p>
+<ol>
+<li>不能对void指针直接进行解引用操作，因为void指针没有指定具体的数据类型，无法确定其大小和内部结构。</li>
+<li>在使用void指针时，需要将其转换为具体的指针类型，才能进行指针运算和解引用操作。</li>
+<li>在进行类型转换时，需要确保转换的类型与实际数据类型相匹配，否则可能会导致内存错误或者程序崩溃。</li>
+</ol>
+<h3 id="8局部变量和静态局部变量有什么区别">8.局部变量和静态局部变量有什么区别</h3>
+<p>局部变量和静态局部变量都是在函数内部定义的变量，它们的区别在于作用域和生命周期。</p>
+<ol>
+<li>存储位置：局部变量通常存储在栈（stack）上，栈上的内存分配和释放是自动进行的。而静态局部变量存储在静态存储区（静态区、全局数据区）中，它的内存分配和释放是由编译器控制的。</li>
+<li>作用域：局部变量的作用域仅限于定义它的函数内部，当函数执行完毕后，局部变量就会被销毁，无法再被访问。<br>
+静态局部变量的作用域仍然仅限于定义它的函数内部，但是它的值在函数调用结束后不会被销毁，下次调用该函数时，它的值仍然保持上次调用结束时的值。</li>
+<li>生命周期：局部变量的生命周期与函数的执行周期相同，当函数执行完毕后，局部变量就会被销毁，无法再被访问。<br>
+静态局部变量的生命周期与程序的执行周期相同，在程序开始运行时被初始化，在程序结束时被销毁。</li>
+</ol>
+<p>因此，局部变量适用于只在函数内部使用的临时变量，而静态局部变量适用于需要在函数调用之间保持状态的变量。静态局部变量还可以用于在函数内部实现全局变量的效果，但是它的作用域仍然仅限于定义它的函数内部。</p>
+<h3 id="9导出接口为什么要加extern">9.导出接口为什么要加extern</h3>
+<p>在C语言中，<code>extern</code>关键字用于声明一个全局变量或函数的外部链接。当我们在一个源文件中声明一个全局变量或函数时，该变量或函数默认具有外部链接，也就是说它可以被其他源文件访问和使用。</p>
+<p>为了在其他源文件中使用这些全局变量或函数，我们需要使用<code>extern</code>关键字进行外部声明。通过在其他源文件中使用<code>extern</code>关键字声明该变量或函数，我们告诉编译器，这些变量或函数是在其他文件中定义的，可以在链接时找到其定义并进行链接。</p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li>
+<ul>
+<li><a href="#1c%E6%BA%90%E4%BB%A3%E7%A0%81%E5%88%B0%E5%8F%AF%E6%89%A7%E8%A1%8C%E6%96%87%E4%BB%B6%E7%9A%84%E8%BF%87%E7%A8%8B">1.C++源代码到可执行文件的过程</a></li>
+<li><a href="#2%E6%B7%B1%E6%B5%85%E6%8B%B7%E8%B4%9D">2.深浅拷贝</a></li>
+<li><a href="#3%E4%B8%BA%E4%BB%80%E4%B9%88%E9%80%9A%E5%B8%B8%E8%A6%81%E6%8A%8A%E6%9E%90%E6%9E%84%E5%87%BD%E6%95%B0%E8%AE%BE%E7%BD%AE%E4%B8%BA%E8%99%9A%E7%9A%84">3.为什么通常要把析构函数设置为虚的</a></li>
+<li><a href="#4-%E4%BB%80%E4%B9%88%E6%98%AF%E5%9B%9E%E8%B0%83%E5%87%BD%E6%95%B0">4. 什么是回调函数</a></li>
+<li><a href="#5%E4%BB%80%E4%B9%88%E6%98%AF%E7%B2%98%E5%8C%85%E8%A7%A3%E5%86%B3%E5%8A%9E%E6%B3%95">5.什么是粘包，解决办法</a></li>
+<li><a href="#6%E8%BF%9B%E7%A8%8B%E5%92%8C%E7%BA%BF%E7%A8%8B%E7%9A%84%E5%85%B3%E7%B3%BB">6.进程和线程的关系</a></li>
+<li><a href="#7mfc%E6%B6%88%E6%81%AF%E6%9C%BA%E5%88%B6">7.MFC消息机制</a></li>
+<li><a href="#7%E4%BB%80%E4%B9%88%E6%98%AFvoid%E6%8C%87%E9%92%88">7.什么是void指针</a></li>
+<li><a href="#8%E5%B1%80%E9%83%A8%E5%8F%98%E9%87%8F%E5%92%8C%E9%9D%99%E6%80%81%E5%B1%80%E9%83%A8%E5%8F%98%E9%87%8F%E6%9C%89%E4%BB%80%E4%B9%88%E5%8C%BA%E5%88%AB">8.局部变量和静态局部变量有什么区别</a></li>
+<li><a href="#9%E5%AF%BC%E5%87%BA%E6%8E%A5%E5%8F%A3%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E5%8A%A0extern">9.导出接口为什么要加extern</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://hensonguo.github.io/post/windows-he-xin-bian-cheng-ying-jian-shu-ru-mo-xing-he-ju-bu-shu-ru-zhuang-tai/">
+              <h3 class="post-title">
+                windows核心编程-硬件输入模型和局部输入状态
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://hensonguo.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

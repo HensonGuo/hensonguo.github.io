@@ -1,0 +1,329 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>c++11之类型推导、返回值类型后置 | Icode</title>
+<link rel="shortcut icon" href="https://hensonguo.github.io/favicon.ico?v=1704354032694">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://hensonguo.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="c++11之类型推导、返回值类型后置 | Icode - Atom Feed" href="https://hensonguo.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="1、类型auto，通过编译器计算变量的初始值来推断类型
+auto 的另一个应用就是当我们不知道变量是什么类型，或者不希望指明具体类型的时候，比如泛型编程中：
+#include &lt;iostream&gt;
+using namespace..." />
+    <meta name="keywords" content="c++11,C++" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://hensonguo.github.io">
+  <img class="avatar" src="https://hensonguo.github.io/images/avatar.png?v=1704354032694" alt="">
+  </a>
+  <h1 class="site-title">
+    Icode
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              c++11之类型推导、返回值类型后置
+            </h2>
+            <div class="post-info">
+              <span>
+                2022-10-12
+              </span>
+              <span>
+                5 min read
+              </span>
+              
+                <a href="https://hensonguo.github.io/tag/5hSqCQEO5/" class="post-tag">
+                  # c++11
+                </a>
+              
+                <a href="https://hensonguo.github.io/tag/blFelWlDF/" class="post-tag">
+                  # C++
+                </a>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <h2 id="1-类型auto通过编译器计算变量的初始值来推断类型">1、类型auto，通过编译器计算变量的初始值来推断类型</h2>
+<p>auto 的另一个应用就是当我们不知道变量是什么类型，或者不希望指明具体类型的时候，比如泛型编程中：</p>
+<pre><code class="language-c++">#include &lt;iostream&gt;
+using namespace std;
+class A{
+public:
+    static int get(void){
+        return 100;
+    }
+};
+class B{
+public:
+    static const char* get(void){
+        return &quot;my test&quot;;
+    }
+};
+template &lt;typename T&gt;
+void func(void){
+    auto val = T::get();
+    cout &lt;&lt; val &lt;&lt; endl;
+}
+int main(void){
+    func&lt;A&gt;();
+    func&lt;B&gt;();
+    return 0;
+}
+</code></pre>
+<p>auto类型推导通常和模板类型推导类似，但是auto类型推导假定花括号初始化代表的类型是std::initializer_list，但是模板类型推导却不是这样<br>
+auto在函数返回值或者lambda参数里面执行模板的类型推导，而不是通常意义的auto类型推导</p>
+<p><font color=red>auto限制：</font></p>
+<ul>
+<li>auto 不能在函数的参数中使用。</li>
+<li>auto 不能作用于类的非静态成员变量（也就是没有 static 关键字修饰的成员变量）中。</li>
+<li>auto 关键字不能定义数组，比如下面的例子就是错误的：<br>
+char url[] = &quot;http://c.biancheng.net/&quot;;<br>
+auto  str[] = url;  //arr 为数组，所以不能使用 auto</li>
+<li>auto 不能作用于模板参数</li>
+</ul>
+<pre><code class="language-c++">template &lt;typename T&gt;
+class A{
+    //TODO:
+};
+
+int  main(){
+    A&lt;int&gt; C1;
+    A&lt;auto&gt; C2 = C1;  //错误
+    return 0;
+}
+</code></pre>
+<p><font color=red>auto应用：</font></p>
+<ul>
+<li>定义迭代器</li>
+</ul>
+<pre><code class="language-c++">#include &lt;vector&gt;
+using namespace std;
+
+int main(){
+    vector&lt; vector&lt;int&gt; &gt; v;
+    vector&lt; vector&lt;int&gt; &gt;::iterator i = v.begin();
+    auto i = v.begin();  //使用 auto 代替具体的类型
+    return 0;
+}
+</code></pre>
+<ul>
+<li>泛型编程</li>
+</ul>
+<br/>
+<br/>
+<h2 id="2-类型推导decltype通过编译器来分析表达式进而得到它的类型但是它不用将表达式的值计算出来">2、类型推导：decltype，通过编译器来分析表达式进而得到它的类型，但是它不用将表达式的值计算出来</h2>
+<p>decltype是根据表达式的实际类型推演出定义变量时所用的类型，比如<br>
+推演表达式类型作为变量的定义类型</p>
+<pre><code class="language-c++">int a = 10, b = 20;
+decltype(a + b)c;
+cout &lt;&lt; typeid(c).name() &lt;&lt; endl;
+</code></pre>
+<p><font color=red>decltype应用：</font><br>
+类的非静态成员类型推导<br>
+auto 只能用于类的静态成员，不能用于类的非静态成员（普通成员），如果我们想推导非静态成员的类型，这个时候就必须使用 decltype</p>
+<pre><code class="language-c++">#include &lt;vector&gt;
+using namespace std;
+
+template &lt;typename T&gt;
+class Base {
+public:
+    void func(T&amp; container) {
+        m_it = container.begin();
+    }
+
+private:
+    typename T::iterator m_it;  //注意这里
+    decltype(T().begin()) m_it;  //注意这里
+};
+
+int main()
+{
+    const vector&lt;int&gt; v;
+    Base&lt;const vector&lt;int&gt;&gt; obj;
+    obj.func(v);
+
+    return 0;
+}
+</code></pre>
+<br/>
+<br/>
+<h2 id="3-返回值类型后置">3、返回值类型后置</h2>
+<p>在泛型编程中，可能需要通过参数的运算来得到返回值的类型。考虑下面这个场景：</p>
+<pre><code class="language-c++">template &lt;typename R, typename T, typename U&gt;
+R add(T t, U u)
+{
+    return t+u;
+}
+int a = 1; float b = 2.0;
+auto c = add&lt;decltype(a + b)&gt;(a, b);
+
+//在 add 函数的定义上能不能直接通过 decltype 拿到返回值呢？
+template &lt;typename T, typename U&gt;
+decltype(t + u) add(T t, U u)  // error: t、u尚未定义
+{
+    return t + u;
+}
+
+//使用新的语法可以写成：
+template &lt;typename T, typename U&gt;
+auto add(T t, U u) -&gt; decltype(t + u)
+{
+    return t + u;
+}
+
+</code></pre>
+<br/>
+<h2 id="4-对模板实例化中连续右尖括号的改进">4、对模板实例化中连续右尖括号&gt;&gt;的改进</h2>
+<p>在 C++98/03 的泛型编程中，模板实例化有一个很烦琐的地方，那就是连续两个右尖括号（&gt;&gt;）会被编译器解释成右移操作符，而不是模板参数表的结束。</p>
+<pre><code class="language-c++">template &lt;typename T&gt;struct Foo{      
+    typedef T type;
+};
+template &lt;typename T&gt;class A{    // ...};
+int main(void){
+        Foo&lt;A&lt;int&gt;&gt;::type xx;  //编译出错    return 0;
+}
+</code></pre>
+<p>使用 gcc 编译时，会得到如下错误提示：<br>
+error: '&gt;&gt;' should be '&gt;&gt;' within a nested template argument list Foo&lt;A<int>&gt;::type xx;意思就是，Foo&lt;A<int>&gt;这种写法是不被支持的，要写成这样Foo&lt;A<int> &gt;（注意两个右尖括号之间的空格）。</p>
+<p>现在在 C++11 中，这种限制终于被取消了。在 C++11 标准中，要求编译器对模板的右尖括号做单独处理，使编译器能够正确判断出&gt;&gt;是一个右移操作符还是模板参数表的结束标记（delimiter，界定符）。</p>
+<br/>
+<br/>
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#1-%E7%B1%BB%E5%9E%8Bauto%E9%80%9A%E8%BF%87%E7%BC%96%E8%AF%91%E5%99%A8%E8%AE%A1%E7%AE%97%E5%8F%98%E9%87%8F%E7%9A%84%E5%88%9D%E5%A7%8B%E5%80%BC%E6%9D%A5%E6%8E%A8%E6%96%AD%E7%B1%BB%E5%9E%8B">1、类型auto，通过编译器计算变量的初始值来推断类型</a></li>
+<li><a href="#2-%E7%B1%BB%E5%9E%8B%E6%8E%A8%E5%AF%BCdecltype%E9%80%9A%E8%BF%87%E7%BC%96%E8%AF%91%E5%99%A8%E6%9D%A5%E5%88%86%E6%9E%90%E8%A1%A8%E8%BE%BE%E5%BC%8F%E8%BF%9B%E8%80%8C%E5%BE%97%E5%88%B0%E5%AE%83%E7%9A%84%E7%B1%BB%E5%9E%8B%E4%BD%86%E6%98%AF%E5%AE%83%E4%B8%8D%E7%94%A8%E5%B0%86%E8%A1%A8%E8%BE%BE%E5%BC%8F%E7%9A%84%E5%80%BC%E8%AE%A1%E7%AE%97%E5%87%BA%E6%9D%A5">2、类型推导：decltype，通过编译器来分析表达式进而得到它的类型，但是它不用将表达式的值计算出来</a></li>
+<li><a href="#3-%E8%BF%94%E5%9B%9E%E5%80%BC%E7%B1%BB%E5%9E%8B%E5%90%8E%E7%BD%AE">3、返回值类型后置</a></li>
+<li><a href="#4-%E5%AF%B9%E6%A8%A1%E6%9D%BF%E5%AE%9E%E4%BE%8B%E5%8C%96%E4%B8%AD%E8%BF%9E%E7%BB%AD%E5%8F%B3%E5%B0%96%E6%8B%AC%E5%8F%B7%E7%9A%84%E6%94%B9%E8%BF%9B">4、对模板实例化中连续右尖括号&gt;&gt;的改进</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://hensonguo.github.io/post/c11-zhi-zhi-zhen/">
+              <h3 class="post-title">
+                c++11之指针
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://hensonguo.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

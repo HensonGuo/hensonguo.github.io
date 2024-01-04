@@ -1,0 +1,533 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>八种排序算法 | Icode</title>
+<link rel="shortcut icon" href="https://hensonguo.github.io/favicon.ico?v=1704354032694">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://hensonguo.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="八种排序算法 | Icode - Atom Feed" href="https://hensonguo.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="快速排序
+快速排序使用分治法（Divide and conquer）策略来把一个串行（list）分为两个子串行（sub-lists）。通过一趟排序将待排记录分割成独立的两部分，则可分别对这两部分记录继续进行排序（递归），以达到整个序列有序。..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://hensonguo.github.io">
+  <img class="avatar" src="https://hensonguo.github.io/images/avatar.png?v=1704354032694" alt="">
+  </a>
+  <h1 class="site-title">
+    Icode
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              八种排序算法
+            </h2>
+            <div class="post-info">
+              <span>
+                2022-09-08
+              </span>
+              <span>
+                11 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <h2 id="快速排序">快速排序</h2>
+<p>快速排序使用分治法（Divide and conquer）策略来把一个串行（list）分为两个子串行（sub-lists）。通过一趟排序将待排记录分割成独立的两部分，则可分别对这两部分记录继续进行排序（递归），以达到整个序列有序。<br>
+Ο(n log n)</p>
+<p>原理如下：</p>
+<ol>
+<li>选择一个基准元素（pivot），通常选择第一个元素或最后一个元素。</li>
+<li>分区，将待排序序列分成两部分，一部分比基准元素小，另一部分比基准元素大，这个过程称为分区（partition）。</li>
+<li>递归，对两个子序列分别进行快速排序，递归地进行上述过程，直到子序列的长度为1或0，此时子序列已经有序。</li>
+<li>合并，将所有子序列的结果合并起来，得到最终的有序序列。</li>
+</ol>
+<p>快速排序的时间复杂度为O(nlogn)，空间复杂度为O(logn)。快速排序是一种原地排序算法，不需要额外的空间来存储中间结果。快速排序是一种高效的排序算法，常用于大数据量的排序场合。</p>
+<h2 id="归并排序">归并排序</h2>
+<p>归并排序（Merge sort）是建立在归并操作上的一种有效的排序算法。该算法是采用<strong>分治法</strong>（Divide and Conquer）的一个非常典型的应用。<br>
+算法步骤：</p>
+<ol>
+<li>申请空间，使其大小为两个已经排序序列之和，该空间用来存放合并后的序列</li>
+<li>设定两个指针，最初位置分别为两个已经排序序列的起始位置</li>
+<li>比较两个指针所指向的元素，选择相对小的元素放入到合并空间，并移动指针到下一位置</li>
+<li>重复步骤3直到某一指针达到序列尾</li>
+<li>将另一序列剩下的所有元素直接复制到合并序列尾</li>
+</ol>
+<h2 id="堆排序">堆排序</h2>
+<p>（Heapsort）是指利用堆这种数据结构所设计的一种排序算法。<strong>堆积是一个近似完全二叉树的结构，并同时满足堆积的性质：即子结点的键值或索引总是小于（或者大于）它的父节点。</strong><br>
+堆排序的平均时间复杂度为Ο(nlogn) 。</p>
+<pre><code class="language-c++">#include&lt;bits/stdc++.h&gt;
+#include&lt;algorithm&gt;
+using namespace std;
+
+//冒泡排序
+void bubble_sort(vector&lt;int&gt; &amp;v) {
+    int n = v.size();
+    bool flag = false;
+    for(int i = 0; i &lt; n; ++i) {
+        for(int j = 0; j &lt; n - 1 - i; ++j) {
+            if(v[j] &gt; v[j + 1]) {
+                flag = true;
+                swap(v[j], v[j + 1]);
+            }
+        }
+        if(flag == false) {
+            break;
+        } else {
+            flag = true;
+        }
+    }
+}
+
+//选择排序
+void select_sort(vector&lt;int&gt; &amp;v) {
+    int n = v.size();
+    for(int i = 0; i &lt; n - 1; ++i) {
+        int min_index = i;
+        for(int j = i + 1; j &lt; n; ++j) {
+            if(v[min_index] &gt; v[j]) {
+                min_index = j;
+            }
+        }
+        if(min_index != i) {
+            swap(v[min_index], v[i]);
+        }
+    }
+}
+
+//插入排序
+void inser_sort(vector&lt;int&gt; &amp;v) {
+    int n = v.size();
+    for(int i = 1; i &lt; n; ++i) {
+        int insert_val = v[i];
+        int insert_index = i - 1;
+        while(insert_index &gt;= 0 &amp;&amp; insert_val &lt; v[insert_index]) {
+            v[insert_index + 1] = v[insert_index];
+            --insert_index;
+        }
+        if(insert_index + 1 != i) {
+            v[insert_index + 1] = insert_val;
+        }
+    }
+}
+
+//希尔排序--交换法
+void shell_sort1(vector&lt;int&gt; &amp;v) {
+    int n = v.size();
+    for(int gap = n / 2; gap &gt; 0; gap /= 2) {
+        for(int i = gap; i &lt; n; ++i) {
+            for(int j = i - gap; j &gt;= 0; j -= gap) {
+                if(v[j] &gt; v[j + gap]) {
+                    swap(v[j], v[j + gap]);
+                }
+            }
+        }
+    }
+}
+
+//希尔排序--移步法
+void shell_sort2(vector&lt;int&gt; &amp;v) {
+    int n = v.size();
+    for(int gap = n / 2; gap &gt; 0; gap /= 2) {
+        for(int i = gap; i &lt; n; ++i) {
+            int j = i;
+            int tmp = v[j];
+            if(v[j] &lt; v[j - gap]) {
+                while(j - gap &gt;= 0 &amp;&amp; tmp &lt; v[j - gap]) {
+                    v[j] = v[j - gap];
+                    j -= gap;
+                }
+                v[j] = tmp;
+            }
+        }
+    }
+}
+
+//快速排序
+void quick_sort(vector&lt;int&gt; &amp;v, int left, int right) {
+    int l = left;
+    int r = right;
+    int mid = left + (right - left) / 2;
+    while(l &lt; r) {
+        while(v[l] &lt; v[mid]) {
+            ++l;
+        }
+        while(v[r] &gt; v[mid]) {
+            --r;
+        }
+        if(l &gt;= r) {
+            break;
+        }
+        swap(v[l], v[r]);
+        if(v[l] == v[mid]) {
+            --r;
+        }
+        if(v[r] == v[mid]) {
+            ++l;
+        }
+    }
+    if(l == r) {
+        ++l;
+        --r;
+    }
+    if(left &lt; r) {
+        quick_sort(v, left, r);
+    }
+    if(right &gt; l) {
+        quick_sort(v, l, right);
+    }
+}
+
+//归并排序
+void merge(vector&lt;int&gt; &amp;v, int left, int right, int mid, vector&lt;int&gt; &amp;tmp) {
+    int i = left;
+    int j = mid + 1;
+    int t = 0;
+    while(i &lt;= mid &amp;&amp; j &lt;= right) {
+        if(v[i] &lt;= v[j]) {
+            tmp[t] = v[i];
+            ++t;
+            ++i;
+        } else {
+            tmp[t] = v[j];
+            ++t;
+            ++j;
+        }
+    }
+    while(i &lt;= mid) {
+        tmp[t] = v[i];
+        ++t;
+        ++i;
+    }
+    while(j &lt;= right) {
+        tmp[t] = v[j];
+        ++t;
+        ++i;
+    }
+    t = 0;
+    int tmpleft = left;
+    while(tmpleft &lt;= right) {
+        v[tmpleft] = tmp[t];
+        ++t;
+        ++tmpleft;
+    }
+}
+
+void merge_sort(vector&lt;int&gt; &amp;v, int left, int right, vector&lt;int&gt; &amp;tmp) {
+    if(left &lt; right) {
+        int mid = left + (right - left) / 2;
+        merge_sort(v, left, mid, tmp);
+        merge_sort(v, mid + 1, right, tmp);
+        merge(v, left, right, mid, tmp);
+    }
+}
+
+//基数排序
+int maxbit(vector&lt;int&gt; &amp;v) {
+    int d = 1;
+    int p = 10;
+    int n = v.size();
+    for(int i = 0; i &lt; n; ++i) {
+        while(v[i] &gt;= p) {
+            p *= 10;
+            ++d;
+        }
+    }
+    return d;
+}
+
+void radix_sort(vector&lt;int&gt; &amp;v) {
+    int d = maxbit(v);
+    int n = v.size();
+    int i = 0, j = 0, k = 0, radix = 1;
+    vector&lt;int&gt; tmp(n, 0), count(10, 0);
+    for(i = 1; i &lt;= d; ++i) {
+        for(j = 0; j &lt; 10; ++j) {
+            count[j] = 0;
+        }
+        for(j = 0; j &lt; n; ++j) {
+            k = (v[j] / radix) % 10;
+            ++count[k];
+        }
+        for(j = 1; j &lt; 10; ++j) {
+            count[j] = count[j - 1] + count[j];
+        }
+        for(j = n - 1; j &gt;= 0; --j) {
+            k = (v[j] / radix) % 10;
+            tmp[count[k] - 1] = v[j];
+            --count[k];
+        }
+        for(j = 0; j &lt; n; ++j) {
+            v[j] = tmp[j];
+        }
+        radix *= 10;
+    }
+}
+
+//桶排序
+void bucket_sort(vector&lt;int&gt; &amp;v) {
+    int min_val = 0;
+    int max_val = 0;
+    int n = v.size();
+    for(int i = 0; i &lt; n; ++i) {
+        if(v[i] &gt; max_val) {
+            max_val = v[i];
+        }
+        if(v[i] &lt; min_val) {
+            min_val = v[i];
+        }
+    }
+    vector&lt;int&gt; tmp(n, 0), count(max_val - min_val + 1, 0);
+    for(int i = 0; i &lt; n; ++i) {
+        int pos = v[i] - min_val;
+        ++count[pos];
+    }
+    n = max_val - min_val + 1;
+    for(int i = 1; i &lt; n; ++i) {
+        count[i] = count[i - 1] + count[i];
+    }
+    n = v.size();
+    for(int i = n - 1; i &gt;= 0; --i) {
+        int pos = v[i] - min_val;
+        tmp[count[pos] - 1] = v[i];
+        --count[pos];
+    }
+    for(int i = 0; i &lt; n; ++i) {
+        v[i] = tmp[i];
+    }
+}
+
+//计数排序
+void count_sort(vector&lt;int&gt; &amp;v) {
+    int min_val = 0;
+    int max_val = 0;
+    int n = v.size();
+    for(int i = 0; i &lt; n; ++i) {
+        if(v[i] &gt; max_val) {
+            max_val = v[i];
+        }
+        if(v[i] &lt; min_val) {
+            min_val = v[i];
+        }
+    }
+    vector&lt;int&gt; tmp(max_val - min_val + 1, 0);
+    cout &lt;&lt; tmp.size() &lt;&lt; endl;
+    for(int i = 0; i &lt; n; ++i) {
+        int pos = v[i] - min_val;
+        ++tmp[pos];
+    }
+    int k = 0;
+    n = tmp.size();
+    for(int i = 0; i &lt; n; ++i) {
+        while(tmp[i] != 0) {
+            v[k] = min_val + i;
+            ++k;
+            --tmp[i];
+        }
+    }
+}
+
+//堆排序
+void adjust_heap(vector&lt;int&gt; &amp;v, int i, int n) {
+    for(int k = i * 2 + 1; i &lt; n; k = k * 2 + 1) {
+        if(k + 1 &lt; n &amp;&amp; v[k] &lt; v[k + 1]) {
+            ++k;
+        }
+        if(k &lt; n &amp;&amp; v[k] &gt; v[i]) {
+            swap(v[i], v[k]);
+            i = k;
+        } else {
+            break;
+        }
+    }
+}
+
+void heap_sort(vector&lt;int&gt; &amp;v) {
+    int n = v.size();
+    for(int i = n / 2 - 1; i &gt;= 0; --i) {
+        adjust_heap(v, i, n);
+    }
+    for(int j = n - 1; j &gt; 0; --j) {
+        swap(v[j], v[0]);
+        adjust_heap(v, 0, j);
+    }
+}
+
+int main() {
+    vector&lt;int&gt; v = {46, 12, 453, 1114, 0};
+    int n = v.size();
+    vector&lt;int&gt; tmp(n, 0);
+    //bubble_sort(v);
+    //select_sort(v);
+    //inser_sort(v);
+    //shell_sort1(v); 
+    //shell_sort2(v);
+    //quick_sort(v, 0, v.size() - 1);
+    //merge_sort(v, 0, n - 1, tmp);
+    //radix_sort(v);
+    //heap_sort(v);
+    //count_sort(v);
+    //bucket_sort(v);
+    for(auto &amp;x : v) {
+        cout &lt;&lt; x &lt;&lt; ' ';
+    }
+    return 0;
+};
+</code></pre>
+<h3 id="8大排序算法排名">8大排序算法排名</h3>
+<p>排序算法的效率和适用场景有很多因素影响，因此没有一个固定的排名。以下是8大排序算法的简介和特点：</p>
+<ol>
+<li>冒泡排序（Bubble Sort）：简单但效率较低的排序算法，时间复杂度为O(n^2)，适用于小规模数据的排序。</li>
+<li>选择排序（Selection Sort）：简单但效率较低的排序算法，时间复杂度为O(n^2)，适用于小规模数据的排序。</li>
+<li>插入排序（Insertion Sort）：简单但效率较高的排序算法，时间复杂度为O(n^2)，适用于小规模数据的排序。</li>
+<li>希尔排序（Shell Sort）：基于插入排序的一种排序算法，时间复杂度为O(nlogn)~O(n^2)，适用于中等规模数据的排序。</li>
+<li>归并排序（Merge Sort）：基于分治思想的一种排序算法，时间复杂度为O(nlogn)，适用于大规模数据的排序，但需要额外的空间来存储中间结果。</li>
+<li>快速排序（Quick Sort）：基于分治思想的一种排序算法，时间复杂度为O(nlogn)，适用于大规模数据的排序，但在最坏情况下时间复杂度为O(n^2)。</li>
+<li>堆排序（Heap Sort）：基于堆的一种排序算法，时间复杂度为O(nlogn)，适用于大规模数据的排序，但需要额外的空间来存储堆。</li>
+<li>基数排序（Radix Sort）：基于数字位的一种排序算法，时间复杂度为O(d(n+r))，适用于大规模数据的排序，但需要额外的空间来存储桶和中间结果，只适用于整数排序。</li>
+</ol>
+<p>综合来看，<font color=red>归并排序和快速排序在大规模数据的排序中表现较好，而插入排序和希尔排序在小规模数据的排序中表现较好。但在实际应用中，需要根据具体情况选择合适的排序算法。</font></p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#%E5%BF%AB%E9%80%9F%E6%8E%92%E5%BA%8F">快速排序</a></li>
+<li><a href="#%E5%BD%92%E5%B9%B6%E6%8E%92%E5%BA%8F">归并排序</a></li>
+<li><a href="#%E5%A0%86%E6%8E%92%E5%BA%8F">堆排序</a>
+<ul>
+<li><a href="#8%E5%A4%A7%E6%8E%92%E5%BA%8F%E7%AE%97%E6%B3%95%E6%8E%92%E5%90%8D">8大排序算法排名</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://hensonguo.github.io/post/czhi-hook/">
+              <h3 class="post-title">
+                C++之HOOK
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://hensonguo.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

@@ -1,0 +1,334 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>windows内存管理总结 | Icode</title>
+<link rel="shortcut icon" href="https://hensonguo.github.io/favicon.ico?v=1704354032694">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://hensonguo.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="windows内存管理总结 | Icode - Atom Feed" href="https://hensonguo.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="内存管理方法
+Windows提供了3种进行内存管理的方法：
+1) 虚拟内存，最适合用来管理大量对象或结构数组；
+2) 内存映射文件，最适合用来管理大型数据流（通常来自文件）以及在单个计算机上运行的多个进程之间共享数据；
+3) 内存堆栈，最适..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://hensonguo.github.io">
+  <img class="avatar" src="https://hensonguo.github.io/images/avatar.png?v=1704354032694" alt="">
+  </a>
+  <h1 class="site-title">
+    Icode
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              windows内存管理总结
+            </h2>
+            <div class="post-info">
+              <span>
+                2023-07-06
+              </span>
+              <span>
+                18 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <h2 id="内存管理方法">内存管理方法</h2>
+<p>Windows提供了3种进行内存管理的方法：<br>
+<strong>1) 虚拟内存，最适合用来管理大量对象或结构数组；<br>
+2) 内存映射文件，最适合用来管理大型数据流（通常来自文件）以及在单个计算机上运行的多个进程之间共享数据；<br>
+3) 内存堆栈，最适合用来管理大量的小对象；</strong></p>
+<br>
+<h2 id="磁盘">磁盘</h2>
+<p>是一种计算机存储设备，通常指的是硬盘（Hard Disk）或固态硬盘（Solid State Drive，SSD）。磁盘是计算机中用于长期存储数据和程序的设备，它的容量通常比物理内存和虚拟内存大得多，但读写速度比物理内存和虚拟内存都要慢得多。</p>
+<br>
+<h2 id="物理内存">物理内存</h2>
+<p><strong>物理内存又称RAM，32位CPU的寻址能力是4GB个字节</strong>，用户最多可以使用4GB的真实物理内存。物理内存的大小直接影响计算机的性能，较大的物理内存可以提高计算机的运行速度和稳定性。PC中很多设备都提供了自己的设备内存，例如显卡就提供了自己的显存。这部分内存会映射到PC的物理内存上，也就是读写这段物理地址，其实会读写的设备内存地址，而不会读写物理内存地址。</p>
+<p><strong>放在寻址总线上的地址</strong>。放在寻址总线上，如果是读，电路根据这个地址每位的值就将相应地址的物理内存中的数据放到数据总线中传输。如果是写，电路根据这个地址每位的值就将相应地址的物理内存中放入数据总线上的内容。物理内存是以字节(8位)为单位编址的。</p>
+<br>
+<h2 id="虚拟内存">虚拟内存</h2>
+<p><strong>是一种计算机存储技术，它将硬盘空间作为扩展内存使用，当物理内存不足时，计算机会将一部分数据和程序从物理内存中转移到虚拟内存中，从而释放出物理内存</strong>。虚拟内存的大小通常比物理内存大得多，但它的读写速度比物理内存慢，因此使用虚拟内存会降低计算机的性能。</p>
+<p>程序中使用的都是虚拟地址。 Windows 2000 使用基于分页机制的虚拟内存。<font color=red>每个进程有4GB的虚拟地址空间</font>。基于分页机制，这4GB地址空间的一些部分被映射了物理内存，一些部分映射硬盘上的交换文件，一些部分什么也没有映射。程序中使用的都是4GB地址空间中的虚拟地址。而访问物理内存，需要使用物理地址。</p>
+<p>虚拟内存也称为分页文件，也就是那个 pagefile.sys文件，如果计算机缺少运行程序操作所需的随机存取内存 (RAM)，则 Windows 使用虚拟内存进行补偿。、（RAM理解为物理内存，相当于手机上的运行内存，而非存储）</p>
+<p>注：为什么 32 位程序只能使用最大 2GB 内存？<br>
+<font color=red>32 位寻址空间只有 4GB 大小，于是 32 位应用程序（进程）最大只能用到 4GB 的内存。然而，除了应用程序本身要用内存，操作系统内核也需要使用。应用程序使用的内存空间分为用户空间和内核空间，每个 32 位程序的用户空间可独享前 2GB 空间（指针值为正数），而内核空间为所有进程共享 2GB 空间（指针值为负数）。所以，32 位应用程序实际能够访问的内存地址空间最多只有 2GB。</font></p>
+<br>
+<h2 id="页文件">页文件</h2>
+<p><strong>页文件是一种用于实现虚拟内存的文件，它通常存储在计算机的硬盘上</strong>。<font color=red>当计算机需要将物理内存中的数据和程序转移到虚拟内存中时，操作系统会将这些数据和程序分成若干个大小固定的块，称为页面（Page），并将这些页面存储到页文件中(简言之这是数据和程序分块（页面）存储到页文件中)。</font></p>
+<p>因此，页文件是虚拟内存的一部分，它存储了从物理内存中转移到虚拟内存中的数据和程序。当计算机需要使用虚拟内存中的数据和程序时，操作系统会从页文件中读取相应的页面，并将其加载到物理内存中。反之，当物理内存中的数据和程序需要转移到虚拟内存中时，操作系统会将其写入到页文件中。</p>
+<br>
+<h2 id="内存分页">内存分页</h2>
+<h3 id="1-为什么需要分页">1、为什么需要分页</h3>
+<p>为了解决内存使用效率低的问题，windows采用了内存分页。内存分页是一种将进程虚拟地址空间划分为固定大小的页的方法，可以提高内存使用效率。内存分页可以让操作系统将物理内存分配给进程使用，而不需要分配连续的物理内存空间，从而提高内存使用效率。</p>
+<br>
+<h3 id="2-分配粒度和分页大小">2、分配粒度和分页大小</h3>
+<p><strong>分配粒度：每个CPU都使用64KB这个分配粒度</strong>，分配粒度是什么呢，举个例子，我申请了0x00010000处的内存空间，我只想申请1KB,但是系统会为你保留64KB</p>
+<p><strong>分页大小：表示的是页面的大小，32位操作系统是4K是内存管理的最小单位。</strong> 一般x86的页面大小为4KB，alphaCPU的页面大小为8KB，不管申请多大内存，但是实际申请内存大小一定是页面大小的倍数<br>
+如果申请1KB,则在x86平台上申请的实际大小为4KB,alpha平台上则为8KB</p>
+<p><strong>分配粒度和分页大小区别：假设你要请求6k = 4K + 2K的空间，操作系统会一次分配64K的空间放着，又因为内存最小操作单位是4K，所以实际上给你分配了8K=4K +  4K，剩下的56K放着有需要了再给你。</strong></p>
+<br/>
+<h3 id="3-分页机制">3、分页机制</h3>
+<p><strong>分页机制思想</strong>：通过映射，可以使连续的线性地址与任意物理内存地址相关联，逻辑上连续的线性地址其对应的物理地址可以不连续。</p>
+<p><strong>作用</strong>：</p>
+<ul>
+<li>将线性地址转换成物理地址。</li>
+<li>将大小不同的大内存段拆分成大小相等的小内存块<br>
+<img src="https://hensonguo.github.io/post-images/1688725059779.jpg" alt="" loading="lazy"></li>
+</ul>
+<p>分页机制是建立在分段机制上，即使在分页机制下的进程也需要先经过逻辑上的分段。</p>
+<ol>
+<li><strong>分配内存段</strong>：当加载一个进程，操作系统按照进程中各段的起始范围，在进程自己的 4GB 虚拟地址空间中寻找可用空间分配内存段。</li>
+<li><strong>分页机制</strong>：在分页机制下，这些分配的段(例如：图示的代码段和数据段)在逻辑上被拆分成以页为单位的小内存块。</li>
+<li><strong>映射</strong>：接着操作系统为这些虚拟内存块(页)分配真实的物理内存页，OS查找物理内存中可用的页，然后在页表中登记这些物理页地址，这样就完成了虚拟页到物理页的映射。</li>
+</ol>
+<p>从此，<strong>每个进程都认为自己独享 4GB 地址空间</strong>。从0x00000000-0xFFFFFFFF。通过每个进程自己的一套页目录和页表来实现。<font color=red>由于每个进程有自己的页目录和页表，所以每个进程的地址空间映射的物理内存是不一样的</font>。两个进程的同一个虚拟地址处（如果都有物理内存映射）的值一般是不同的，因为他们往往对应不同的物理页。</p>
+<br>
+<h3 id="4-一级页表">4、一级页表</h3>
+<figure data-type="image" tabindex="1"><img src="https://hensonguo.github.io/post-images/1688731242033.jpg" alt="" loading="lazy"></figure>
+<p>上图中，页表大小计算可得： 4Byte*4G =16GB。<br>
+解释：表中存有 4G 个页表项，同时，32 位的地址要用 4 字节的页表项来存储。<br>
+由于页表存放在内存中，16G 显然过大。</p>
+<p>32 位地址表示 4GB 空间，可以将 32 位地址分成高低两部分，低地址部分是内存块大小，高地址部分是内存块数量。</p>
+<pre><code>内存块数∗内存块大小=4GB
+</code></pre>
+<p>CPU 中采用的页大小 (内存块大小) 定为 4KB（2的12次方）【注】：页是地址空间的计量单位，只要是 4KB 的地址空间都可以称为一页。</p>
+<p>那么，4GB 地址空间被划分成 4GB/4KB=1M 个页，即4GB 空间中可以容纳 1048576 个页，页表中自然也要有 1048576 个页表项，这就是一级页表。</p>
+<p>经以上的分析，<strong><font color=red>虚拟地址的高 20 位可用来定位一个物理页，低 12 位可用来在该物理页内寻址</font></strong>。<br>
+【解释】我们用高 20 位，索引一个页（索引范围 0～0xfffff），表示第几个页。低 12 位作为页内寻址。</p>
+<br>
+<h3 id="5-如何将线性地址转换成物理地址">5、如何将线性地址转换成物理地址</h3>
+<p><font color=red>一个页表项对应一个页，所以，用线性地址的高 20 位作为页表项的索引，每个页表项要占用 4 字节<br>
+大小，所以这高 20 位的索引乘以 4 后才是该页表项相对于页表物理地址的字节偏移量。用 cr3 寄存器中的页表物理地址加上此偏移量便是该页表项的物理地址，从该页表项中得到映射的物理页地址，然后用线性地址的低 12 位与该物理页地址相加，所得的地址之和便是最终要访问的物理地址。</font><br>
+<img src="https://hensonguo.github.io/post-images/1688731802325.jpg" alt="" loading="lazy"></p>
+<p>物理内存分页，一个物理页的大小为4K字节，第0个物理页从物理地址 0x00000000 处开始。由于页的大小为4KB，就是0x1000字节，所以第1页从物理地址 0x00001000处开始。第2页从物理地址0x00002000处开始。可以看到由于页的大小是4KB，所以只需要32bit的地址中高20bit来寻址物理页。</p>
+<p><strong>页表</strong>，一个页表的大小为4K字节，放在一个物理页中。由1024个4字节的页表项组成。页表项的大小为4个字节(32bit)，所以一个页表中有1024个页表项。页表中的每一项的内容（每项4个字节,32bit）高20bit用来放一个物理页的物理地址，低12bit放着一些标志。</p>
+<p><strong>页目录</strong>，<strong>一个页目录大小为4K字节，放在一个物理页中。由1024个4字节的页目录项组成。页目录项的大小为4个字节(32bit)，所以一个页目录中有1024个页目录项。页目录中的每一项的内容（每项4个字节）高20bit用来放一个页表（页表放在一个物理页中）的物理地址，低12bit放着一些标志。</strong></p>
+<p><font color=red>线性地址—&gt;物理地址（计算+查页表映射）—&gt;地址总线—&gt;内存地址</font></p>
+<br/>
+<h3 id="6-二级页表">6、二级页表</h3>
+<ul>
+<li>无论是几级页表，标准页的大小都是 4KB。因此4GB 线性地址空间最多有 1M 个标准页。</li>
+<li>二级页表是将这 1M 个标准页平均放置 1K 个页表中。每个页表中包含有 1K 个页表项，每个页表大小为4KB。为了更好的管理每个页表，将每个页表的物理地址存放在页目录表中都以页目录项（Page Directory Entry， PDE）的形式存储，页目录项大小同页表项一样都为 4KB ，PDE用来描述一个物理页的物理地址。</li>
+<li>页目录表和所有页表都放在物理内存中。<br>
+<img src="https://hensonguo.github.io/post-images/1688732211457.jpg" alt="" loading="lazy"></li>
+</ul>
+<br/>
+<h2 id="虚拟内存申请与释放">虚拟内存申请与释放</h2>
+<p>Windows所有程序（包括Ring0层和Ring3层的程序）可以操作的都是虚拟内存。之所以称为虚拟内存，是因为对它的所有操作最终都会变成一系列对真实物理内存的操作。</p>
+<p>通过调用VirtualAlloc函数，可以在进程的地址空间中保留一个区域：</p>
+<pre><code class="language-c++">PVOID VirtualAlloc(
+    PVOID pvAddress,
+    SIZE_T dwSize,
+    DWORD fdwAllocationType,
+    DWORD fdwProtect);
+</code></pre>
+<p>第一个参数pvAddress包含一个内存地址，用于设定想让系统将地址空间保留在什么地址，多数情况下，该参数传递NULL，用于告诉VirtualAlloc，<strong>保存一个空间地址区域的记录，系统应该将区域保留在它认为合适的任何地方</strong>。系统可以从进程的地址空间的任何位置来保留一个区域，因为不能保证系统可以从地址空间的底部向上或从上面向底部来分配各个区域，使用MEM_TOP_DOWN标志来说明该分配方式。</p>
+<p><strong>分配内存时，操作系统寻找一个大小满足需要的内存块，并返回内存块的地址，由于每个进程有自己的地址空间，可以设定一个基本内存地址，在这个地址上让操作系统保留地址空间区域。</strong> 例如，将一个从50MB开始的区域保留在进程的地址空间中，传递pvAddress为52428800(50<em>1024</em>1024)，如果该内存地址有一个足够大的空闲区域满足你的要求，那系统就保留这个区域并返回地址，如果在特定的地址上不存在空闲区域，或者空闲区域不够大，那系统就不满足需求，VirtualAlloc函数返回NULL。</p>
+<p>注意：</p>
+<ul>
+<li>
+<p><strong>为pvAddress参数传递的任何地址必须始终位于进程的用户方式分区中</strong>，否则对VirtualAlloc函数    的调用就会失败，导致其返回NULL。</p>
+</li>
+<li>
+<p><strong>地址空间区域总是按照分配粒度的边界来保留（迄今为止所有的Windows环境下都是64KB）</strong>，因此，如果试图在进程地址空间中保留一个从19668992(300 * 65536+8192)这个地址开始的区域，系统就会将这个地址保留为64KB的倍数，即19660800(300*65536)开始的区域。</p>
+</li>
+<li>
+<p>如果传递一个指定的地址作为VirtualAlloc的pvAddress参数，那么该返回值与传递给VirtualAlloc的值相同，并取为64KB的整数倍。</p>
+</li>
+<li>
+<p>VirtualAlloc函数的第二个参数是dwSize，用于设定想保留的区域大小（以字节为单位），系统保留的区域必须是CPU页面大小的倍数，如试图保留一个跨越62KB的区域，结果就会在使用4KB/8KB或16KB页面的计算机上产生一个跨越64KB的区域。</p>
+</li>
+<li>
+<p>VirtualAlloc函数的第三个参数是fdwAllocationType，告诉系统想保留一个区域还是提交物理存储器（VirtualAlloc函数也可以用来提交物理存储器），若要保留一个地址空间区域，传递MEM_RESERVE标识符作为fdwAllocationType参数的值。如果保留区域预计在很长时间内不会被释放，那可以在尽可能高的内存地址上保留该区域，这样，该区域就不会从进程地址空间的中间位置上进行保留，因此这个位置可能导致区域分成碎片，如果想让系统在最高内存地址上保留一个区域，需为pvAddress参数和fdwAllocationType参数传递NULL，还必须逐位使用OR将MEM_TOP_DOWN标志和MEM_RESERVE标志连接起来。</p>
+</li>
+<li>
+<p>VirtualAlloca最后一个参数是fdwProtect，用于指明应该赋予该地址空间区域的保护属性。</p>
+</li>
+</ul>
+<p><strong>当保留一个区域后，必须将物理存储器提交给该区域，然后才能访问该区域中包含的内存地址，系统从它的页文件中将已提交的物理存储器分配给一个区域，物理存储器总是按页面边界和页面大小的块来提交的。</strong> 若要提交物理存储器，调用VirtualAlloc函数时设置参数fdwAllocationType为MEM_COMMIT，传递的页面保护属性一般与调用VirtualAlloc来保留区域时使用的保护属性相同（大多数情况下是PAGE_READWRITE）。在已保留的区域中，须告诉VirtualAlloc函数，要将物理存储器提交到那里以及提交多大物理存储空间，实现这一点，需要在pvAddress参数中设定需要的内存地址，并在dwSize参数上设定物理存储器的大小。</p>
+<p>若要回收映射到一个区域的物理存储器，或者释放这个地址空间区域，可调用VirtualFree函数：</p>
+<pre><code>BOOL VirtualFree(
+    LPVOID pvAddress,
+    SIZE_T dwSize,
+    DWORD fdwFreeType);
+</code></pre>
+<p>当进程不再访问区域中的物理存储器，可以释放整个保留的区域和所有提交给该区域的物理存储器，方法是一次调用VirtualFree函数。</p>
+<p>pvAddress是释放区域的基地址，与该区域被保留时VirtualAlloc函数返回的地址相同，系统知道在特定内存地址上的区域大小，因此dwSize参数可以为零，实际，该参数必须传递零，否则调用VirtualFree失败，对最后一个参数fdwFreeType，必须传递MEM_RELEASE，以告诉系统将所有映射的物理存储器提给该区域并释放该区域，当释放一个区域时，必须释放该区域保留的所有地址空间。</p>
+<p>当想要从一个区域回收某些物理存储器，但是却不释放该区域，设置参数fdwFreeType为MEM_DECOMMIT标志。<font style="font-weight:bold">回收时也按照页面的分配粒度来进行，设定一个页面中间的一个内存地址就可以回收整个页面，如果pvAddress+dwSize的值位于一个页面的中间，那包含该地址的整个页面将被回收，因此，位于pvAddress至pvAddress+dwSize范围内的所有页面均被回收。</font></p>
+<br/>
+<h2 id="内存映射">内存映射</h2>
+<p>内存映射是一种将文件映射到进程虚拟地址空间的方法，可以让进程直接访问文件，而不需要进行文件读写操作。内存映射可以提高文件访问速度，并且可以让多个进程共享同一个文件，从而提高系统性能。</p>
+<br>
+<h2 id="内存共享">内存共享</h2>
+<p>内存共享是一种让多个进程共享同一块内存空间的方法，可以提高系统性能。内存共享可以让多个进程共享同一个数据结构，从而避免了数据复制和同步的开销。</p>
+<br>
+<h2 id="栈区">栈区</h2>
+<p>栈区是用于存储函数调用时的局部变量和函数参数的存储区域，由程序自动管理。栈区通常是由操作系统分配的一块连续的内存空间，栈顶指针指向栈顶位置。</p>
+<br>
+<h2 id="堆区">堆区</h2>
+<p>堆区是用于存储动态分配的内存的存储区域，由程序自己管理。堆区通常是由操作系统分配的一块连续的内存空间，程序可以通过调用 malloc() 或 new 函数来动态分配内存，通过调用 free() 或 delete 函数来释放内存。堆区的大小和布局是由程序自己管理的，程序需要确保不会出现内存泄漏或内存溢出的情况。</p>
+<h2 id="进程地址空间">进程地址空间</h2>
+<p>所谓进程地址空间（process address space），就是从进程的视角看到的地址空间，是进程运行时所用到的虚拟地址的集合。操作系统会给每一个进程都创建一个独立的虚拟地址空间，每一个进程的地址空间都是整个内存的大小。操作系统让进程假装以为整个内存都为自己服务，就像老板给员工画的大大的饼，既然是画饼，所以在某个进程需要过大的内存时操作系统会直接拒绝。</p>
+<p>然后，操作系统会通过页表将虚拟地址空间与物理内存建立映射，也就是说当我们得到虚拟地址时，通过页表就可以对应到物理地址。当我们需要修改虚拟地址中的数据时，操作系统会先通过页表找到对应的物理内存，然后修改物理内存中的数据。<br>
+<img src="https://hensonguo.github.io/post-images/1688733794901.jpg" alt="" loading="lazy"><br>
+在操作系统中，进程地址空间中的地址通常也被称为线性地址，因为它是按比特位从全0到全1依次顺序编址的；磁盘程序内部的地址通常被称为逻辑地址。而在其他地方，线性地址、虚拟地址、逻辑地址区分比较严格，但是在Linux中，三者的意思是一样的，都表示虚拟地址，大家不用过于区分。</p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E6%96%B9%E6%B3%95">内存管理方法</a></li>
+<li><a href="#%E7%A3%81%E7%9B%98">磁盘</a></li>
+<li><a href="#%E7%89%A9%E7%90%86%E5%86%85%E5%AD%98">物理内存</a></li>
+<li><a href="#%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98">虚拟内存</a></li>
+<li><a href="#%E9%A1%B5%E6%96%87%E4%BB%B6">页文件</a></li>
+<li><a href="#%E5%86%85%E5%AD%98%E5%88%86%E9%A1%B5">内存分页</a>
+<ul>
+<li><a href="#1-%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81%E5%88%86%E9%A1%B5">1、为什么需要分页</a></li>
+<li><a href="#2-%E5%88%86%E9%85%8D%E7%B2%92%E5%BA%A6%E5%92%8C%E5%88%86%E9%A1%B5%E5%A4%A7%E5%B0%8F">2、分配粒度和分页大小</a></li>
+<li><a href="#3-%E5%88%86%E9%A1%B5%E6%9C%BA%E5%88%B6">3、分页机制</a></li>
+<li><a href="#4-%E4%B8%80%E7%BA%A7%E9%A1%B5%E8%A1%A8">4、一级页表</a></li>
+<li><a href="#5-%E5%A6%82%E4%BD%95%E5%B0%86%E7%BA%BF%E6%80%A7%E5%9C%B0%E5%9D%80%E8%BD%AC%E6%8D%A2%E6%88%90%E7%89%A9%E7%90%86%E5%9C%B0%E5%9D%80">5、如何将线性地址转换成物理地址</a></li>
+<li><a href="#6-%E4%BA%8C%E7%BA%A7%E9%A1%B5%E8%A1%A8">6、二级页表</a></li>
+</ul>
+</li>
+<li><a href="#%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98%E7%94%B3%E8%AF%B7%E4%B8%8E%E9%87%8A%E6%94%BE">虚拟内存申请与释放</a></li>
+<li><a href="#%E5%86%85%E5%AD%98%E6%98%A0%E5%B0%84">内存映射</a></li>
+<li><a href="#%E5%86%85%E5%AD%98%E5%85%B1%E4%BA%AB">内存共享</a></li>
+<li><a href="#%E6%A0%88%E5%8C%BA">栈区</a></li>
+<li><a href="#%E5%A0%86%E5%8C%BA">堆区</a></li>
+<li><a href="#%E8%BF%9B%E7%A8%8B%E5%9C%B0%E5%9D%80%E7%A9%BA%E9%97%B4">进程地址空间</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://hensonguo.github.io/post/windows-he-xin-bian-cheng-dui-zhan/">
+              <h3 class="post-title">
+                windows核心编程-堆栈
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://hensonguo.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

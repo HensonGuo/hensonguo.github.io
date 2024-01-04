@@ -1,0 +1,352 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>windows核心编程-在应用程序中使用虚拟内存 | Icode</title>
+<link rel="shortcut icon" href="https://hensonguo.github.io/favicon.ico?v=1704354032694">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://hensonguo.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="windows核心编程-在应用程序中使用虚拟内存 | Icode - Atom Feed" href="https://hensonguo.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="Windows提供了3种进行内存管理的方法，它们是：
+• 虚拟内存，最适合用来管理大型对象或结构数组。
+• 内存映射文件，最适合用来管理大型数据流（通常来自文件）以及在单个计算机上运行的多个进程之间共享数据。
+• 内存堆栈，最适合用来管理大..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://hensonguo.github.io">
+  <img class="avatar" src="https://hensonguo.github.io/images/avatar.png?v=1704354032694" alt="">
+  </a>
+  <h1 class="site-title">
+    Icode
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              windows核心编程-在应用程序中使用虚拟内存
+            </h2>
+            <div class="post-info">
+              <span>
+                2023-06-13
+              </span>
+              <span>
+                26 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <p>Windows提供了3种进行内存管理的方法，它们是：<br>
+• <strong>虚拟内存，最适合用来管理大型对象或结构数组。<br>
+• 内存映射文件，最适合用来管理大型数据流（通常来自文件）以及在单个计算机上运行的多个进程之间共享数据。<br>
+• 内存堆栈，最适合用来管理大量的小对象。</strong></p>
+<p>用于管理虚拟内存的函数可以用来直接保留一个地址空间区域，将物理存储器（来自页文件）提交给该区域，并且可以设置你自己的保护属性。</p>
+<h2 id="在地址空间中保留一个区域">在地址空间中<strong>保留</strong>一个区域</h2>
+<p>通过调用VirtualAlloc函数，可以在进程的地址空间中保留一个区域：</p>
+<pre><code class="language-c++">PVOID VirtualAlloc(
+    PVOID pvAdress,
+    SIZE_T dwSize,
+    DWORD fdwAllocationType,
+    DWORD fdwProtect
+)
+</code></pre>
+<p>第一个参数pvAdress包含一个内存地址，用于设定想让系统将地址空间保留在什么地方。在大多数情况下，你为该参数传递 NULL。它告诉VirtualAlloc，保存着一个空闲地址区域的记录的系统应该将区域保留在它认为合适的任何地方。系统可以从进程的地址空间的任何位置来保留一个区域，因为不能保证系统可以从地址空间的底部向上或者从上面向底部来分配各个区域。可以使用MEM_TOP_DOWN标志来说明该分配方式。这个标志将在本章的后面加以介绍。</p>
+<p>对大多数程序员来说，能够选择一个特定的内存地址，并在该地址保留一个区域，这是个非同寻常的想法。当你在过去分配内存时，操作系统只是寻找一个其大小足以满足需要的内存块，并分配该内存块，然后返回它的地址。但是，由于每个进程有它自己的地址空间，因此可以设定一个基本内存地址，在这个地址上让操作系统保留地址空间区域。</p>
+<p>如果VirtualAlloc函数能够满足你的要求，那么它就返回一个值，指明保留区域的基地址。如果传递一个特定的地址作为 VirtualAlloc的pvAdress参数，那么该返回值与传递给VirtualAlloc的值相同，并被圆整为（如果需要的话）64KB边界值。</p>
+<p>VirtualAlloc函数的第二个参数是dwSize，用于设定想保留的区域的大小（以字节为计量单位）。由于系统保留的区域始终必须是 CPU页面大小的倍数，因此，如果试图保留一个跨越62KB的区域，结果就会在使用 4 KB、8 KB或16 KB页面的计算机上产生一个跨越 6 4 K B的区域。</p>
+<p>VirtualAlloc函数的第三个参数是fdwAllocationType，它能够告诉系统你想保留一个区域还是提交物理存储器（这样的区分是必要的，因为VirtualAlloc函数也可以用来提交物理存储器）。若要保留一个地址空间区域，必须传递 MEM_RESERVE标识符作为fdwAllocationType参数的值。如果保留的区域预计在很长时间内不会被释放，那么可以在尽可能高的内存地址上保留该区域。这样，该区域就不会从进程地址空间的中间位置上进行保留。因为在这个位置上它可能导致区域分成碎片。</p>
+<p>如果想让系统在最高内存地址上保留一个区域，必须为pvAdress参数和fdwAllocationType参数传递 NULL，还必须逐位使用 OR将MEM_TOP_DOWN标志和<strong>MEM_RESERVE</strong>标志连接起来。</p>
+<p>最后一个参数是fdwProtect，用于指明应该赋予该地址空间区域的保护属性。与该区域相关联的保护属性对映射到该区域的已提交内存没有影响。无论赋予区域的保护属性是什么，如果没有提交任何物理存储器，那么访问该范围中的内存地址的任何企图都将导致该线程引发一个访问违规。</p>
+<p>当保留一个区域时，应该为该区域赋予一个已提交内存最常用的保护属性。例如，如果打算提交的物理存储器的保护属性是 PAGE_READWRITE（这是最常用的保护属性），那么应该用PAGE_READWRITE保护属性来保留该区域。当区域的保护属性与已提交内存的保护属性相匹配时，系统保存的内部记录的运行效率最高。</p>
+<p>可以使用下列保护属性中的任何一个：PAGE_NOACCESS、PAGE_READWRITE、PAGE_READONLY、PAGE_EXECUTE、PAGE_EXECUTE_READ或PAGE_EXECUTE_READWRITE。但是，既不能设定 PAGE_WRITECOPY属性，也不能设定 PAGE_EXECUTE_WRITECOPY属性。如果设定了这些属性，VirtualAlloc函数将不保留该区域，并且返回NULL。另外，当保留地址空间区域时，不能使用保护属性标志 PAGE_GUARD，PAGE_NOCACHE或PAGE_WRITECOMBINE，这些标志只能用于已提交的内存。</p>
+<h2 id="在保留区域中的提交存储器">在保留区域中的<strong>提交</strong>存储器</h2>
+<p>当保留一个区域后，必须将物理存储器提交给该区域，然后才能访问该区域中包含的内存地址。系统从它的页文件中将已提交的物理存储器分配给一个区域。物理存储器总是按页面边界和页面大小的块来提交的。</p>
+<p>若要提交物理存储器，必须再次调用VirtualAlloc函数。不过这次为fdwAllocationType参数传递的是<strong>MEM_COMMIT</strong>标志，而不是MEM_RESERVE标志。传递的页面保护属性通常与调用VirtualAlloc来保留区域时使用的保护属性相同（大多数情况下是 PAGE_READWRITE），不过也可以设定一个不同的保护属性。</p>
+<p>在已保留的区域中，你必须告诉VirtualAlloc函数，你想将物理存储器提交到何处，以及要提交多少物理存储器。为了做到这一点，可以在 pvAddress参数中设定你需要的内存地址，并在dwSize参数中设定物理存储器的数量（以字节为计量单位）。注意，不必立即将物理存储器提交给整个区域。</p>
+<h2 id="同时进行区域的保留和内存的提交">同时进行区域的保留和内存的提交</h2>
+<p>有时你可能想要在保留区域的同时，将物理存储器提交给它。只需要一次调用 VirtualAlloc函数就能进行这样的操作，如下所示：</p>
+<pre><code class="language-c++">PVOID pvMem = VirtualAlloc(
+    NULL, 99*1024, 
+    MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE
+);
+</code></pre>
+<p>这个函数调用请求保留一个 99 KB的区域，并且将99 KB的物理存储器提交给它。当系统处理这个函数调用时，它首先要搜索你的进程的地址空间，找出未保留的地址空间中一个地址连续的区域，它必须足够大，能够存放100 KB（在4 KB页面的计算机上）或104 KB（在8 KB页面的计算机上）。</p>
+<p>系统之所以要搜索地址空间，原因是已将 pvAdress参数设定为NULL。如果为pvAdress设定了内存地址，系统就要查看在该内存地址上是否存在足够大的未保留地址空间。如果系统找不到足够大的未保留地址空间，VirtualAlloc将返回NULL.</p>
+<h2 id="何时提交物理存储器">何时提交物理存储器</h2>
+<p>假设想实现一个电子表格应用程序，这个电子表格为 200行 x 256列。对于每一个单元格，都需要一个CELLDATA结构来描述单元格的内容。若要处理这种二维单元格矩阵，最容易的方法是在应用程序中声明下面的变量：</p>
+<pre><code class="language-c++">CELLDATA cellData[200][256]
+</code></pre>
+<p>如果CELLDATA结构的大小是128字节，那么这个二维矩阵将需要6 553 600（200 x 256 x128）个字节的物理存储器。对于电子表格来说，如果直接用页文件来分配物理存储器，那么这是个不小的数目了，尤其是考虑到大多数用户只是将信息放入少数的单元格中，而大部分单元格却空闲不用，因此显得有些浪费。内存的利用率非常低。</p>
+<p>传统上，电子表格一直是用其他数据结构技术来实现的，比如链接表等。使用链接表，只需要为电子表格中实际包含数据的单元格创建CELLDATA结构。由于电子表格中的大多数单元格都是不用的，因此这种方法可以节省大量的内存。但是这种方法使得你很难获得单元格的内容。如果想知道第5行第1 0列的单元格的内容，必须遍历链接表，才能找到需要的单元格，因此使用链接表方法比明确声明的矩阵方法速度要慢。</p>
+<p>虚拟内存为我们提供了一种兼顾预先声明二维矩阵和实现链接表的两全其美的方法。运用虚拟内存，既可以使用已声明的矩阵技术进行快速而方便的访问，又可以利用链接表技术大大节省内存的使用量。</p>
+<p>如果想利用虚拟内存技术的优点，你的程序必须按照下列步骤来编写：</p>
+<ol>
+<li>保留一个足够大的地址空间区域，用来存放 CELLDATA结构的整个数组。保留一个根本不使用任何物理存储器的区域。</li>
+<li>当用户将数据输入一个单元格时，找出 CELLDATA结构应该进入的保留区域中的内存地址。当然，这时尚未有任何物理存储器被映射到该地址，因此，访问该地址的内存的任何企图都会引发访问违规。</li>
+<li>就CELLDATA结构来说，只将足够的物理存储器提交给第二步中找到的内存地址（你可以告诉系统将物理存储器提交给保留区域的特定部分，这个区域既可以包含映射到物理存储器的各个部分，也可以包含没有映射到物理存储器的各个部分）。</li>
+<li>设置新的CELLDATA结构的成员。现在物理存储器已经映射到相应的位置，你的程序能够访问内存，而不会引发访问违规。这个虚拟内存技术非常出色，因为只有在用户将数据输入电子表格的单元格时，才会提交物理存储器。由于电子表格中的大多数单元格是空的，因此大部分保留区域没有提交给它的物理存储器。</li>
+</ol>
+<p><strong>虚拟内存技术存在的一个问题是，必须确定物理存储器在何时提交</strong>。如果用户将数据输入一个单元格，然后只是编辑或修改该数据，那么就没有必要提交物理存储器，因为该单元格的CELLDATA结构的内存在数据初次输入时就已经提交了。</p>
+<p>另外，系统总是按页面的分配粒度来提交物理存储器的。因此，当试图为单个CELLDATA结构提交物理存储器时（像上面的第二步那样），系统实际上提交的是内存的一个完整的页面。这并不像它听起来那样十分浪费：为单个CELLDATA结构提交物理存储器的结果是，也要为附近的其他CELLDATA结构提交内存。如果这时用户将数据输入邻近的单元格（这是经常出现的情况），就不需要提交更多的物理存储器。</p>
+<p>有4种方法可以用来确定是否要将物理存储器提交给区域的一个部分：</p>
+<ol>
+<li><strong>始终设法进行物理存储器的提交</strong>。每次调用VirtualAlloc函数的时候，不要查看物理存储器是否已经映射到地址空间区域的一个部分，而是让你的程序设法进行内存的提交。系统首先查看内存是否已经被提交，如果已经提交，那么就不要提交更多的物理存储器。这种方法最容易操作，但是它的缺点是每次改变CELLDATA结构时要多进行一次函数的调用，<strong>这会使程序运行得比较慢</strong>。</li>
+<li><strong>（使用VirtualQuery函数）确定物理存储器是否已经提交给包含CELLDATA结构的地址空间。如果已经提交了，那么就不要进行任何别的操作</strong>。如果尚未提交，则可以调用VirtualAlloc函数以便提交内存。这种方法实际上比第一种方法差，<strong>它既会增加代码的长度，又会降低程序运行的速度</strong>（因为增加了对VirtualAlloc函数的调用）。</li>
+<li><strong>保留一个关于哪些页面已经提交和哪些页面尚未提交的记录</strong>。这样做可以使你的应用程序运行得更快，因为不必调用 VirtualAlloc函数，你的代码能够比系统更快地确定内存是否已经被提交。它的缺点是，<strong>必须不断跟踪页面提交的信息，这可能非常简单，也可能非常困难，要根据你的情况而定</strong>。</li>
+<li><strong><font color=red>使用结构化异常处理（ SEH）方法，这是最好的方法</font></strong>。 SEH是一个操作系统特性，它使系统能够在发生某种情况时将此情况通知你的应用程序。实际上可以创建一个带有异常处理程序的应用程序，然后，每当试图访问未提交的内存时，系统就将这个问题通知应用程序。然后你的应用程序便进行内存的提交，并告诉系统重新运行导致异常条件的指令。这时对内存的访问就能成功地进行了，程序将继续运行，仿佛从未发生过问题一样。这种方法是优点最多的方法，因为需要做的工作最少（也就是说要你编写的代码比较少），同时，你的程序可以全速运行。</li>
+</ol>
+<h2 id="回收虚拟内存和释放地址空间区域">回收虚拟内存和释放地址空间区域</h2>
+<p>若要回收映射到一个区域的物理存储器，或者释放这个地址空间区域，可调用 VirtualFree函数：</p>
+<pre><code class="language-c++">BOOL VirtualFree(
+    PVOID pvAdress,
+    SIZE_T dwSize,
+    DWORD fdwFreeType
+)
+</code></pre>
+<p>就这个函数的调用来说， pvAdress参数必须是该区域的基地址。此地址与该区域被保留时VirtualAlloc函数返回的地址相同。系统知道在特定内存地址上的该区域的大小，因此可以为dwSize参数传递0。实际上，必须为dwSize参数传递0，否则对VirtualFree的调用就会失败。对于第三个参数fdwFreeType，必须传递MEM_RELEASE，以告诉系统将所有映射的物理存储器提交给该区域并释放该区域。当释放一个区域时，必须释放该区域保留的所有地址空间。例如不能保留一个128 KB的区域，然后决定只释放它的64 KB。必须释放所有的128 KB。</p>
+<p>当想要从一个区域回收某些物理存储器，但是却不释放该区域时，也可以调用 VirtualFree函数，若要回收某些物理存储器，必须在 VirtualFree函数的pvAdress参数中传递用于标识要回收的第一个页面的内存地址，还必须在dwSize参数中设定要释放的字节数，并在fdwFreeType参数中传递MEM_DECOMMIT标志。</p>
+<p>与提交物理存储器的情况一样，回收时也必须按照页面的分配粒度来进行。这就是说，设定页面中间的一个内存地址就可以回收整个页面。当然，如果 pvAddress + dwSize的值位于一个页面的中间，那么包含该地址的整个页面将被回收。因此位于 pvAddress 至pvAddress +dwSize范围内的所有页面均被回收。</p>
+<p>如果dwSize是0，pvAdress是已分配区域的基地址，那么 VirtualFree将回收全部范围内的已分配页面。当物理存储器的页面已经回收之后，已释放的物理存储器就可以供系统中的所有其他进程使用，如果试图访问未回收的内存，将会造成访问违规。</p>
+<h2 id="何时回收物理存储器">何时回收物理存储器</h2>
+<p>在实践中，知道何时回收内存是非常困难的。让我们再以电子表格为例。如果你的应用程序是在x 8 6计算机上运行，每个内存页面是4 KB ，它可以存放32个（4096 / 128）CELLDATA结构。如果用户删除了单元格 C e l l D a t a [0][1]的内容，那么只要单元格 CELLDATA[0] [0]至CELLDATA[0][31]也不被使用，就可以回收它的内存页面。那么怎么能够知道这个情况呢？可以用下面3种方法来解决这个问题。</p>
+<ol>
+<li>毫无疑问，最容易的方法是设计一个CELLDATA结构，它的大小只有一个页面。这时，由于始终都是每个页面使用一个结构，因此当不再需要该结构中的数据时，就可以回收该页面的物理存储器。即使你的数据结构是 x86 CPU上的8 KB或12 KB页面的倍数（通常这是非常大的数据结构），回收内存仍然是非常容易的。当然，如果要使用这种方法，必须定义你的数据结构，使之符合你针对的 C P U的页面大小而不是我们通常编写程序所用的结构。</li>
+<li>更为实用的方法是保留一个正在使用的结构的记录。为了节省内存，可以使用一个位图。这样，如果有一个100个结构的数组，你也可以维护一个 100位的数组。开始时，所有的位均设置为0，表示这些结构都没有使用。当使用这些结构时，可以将对应的位设置为 1。然后，每当不需要某个结构，并将它的位重新改为 0时，你可以检查属于同一个内存页面的相邻结构的位。如果没有相邻的结构正在使用，就可以回收该页面。</li>
+<li>最后一个方法是实现一个无用单元收集函数。这个方案依赖于这样一种情况，即当物理存储器初次提交时，系统将一个页面中的所有字节设置为 0。若要使用该方案，首先必须在你的结构中设置一个BOOL（也许称为fInUse）。然后，每次你将一个结构放入已提交的内存中，必须确保该fInUse被置于TRUE。</li>
+</ol>
+<p>当你的应用程序运行时，必须定期调用无用单元收集函数。该函数应该遍历所有潜在的数据结构。对于每个数据结构，该函数首先要确定是否已经为该结构提交内存。如果已经提交，该函数将检查fInUse成员，以确定它是否是0。如果该值是0，则表示该结构没有被使用。如果该值是TRUE，则表示该结构正在使用。当无用单元函数检查了属于既定页面的所有结构后，如果所有结构都没有被使用，它将调用VirtualFree函数，回收该内存。</p>
+<p>当一个结构不再被视为“在用”（In Use）后，就可以立即调用无用单元收集函数，不过这项操作需要的时间比你想像的要长，因为该函数要循环通过所有可能的结构。实现该函数的一个出色方法是让它作为低优先级线程的一部分来运行。这样，就不必占用执行主应用程序的线程的时间。每当主应用程序运行空闲时，或者主应用程序的线程执行文件的 I / O操作时，系统就可以给无用单元收集函数安排运行时间。</p>
+<h2 id="改变保护属性">改变保护属性</h2>
+<p>虽然实践中很少这样做，但是可以改变已经提交的物理存储器的一个或多个页面的保护属性。例如，你编写了一个用于管理链接表的代码，将它的节点存放在一个保留区域中。可以设计一些函数，以便处理该链接表，这样，它们就可以在每个函数开始运行时将已提交内存的保护属性改为 PAGE_READWRITE，然后在每个函数终止运行时将保护属性重新改为PAGE_NOACCESS。</p>
+<p>通过这样的设置，就能够使链接表数据不受隐藏在程序中的其他错误的影响。如果进程中的任何其他代码存在一个迷失指针，试图访问你的链接表数据，那么就会引发访问违规。当试图寻找应用程序中难以发现的错误时，利用保护属性是极其有用的。</p>
+<p>若要改变内存页面的保护属性，可以调用VirtualProtect函数：</p>
+<pre><code class="language-c++">BOOL VirtualProtect(
+    PVOID pvAdress,
+    SIZE_T dwSize,
+    DWORD flNewProtect,
+    PDWORD pfOldProtect
+)
+</code></pre>
+<p>这里的pvAdress参数指向内存的基地址（它必须位于进程的用户方式分区中），dwSize参数用于指明你想要改变保护属性的字节数，而 flNewProtect参数则代表PAGE_ *保护属性标志中的任何一个标志，PAGE_WRITECOPY和PAGE_EXECUTE_WRITECOPY这两个标志除外。</p>
+<p>最后一个参数pfOldProtect是DWORD的地址，VirtualProtect将用原先与pvAdress位置上的字节相关的保护属性填入该DWORD。尽管许多应用程序并不需要该信息，但是必须为该参数传递一个有效地址，否则该函数的运行将会失败。</p>
+<p>当然，保护属性是与内存的整个页面相关联的，而不是赋予内存的各个字节的。因此，如果要使用下面的代码来调用 4 KB 页面的计算机上的VirtualProtect函数，其结果是把PAGE_NOACCESS保护属性赋予内存的两个页面：</p>
+<pre><code class="language-c++">VirtualProtect(pvRgnBase + (3*1024), 2*1024,  PAGE_NOACCESS, &amp;pfOldProtect);
+</code></pre>
+<h2 id="清除物理存储器的内容">清除物理存储器的内容</h2>
+<p>Windows 2000提供了一个特性，使得应用程序能够提高它的性能，这个特性就是对物理存储器内容进行清除。清除存储器意味着你告诉系统，内存的一个或多个页面上的数据并没有被修改。如果系统正在搜索RAM的一个页面，并且选择一个已修改的页面，系统必须将RAM的这个页面写入页文件。这个操作的速度很慢，而且会影响系统的运行性能。对于大多数应用程序来说，可以让系统将你修改了的页面保留在系统的页文件中。</p>
+<p>然而，有些应用程序使用内存的时间很短，然后就不再要求保留该内存的内容。为了提高性能，应用程序可以告诉系统不要将内存的某些页面保存在系统的页文件中。这是应用程序告诉系统数据页面尚未修改的一个基本方法。因此，如果系统选择将 RAM的页面用于别的目的，那么该页面的内容就不必保存在页文件中，从而可以提高应用程序的运行性能。若要清除内存的内容，应用程序可以调用VirtualAlloc函数，在第三个参数中传递MEM_RESET标志。</p>
+<p>如果在调用VirtualAlloc函数时引用的页面位于页文件中，系统将删除这些页面。下次应用程序访问内存时，便使用最初被初始化为 0的RAM页面。如果清除了当前RAM中的页面内容，那么它们将被标上未修改的标记，这样它们将永远不会被写入页文件。注意，虽然 RAM页面的内容没有被置0，但是不应该继续从内存的该页面读取数据。如果系统不需要 RAM的这个页面，它将包含其原始内容。但是如果系统需要 RAM的这个页面，系统就可以提取该页面。然后当你试图访问该页面的内容时，系统将给你一个已经删除内容的新页面。由于你无法控制这个行为特性，因此，当清除页面的内容后，你必须假定该页面的内容是无用信息。</p>
+<p>当清除内存的内容时，有两件事情必须记住。首先，当调用VirtualAlloc函数时，基地址通常圆整为一个页面边界的值，而字节数则圆整为一个页面的整数。当清除页面的内容时，用这种办法圆整基地址和字节数是非常危险的，因此，当传递 <strong>MEM_RESET标志时，VirtualAlloc将按反方向对这些值进行圆整</strong>。例如，有下面这个代码：</p>
+<pre><code class="language-c++">PINT pnData = (PINT)VirtualAlloc(
+    NULL, 1024, 
+    MEM_RESERVE | MEM_COMMIT
+);
+pn[0] = 100;
+pn[1] = 200;
+VirtualAlloc((PVOID) pnData, sizeof(int), MEM_RESET, PAGE_RE);
+</code></pre>
+<p>该代码提交了一个内存页面，然后指明前 4个字节sizeof(int)不再需要，可以被清除。但是，与所有内存操作一样，一切操作都必须在页面边界上并按页面增量来进行。结果，对上面这个内存清除函数的调用会失败（VirtualAlloc函数返回 NULL）。为什么呢？因为当将MEM_RESET传递给VirtualAlloc时，传递给函数的基地址被圆整为页面边界的值，字节数圆整为一个页面的整数。这样做是为了确保重要的数据不会丢失。在上面的例子中，字节数圆整后得出的是0，而清除0字节是不合法的。</p>
+<p>要记住的第二件事情是， MEM_RESET标志始终必须自己单独使用，不能用 OR将它与任何其他标志连接起来使用。下面这个函数调用总是失败的，它返回的是 NULL。</p>
+<pre><code class="language-c++">PVOID pvMem = VirtualAlloc(
+    NULL, 1024, 
+    MEM_RESERVE | MEM_COMMIT | MEM_RESET, PAGE_READWRITE
+);
+</code></pre>
+<p>将MEM_RESET标志与任何其他标志连接起来确实没有任何意义。<br>
+最后请注意，带有MEM_RESET标志的VirtualAlloc函数要求传递一个有效的页面保护属性，即使该函数不使用这个值，也必须传递该值。</p>
+<h2 id="地址窗口扩展">地址窗口扩展</h2>
+<p>随着时间的推移，<strong>应用程序需要的内存越来越多。对于服务器应用程序来说，情况更是如此。由于越来越多的客户机对服务器提出访问请求，服务器的运行性能就会降低。为了提高运行性能，服务器应用程序必须在 RAM中保存更多的数据，并且缩小磁盘的页面</strong>。其他类别的应用程序，比如数据库、工程设计和科学应用程序，也需要具备处理大块内存的能力。对于所有这些应用程序来说，3 2位地址空间是不够使用的。</p>
+<p>为了满足这些应用程序的需要， Windows提供了一个新特性。称为地址窗口扩展（AWE）。Microsoft创建AW E是出于下面两个目的D:<br>
+<strong>1) 允许应用程序对从来不在操作系统与磁盘之间交换的 RAM进行分配。<br>
+2) 允许应用程序访问的RAM大于进程的地址空间。</strong></p>
+<p>AWE基本上为应用程序提供了一种分配一个或多个 RAM块的手段。当分配RAM块时，在进程的地址空间中是看不见这些 RAM块的。后来，应用程序（使用 VirtualAlloc函数）保留一个地址空间区域，这个区域就成为地址窗口。这时应用程序调用一个函数，每次将一个 RAM块赋予该地址窗口。将一个RAM块赋予地址窗口的速度是非常快的（通常只需要几个毫秒）。显然，通过单个地址窗口，每次只能访问一个 RAM块。这使得你的代码很难实现，因为，当需要时，必须在你的代码中显式调用函数，才能将不同的 RAM块赋予地址窗口。</p>
+<p>下面的代码显示了如何使用AWE的方法：</p>
+<pre><code class="language-c++">//first, reverse a 1mb region for the adress window
+ULONG_PTR ulRamBytes = 1024*1024;
+PVOID pvWindow = VirtualAlloc(
+    NULL, ulRamBytes, 
+    MEM_RESERVE | MEM_PHYSICAL , PAGE_READWRITE
+);
+
+//Get the number of bytes in a page for this cpu platform
+SYSTEM_INFO sinf;
+GetSystemInfo(&amp;sinf);
+
+//calculate the required number of ram pages for the desired number of bytes
+ULONG_PTR ulRamPages = ulRamBytes / sinfo.dwPageSize;
+
+//allocate array for ram page's page frame numbers
+ULONG_PTR aRAMPages[ulRamBytes];
+//allocate the pages of ram(requires lock pages in memory user right) 
+//--RAM物理存储器的分配
+AllocateUserPhysicalPages(
+    GetCurrentPages(),  //allocate the storage for our process
+    &amp;ulRamPages,         //input: # of ram pages, output:#pages allocated
+    aRAMPages              //output: opaque array indicating pages allocated
+);
+
+//assign the ram pages to our window
+//--通过调用 MapUserPhysicalPages函数将该R A M块赋予该地址窗口：
+MapUserPhysicalPages(
+    pvWindow,           //the address of the address window
+    ulRamPages,         //number of entries in array
+    aRAMPages);         //array of ram pages
+
+//access the ram pages via the pvWindow virtual address
+.
+.
+.
+//free the block of ram pages
+FreeUserPhysicalPages(
+    GetCurrentPages(),      // free the ram allocated for our process
+    &amp;ulRamPages,             //input: # of ram pages, output:#pages freed
+    aRAMPages                 //output: array indicating the ram pages to freed
+)
+
+//destroy the address window
+VirtualFree(pvWindow, 0, MEM_RELEASE);
+</code></pre>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#%E5%9C%A8%E5%9C%B0%E5%9D%80%E7%A9%BA%E9%97%B4%E4%B8%AD%E4%BF%9D%E7%95%99%E4%B8%80%E4%B8%AA%E5%8C%BA%E5%9F%9F">在地址空间中<strong>保留</strong>一个区域</a></li>
+<li><a href="#%E5%9C%A8%E4%BF%9D%E7%95%99%E5%8C%BA%E5%9F%9F%E4%B8%AD%E7%9A%84%E6%8F%90%E4%BA%A4%E5%AD%98%E5%82%A8%E5%99%A8">在保留区域中的<strong>提交</strong>存储器</a></li>
+<li><a href="#%E5%90%8C%E6%97%B6%E8%BF%9B%E8%A1%8C%E5%8C%BA%E5%9F%9F%E7%9A%84%E4%BF%9D%E7%95%99%E5%92%8C%E5%86%85%E5%AD%98%E7%9A%84%E6%8F%90%E4%BA%A4">同时进行区域的保留和内存的提交</a></li>
+<li><a href="#%E4%BD%95%E6%97%B6%E6%8F%90%E4%BA%A4%E7%89%A9%E7%90%86%E5%AD%98%E5%82%A8%E5%99%A8">何时提交物理存储器</a></li>
+<li><a href="#%E5%9B%9E%E6%94%B6%E8%99%9A%E6%8B%9F%E5%86%85%E5%AD%98%E5%92%8C%E9%87%8A%E6%94%BE%E5%9C%B0%E5%9D%80%E7%A9%BA%E9%97%B4%E5%8C%BA%E5%9F%9F">回收虚拟内存和释放地址空间区域</a></li>
+<li><a href="#%E4%BD%95%E6%97%B6%E5%9B%9E%E6%94%B6%E7%89%A9%E7%90%86%E5%AD%98%E5%82%A8%E5%99%A8">何时回收物理存储器</a></li>
+<li><a href="#%E6%94%B9%E5%8F%98%E4%BF%9D%E6%8A%A4%E5%B1%9E%E6%80%A7">改变保护属性</a></li>
+<li><a href="#%E6%B8%85%E9%99%A4%E7%89%A9%E7%90%86%E5%AD%98%E5%82%A8%E5%99%A8%E7%9A%84%E5%86%85%E5%AE%B9">清除物理存储器的内容</a></li>
+<li><a href="#%E5%9C%B0%E5%9D%80%E7%AA%97%E5%8F%A3%E6%89%A9%E5%B1%95">地址窗口扩展</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://hensonguo.github.io/post/windows-he-xin-bian-cheng-nei-cun-guan-li/">
+              <h3 class="post-title">
+                windows核心编程-虚拟内存
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://hensonguo.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

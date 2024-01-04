@@ -1,0 +1,275 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>windows核心编程-线程的调度、优先级和亲缘性 | Icode</title>
+<link rel="shortcut icon" href="https://hensonguo.github.io/favicon.ico?v=1704354032694">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://hensonguo.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="windows核心编程-线程的调度、优先级和亲缘性 | Icode - Atom Feed" href="https://hensonguo.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="调度
+Windows不是实时操作系统，它是抢占式多线程操作系统。在如果全部优先级同样的情况下，CPU对线程的调度原则是每隔20m就会切换到下一个线程，依据Context中的IP和SP来接着运行上次的东西。Windows永远不会让1个线程去独..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://hensonguo.github.io">
+  <img class="avatar" src="https://hensonguo.github.io/images/avatar.png?v=1704354032694" alt="">
+  </a>
+  <h1 class="site-title">
+    Icode
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              windows核心编程-线程的调度、优先级和亲缘性
+            </h2>
+            <div class="post-info">
+              <span>
+                2023-06-01
+              </span>
+              <span>
+                12 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <h2 id="调度">调度</h2>
+<p><strong>Windows不是实时操作系统，它是抢占式多线程操作系统</strong>。在如果全部优先级同样的情况下，CPU对线程的调度原则是每隔20m就会切换到下一个线程，依据Context中的IP和SP来接着运行上次的东西。Windows永远不会让1个线程去独占一段时间。</p>
+<h2 id="线程的暂停和恢复">线程的暂停和恢复</h2>
+<p>在线程内核对象内部有一个表示暂停计数器的成员，当你调用 CreateProcess 或 CreateThread 时，这个计数器初始化为 1，避免线程被调度给 CPU，保证线程在完全初始化之前不会执行任何代码，一旦线程完全初始完成，创建函数会检测你是否传递了一个 CREATE_SUSPENDED 标志，如果没有传递这个标志，函数会减少暂停计数器计数，只要计数器为 0，这个线程就成为可调度线程，否则它会暂停执行。</p>
+<ul>
+<li>
+<p>在CreateThread的时候通过制定CREATE_SUSPENDED来让线程暂停运行</p>
+</li>
+<li>
+<p>在DWORD SuspendThread(HANDLE hThread)函数来暂停一个线程，最多次数为MAXIMUM_SUSPEND_COUNT（127）</p>
+</li>
+<li>
+<p>通过函数DWORD ResumeThread(HANDLE hThread)来唤醒线程</p>
+</li>
+</ul>
+<h2 id="暂停和恢复进程的运行">暂停和恢复进程的运行</h2>
+<p><strong>对于Windows来说，不存在暂停或恢复进程的概念，因为进程从来不会被安排获得CPU时间。</strong> 但是，曾经有人无数次问我如何暂停进程中的所有线程的运行。 Windows确实允许一个进程暂停另一个进程中的所有线程的运行，但是从事暂停操作的进程必须是个调试程序。特别是，进程必须调用WaitForDebugEvent和ContinueDebugEvent之类的函数。<br>
+由于竞争的原因，Windows没有提供其他方法来暂停进程中所有线程的运行。例如，虽然许多线程已经暂停，但是仍然可以创建新线程。从某种意义上说，系统必须在这个时段内暂停所有新线程的运行。Microsoft已经将这项功能纳入了系统的调试机制。虽然无法创建绝对完美的SuspendProcess函数，但是可以创建一个该函数的实现代码，它能够在许多条件下出色地运行。下面是我的SuspendProcess函数的实现代码：</p>
+<pre><code class="language-c++">VOID SuspendProcess(DWORD dwProcessId, BOOL fSuspend)
+{
+     HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, dwProcessId);
+ 
+     if (hSnapshot != INVALID_HANDLE_VALUE)
+     {
+         THREADENTRY32 te = { sizeof (THREADENTRY32)};
+         BOOL fOk = Thread32First(hSnapshot, &amp;te);
+         for  (; fOk; fOk = Thread32Next(hSnapshot, &amp;te))
+         {
+             // 当前线程属于进程吗？
+             if (te.th32OwnerProcessID == dwProcessId)
+             {
+                 // 将线程ID转换为一个句柄
+                 HANDLE hThread = OpenThread(THREAD_SUSPEND_RESUME,
+                     FALSE, te.th32OwnerProcessID);
+                 if (hThread != NULL)
+                 {
+                     // 暂停或恢复这个线程
+                     if (fSuspend)
+                         SuspendThread(hThread);
+                     else
+                         ResumeThread(hThread);
+                 }
+                 CloseHandle(hThread);
+             }
+         }
+         CloseHandle(hSnapshot);
+     }
+}
+</code></pre>
+<h2 id="睡眠方式">睡眠方式</h2>
+<p>线程也能告诉系统，它不想在某个时间段内被调度。这是通过调用Sleep函数来实现的。可以将0传递给Sleep。这将告诉系统，调用线程将释放剩余的时间片，并迫使系统调度另一个线程。但是，系统可以对刚刚调用Sleep的线程重新调度。如果不存在多个拥有相同优先级的可调度线程，就会出现这种情况。</p>
+<h2 id="转换到另一个线程">转换到另一个线程</h2>
+<p>系统提供了一个称为SwithToThread的函数，使得另一个可调度线程。当调用这个函数的时候，系统要查看是否存在一个迫切需要CPU时间的线程。如果没有线程迫切需要CPU时间，SwitchToThread就会立即返回。如果存在一个迫需要CPU时间的线程，SwitchToThread就对该线程进行调度。</p>
+<p>调用SwitchToThread函数与调用Sleep是相似的，并且传递给它一个0ms的超时。差别是SwitchToThread允许优先级较低的线程运行。即使低优先级线程迫切需要CPU时间，Sleep也能够立即对调用线程重新进行调度。</p>
+<h2 id="线程的运行时间">线程的运行时间</h2>
+<p>如果是用GetTickCount的话，即是做了一个简单的假设：它不会被中断。但是，在抢占式操作系统中，永远无法知道线程何时被赋予CPU时间。Windows提供了一个称为GetThreadTimes的函数。它可以返回线程执行操作系统代码和应用程序代码用来多少个100ns的CPU时间。</p>
+<p>GetProcessTimes返回的时间适用于某个进程中的所有线程。返回的内核时间是所有进程的线程在内核代码中经过的全部时间的总和。</p>
+<h2 id="运用结构环境">运用结构环境</h2>
+<p>环境结构使得系统能够记住线程的状态，这样，当下次线程拥有可以运行的CPU时，它就能够找到它上次中断运行的地方。CONTEXT结构中包含了主机C P U上的每个寄存器的数据结构。在x86计算机上，数据成员是Eax、Ebx、Ecx、Edx等等。</p>
+<p>Windows实际上允许查看线程内核对象的内部情况，以便抓取它当前的一组CPU寄存器。若要进行这项操作，只需要调用GetThreadContext函数。</p>
+<p>在调用GetThreadContext函数之前，应该调用SuspendThread，否则，线程可能被调度，而且线程的环境可能与你收回的不同。一个线程实际上有两个环境。一个是用户方式，一个是内核方式。GetThreadContext只能返回线程的用户方式环境。如果调用SuspendThread来停止线程的运行，但是该线程目前正在用内核方式运行，那么，即使SuspendThread实际上尚未暂停该线程的运行，它的用户方式仍然处于稳定状态。线程在恢复用户方式之前，它无法执行更多的用户方式代码，因此可以放心地将线程视为处于暂停状态， GetThreadContext函数将能正常运行。</p>
+<p>Windows使你能够修改CONTEXT结构中的成员，然后通过调用SetThreadContext将新寄存器值放回线程的内核对象中。同样，修改其环境的线程应该首先暂停，否则其结果将无法预测。</p>
+<p>实际上，几乎没有应用程序调用这些函数。增加这些函数是为了增强调试程序和其他工具的功能。</p>
+<p>CONTEXT 结构：<br>
+CONTEXT 结构允许系统记住线程的状态，线程下一次得到 CPU 时间的时候它可以继续执行。这个结构在 WinNT.h 中定义，它的每一个成员对应一个 CPU 寄存器。</p>
+<p>CONTEXT 结构有几个部分，CONTEXT_CONTROL 包含了 CPU 的控制寄存器，如指令指针、栈指针、标志寄存器、函数返回地址等；CONTEXT_INTEGER 表示 CPU 的整数寄存器；CONTEXT_FLOATING_POINT 表示 CPU 的浮点指针寄存器；CONTEXT_SEGMENTS 表示 CPU 的段寄存器；CONTEXT_DEBUG_RGEISTERS 表示 CPU 的调试寄存器；CONTEXT_EXTENDED_REGISTERS 表示 CPU 的扩展寄存器。</p>
+<p>可以使用</p>
+<pre><code>BOOL GetThreadContext(
+     HANDLE      hThread,
+     PCONTEXT    pContext);
+</code></pre>
+<h2 id="线程的优先级">线程的优先级</h2>
+<p><strong>每个线程都会被赋予一个从0（最低）到31（最高）的优先级号码。</strong> 当系统确定将哪个线程分配给CPU时，它首先观察优先级为31的线程，并以循环方式对它们进行调度。如果优先级为31的线程可以调度，那么就将该线程赋予一个CPU。在该线程的时间片结束时，系统要查看是否还有另一个优先级为31的线程可以运行，如果有，它将允许该线程被赋予一个CPU。只要优先级为31的线程是可调度的，系统就绝对不会将优先级为0到30的线程分配给CPU。</p>
+<p>人们可能认为，在这样的系统中，低优先级线程永远得不到机会运行。不过正像前面指出的那样，在任何一个时段内，系统中的大多数线程是不能调度的。</p>
+<p>高优先级线程将抢在低优先级线程之前运行，不管低优先级线程正在运行什么。例如，如果一个优先级为5的线程正在运行，系统发现一个高优先级的线程准备要运行，那么系统就会立即暂停低优先级线程的运行（即使它处于它的时间片中），并且将CPU分配给高优先级线程，使它获得一个完整的时间片。</p>
+<p>当系统引导时，它会创建一个特殊的线程，称为0页线程。该线程被赋予优先级0，<br>
+它是整个系统中唯一的一个在优先级0上运行的线程。当系统中没有任何线程需要执行操作时，0页线程负责将系统中的所有空闲RAM页面置0。</p>
+<h2 id="对优先级的抽象说明">对优先级的抽象说明</h2>
+<p>• Microsoft没有将调度程序的行为特性完全固定下来。<br>
+• Microsoft没有让应用程序充分利用调度程序的特性。<br>
+• Microsoft声称调度程序的算法是变化的，在编写代码时应有所准备。</p>
+<p>Windows API展示了系统的调度程序上的一个抽象层，这样就永远不会直接与调度程序进行通信。</p>
+<p>Windows 支持6个优先级类：即空闲、低于正常、正常、高于正常、高和实时。当然，正常优先级是最常用的优先级类， 99%的应用程序均使用这个优先级类。</p>
+<p>当系统什么也不做的时候，将空闲优先级类用于应用程序的运行是最恰当不过的。定期更新系统的某些状态的统计信息跟踪应用程序不应该干扰关键任务的运行。只有当绝对必要的时候，才可以使用高优先级类。Windows Explorer是在高优先级上运行的。大多数时间Explorer的线程是暂停的，等待用户按下操作键或者点击鼠标按钮时被唤醒。如果低优先级线程正在运行，系统会立即抢在这些线程的前面，让Explorer的线程优先运行。MicroSoft就是按这种方法设计Explorer的，因为用户希望无论系统中正在运行什么，外壳程序都具有极强的响应能力。</p>
+<p>应该尽可能避免使用实时优先级类。实时优先级是很高的优先级，它可能干扰操作系统任务的运行，因为大多数操作系统线程均以较低的优先级来运行。因此实时线程可能阻止必要的磁盘I/O信息和网络信息的产生。此外，键盘和鼠标输入将无法及时得到处理，用户可能以为系统已经暂停运行。大体来说，必须有足够的理由才能使用实时优先级，比如需要以很短的等待时间来响应硬件事件，或者执行某些不能中断的短期任务。</p>
+<h2 id="程序的优先级">程序的优先级</h2>
+<p>创建子进程的进程负责选择子进程运行的优先级类。一旦子进程运行，它就能够通过调用SetPriorityClass来改变它自己的优先级类。</p>
+<p>通过将线程的相对优先级与线程的进程优先级类综合起来考虑，系统就可以确定线程的优先级等级。有时这称为线程的基本优先级等级。系统常常要提高线程的优先级等级，以便对窗口消息或读取磁盘等I/O事件作出响应。系统只能为基本优先级等级在1至15之间的线程提高其优先级等级。实际上这是因为这个范围称为动态优先级范围。</p>
+<p>当用户对进程的窗口进行操作时，该进程就称为前台进程，所有其他进程则称为后台进程。为了提高前台进程的响应性，Windows能够为前台进程中的线程调整其调度算法。系统可以为前台进程的线程提供比通常多的CPU时间量。这种调整只能在前台进程属于正常优先级类的进程时才能进行。如果它属于其他任何优先级类，就无法进行任何调整。</p>
+<h2 id="亲缘性">亲缘性</h2>
+<p>按照默认设置，当系统将线程分配给处理器时，如果所有其他因素相同的话，它将设法在它上次运行的那个处理器上运行线程。让线程留在单个处理器上，有助于重复使用仍然在处理器的内存高速缓存中的数据。</p>
+<p>计算机在引导时，系统要确定机器中有多少个CPU可供使用。按照默认设置，任何线程都可以调度到这些CPU中的任何一个上去运行。为了限制在可用C P U的子集上运行的单个进程中的线程数量，可以调用SetProcessAffinityMask。子进程可以继承进程的亲缘性。此外，可以使用作业内核对象将一组进程限制在要求的一组CPU上运行。</p>
+<p>在大多数环境中，改变线程的亲缘性就会影响调度程序有效地在各个CPU之间移植线程的能力，而这种能力可以最有效地使用CPU时间。</p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#%E8%B0%83%E5%BA%A6">调度</a></li>
+<li><a href="#%E7%BA%BF%E7%A8%8B%E7%9A%84%E6%9A%82%E5%81%9C%E5%92%8C%E6%81%A2%E5%A4%8D">线程的暂停和恢复</a></li>
+<li><a href="#%E6%9A%82%E5%81%9C%E5%92%8C%E6%81%A2%E5%A4%8D%E8%BF%9B%E7%A8%8B%E7%9A%84%E8%BF%90%E8%A1%8C">暂停和恢复进程的运行</a></li>
+<li><a href="#%E7%9D%A1%E7%9C%A0%E6%96%B9%E5%BC%8F">睡眠方式</a></li>
+<li><a href="#%E8%BD%AC%E6%8D%A2%E5%88%B0%E5%8F%A6%E4%B8%80%E4%B8%AA%E7%BA%BF%E7%A8%8B">转换到另一个线程</a></li>
+<li><a href="#%E7%BA%BF%E7%A8%8B%E7%9A%84%E8%BF%90%E8%A1%8C%E6%97%B6%E9%97%B4">线程的运行时间</a></li>
+<li><a href="#%E8%BF%90%E7%94%A8%E7%BB%93%E6%9E%84%E7%8E%AF%E5%A2%83">运用结构环境</a></li>
+<li><a href="#%E7%BA%BF%E7%A8%8B%E7%9A%84%E4%BC%98%E5%85%88%E7%BA%A7">线程的优先级</a></li>
+<li><a href="#%E5%AF%B9%E4%BC%98%E5%85%88%E7%BA%A7%E7%9A%84%E6%8A%BD%E8%B1%A1%E8%AF%B4%E6%98%8E">对优先级的抽象说明</a></li>
+<li><a href="#%E7%A8%8B%E5%BA%8F%E7%9A%84%E4%BC%98%E5%85%88%E7%BA%A7">程序的优先级</a></li>
+<li><a href="#%E4%BA%B2%E7%BC%98%E6%80%A7">亲缘性</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://hensonguo.github.io/post/windows-he-xin-bian-cheng-xian-cheng/">
+              <h3 class="post-title">
+                windows核心编程-线程
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://hensonguo.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

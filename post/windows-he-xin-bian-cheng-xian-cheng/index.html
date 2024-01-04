@@ -1,0 +1,278 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>windows核心编程-线程 | Icode</title>
+<link rel="shortcut icon" href="https://hensonguo.github.io/favicon.ico?v=1704354032694">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://hensonguo.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="windows核心编程-线程 | Icode - Atom Feed" href="https://hensonguo.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="线程
+线程也是由两个部分组成的：
+• 一个是线程的内核对象，操作系统用它来对线程实施管理。内核对象也是系统用来存放
+线程统计信息的地方。
+• 另一个是线程堆栈，它用于维护线程在执行代码时需要的所有函数参数和局部变量
+\qquad进程是不活泼..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://hensonguo.github.io">
+  <img class="avatar" src="https://hensonguo.github.io/images/avatar.png?v=1704354032694" alt="">
+  </a>
+  <h1 class="site-title">
+    Icode
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              windows核心编程-线程
+            </h2>
+            <div class="post-info">
+              <span>
+                2023-05-31
+              </span>
+              <span>
+                14 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <h2 id="线程">线程</h2>
+<p>线程也是由两个部分组成的：<br>
+<strong>• 一个是线程的内核对象，操作系统用它来对线程实施管理。内核对象也是系统用来存放<br>
+线程统计信息的地方。<br>
+• 另一个是线程堆栈，它用于维护线程在执行代码时需要的所有函数参数和局部变量</strong></p>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span><strong>进程是不活泼的。进程从来不执行任何东西，它只是线程的容器</strong>。线程总是在某个进程环境中创建的，而且它的整个寿命期都在该进程中。这意味着线程在它的进程地址空间中执行代码，并且在进程的地址空间中对数据进行操作。因此，如果在单进程环境中，你有<strong>两个或多个线程正在运行，那么这两个线程将共享单个地址空间</strong>。这些线程能够执行相同的代码，对相同的数据进行操作。这些<strong>线程还能共享内核对象句柄，因为句柄表依赖于每个进程而不是每个线程存在</strong>。<br>
+<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span>如你所见，进程使用的系统资源比线程多得多，原因是它需要更多的地址空间。为进程创建一个虚拟地址空间需要许多系统资源。系统中要保留大量的记录，这要占用大量的内存。另外，由于. exe和. dll文件要加载到一个地址空间，因此也需要文件资源。而线程使用的系统资源要少得多。实际上，线程只有一个内核对象和一个堆栈，保留的记录很少，因此需要很少的内存。<br>
+<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span>由于线程需要的开销比进程少，因此始终都应该设法用增加线程来解决编程问题，而要避免创建新的进程。但是，这个建议并不是一成不变的。许多程序设计用多个进程来实现会更好些。应该懂得权衡利弊，经验会指导你的编程实践。</p>
+<br>
+<h2 id="创建线程">创建线程</h2>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span><strong>线程的设计是为了提高CPU的使用率</strong>：当系统同时拥有多个CPU时让每个CPU都执行一个指令流在同一时间进行两个工作。当进程只拥有一个CPU的执行时间时，若执行流中发生阻塞（等待）而阻塞时不需要CPU执行任何指令，这时候可以让CPU去执行其他指令称之为线程切换，在阻塞解除又具备了指令继续执行下去的条件时CPU继续执行之后的指令看起来像是两个指令流同时在执行。这两种情况都可以称为并发。而CPU执行的线程属于同一个进程时称为多线程，属于不同进程时称为多进程，这两种都是并发的实现方式。考虑使用多线程或多进程时考虑他们的代价，<strong>多线程切换的代价远小于多进程切换的代价。对于有阻塞的情况（IO密集型）多采用多线程的方式，而对于线程能够一直占有进程的CPU（计算密集型）的情况一般采用多进程的方式</strong>。</p>
+<p>Windows提供创建线程的API：</p>
+<pre><code>HANDLE CreateThread(
+  PSECURITY_ATTRIBUTE psa,  //内核对象的安全属性
+  DWORD chStackSize,  // 指定线程栈的大小
+  PTHREAD_START_ROUTINE pfnStartAddr, //指定线程函数的地址
+  PVOID pvParam,  //传给线程函数的参数
+  DWORD dwCreateFlag,  //指定线程的状态，创建后激活或者挂起，若为CREATE_SUSPEND需要调用ResumeThread运行
+  PDWORD pdwThreadID //返回值，记录线程ID，可以为NULL
+);  
+</code></pre>
+<br>
+<h2 id="终止线程">终止线程</h2>
+<p>与终止进程一样，线程可以通过以下四种方式终止运行：<br>
+1：线程函数返回（最好使用这种方法）。<br>
+2：线程调用ExitThread杀死自己。<br>
+3：其他线程调用TerminateThread。<br>
+4：进程终止导致线程终止。</p>
+<p>1） 线程函数返回<br>
+始终都应该将线程设计成这样的形式，即当想要线程终止运行时，它们就能够返回。这是<br>
+确保所有线程资源被正确地清除的唯一办法。<br>
+如果线程能够返回，就可以确保下列事项的实现：<br>
+• 在线程函数中创建的所有C + +对象均将通过它们的撤消函数正确地撤消。<br>
+• 操作系统将正确地释放线程堆栈使用的内存。<br>
+• 系统将线程的退出代码（在线程的内核对象中维护）设置为线程函数的返回值。<br>
+• 系统将递减线程内核对象的使用计数。</p>
+<p>2）ExitThread函数<br>
+可以让线程调用ExitThread函数函数，以便强制线程终止运行：</p>
+<pre><code class="language-c++">void ExitThread(DWORD dwExitCode);
+</code></pre>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span>该函数将终止线程的运行，并导致操作系统清除该线程使用的所有操作系统资源。但是，C++资源（如C++类对象）将不被撤消。由于这个原因，最好从线程函数返回，而不是通过调用ExitThread函数来返回（详细说明参见第4章）。<br>
+<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span>当然，可以使用 ExitThread函数的dwExitCode参数告诉系统将线程的退出代码设置为什么。<br>
+ExitThread函数并不返回任何值，因为线程已经终止运行，不能执行更多的代码。<br>
+<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span>注意 终止线程运行的最佳方法是让它的线程函数返回。但是，如果使用本节介绍的方法，应该知道ExitThread函数是Windows用来撤消线程的函数。如果编写C/ C++代码，那么决不应该调用ExitThread。应该使用Visual C++运行期库函数_endthreadex。如果不使用Microsoft的Visual C++编译器，你的编译器供应商有它自己的 ExitThread的替代函数。不管这个替代函数是什么，都必须使用。本章后面将说明 _endthreadex的作用和它的重要性。</p>
+<p>3）TerminateThread函数<br>
+调用TerminateThread函数也能够终止线程的运行：</p>
+<pre><code class="language-c++">bool TerminateThread(HANDLE hThread, DWORD dwExitCode);
+</code></pre>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span>与ExitThread不同，ExitThread总是撤消调用的线程，而TerminateThread能够撤消任何线程。hThread参数用于标识被终止运行的线程的句柄。当线程终止运行时，它的退出代码成为你作<br>
+为dwExitCode参数传递的值。同时，线程的内核对象的使用计数也被递减。<br>
+<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span>注意 TerminateThread函数是异步运行的函数，也就是说，它告诉系统你想要线程终止运行，但是，当函数返回时，不能保证线程被撤消。如果需要确切地知道该线程已经终止运行，必须调用WaitFor SingleObject (第9章介绍)或者类似的函数，传递线程的句柄。<br>
+<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span>设计良好的应用程序从来不使用这个函数，因为被终止运行的线程收不到它被撤消的通知。线程不能正确地清除，并且不能防止自己被撤消。<br>
+<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span>注意 当使用返回或调用ExitThread的方法撤消线程时，该线程的内存堆栈也被撤消。但是，如果使用TerminateThread，那么在拥有线程的进程终止运行之前，系统不撤消该线程的堆栈。Microsoft故意用这种方法来实现TerminateThread。如果其他仍然正在执行的线程要引用强制撤消的线程堆栈上的值，那么其他的线程就会出现访问违规的问题。如果将已经撤消的线程的堆栈留在内存中，那么其他线程就可以继续很好地运行。此外，当线程终止运行时， D L L通常接收通知。如果使用 Terminate Thread 强迫线程终止，DLL就不接收通知，这能阻止适当的清除（详细信息参见第 2 0章）。</p>
+<p>4）在进程终止运行时撤消线程<br>
+第4章介绍的ExitProcess和TerminateProcess函数也可以用来终止线程的运行。差别在于这些线程将会使终止运行的进程中的所有线程全部终止运行。另外，由于整个进程已经被关闭，进程使用的所有资源肯定已被清除。这当然包括所有线程的堆栈。这两个函数会导致进程中的剩余线程被强制撤消，就像从每个剩余的线程调用TerminateThread一样。显然，这意味着正确的应用程序清除没有发生，即C + +对象撤消函数没有被调用，数据没有转至磁盘等等。</p>
+<p>5)线程终止运行时发生的操作<br>
+当线程终止运行时，会发生下列操作：<br>
+• 线程拥有的所有用户对象均被释放。在 Windows中，大多数对象是由包含创建这些对象的线程的进程拥有的。但是一个线程拥有两个用户对象，即窗口和挂钩。当线程终止运行时，系统会自动撤消任何窗口，并且卸载线程创建的或安装的任何挂钩。其他对象只有在拥有线程的进程终止运行时才被撤消。<br>
+• 线程的退出代码从STILL_ACTIVE改为传递给ExitThread或TerminateThread的代码。<br>
+• 线程内核对象的状态变为已通知。<br>
+• 如果线程是进程中最后一个活动线程，系统也将进程视为已经终止运行。<br>
+• 线程内核对象的使用计数递减1。<br>
+当一个线程终止运行时，在与它相关联的线程内核对象的所有未结束的引用关闭之前，该<br>
+内核对象不会自动被释放。<br>
+一旦线程不再运行，系统中就没有别的线程能够处理该线程的句柄。然而别的线程可以调用GetExitcodeThread来检查由hThread标识的线程是否已经终止运行。如果它已经终止运行，<br>
+则确定它的退出代码：</p>
+<pre><code class="language-c++">bool GetExitcodeThread(HANDLE hThread, DWORD pdwExitCode);
+</code></pre>
+<p>退出代码的值在pdwExitCode指向的DWORD中返回。如果调用GetExitcodeThread时线程<br>
+尚未终止运行，该函数就用 STILL_ACTIVE标识符（定义为0 x 1 0 3）填入DWORD。如果该函<br>
+数运行成功，便返回 TRUE（第9章将详细地介绍如何使用线程的句柄来确定何时线程终止运<br>
+行）。</p>
+<h2 id="线程资源释放">线程资源释放</h2>
+<p>必须明白，一个线程终止和线程资源释放那个不是一个概念。当一个线程以上面几种退出方式终止之后，线程对象及资源还存在于内存中，所以在线程终止之后还需要某种方式释放资源。</p>
+<p>线程的释放方式与创建方式相关联：<br>
+<strong>CreateThread创建的线程应使用CloseHandle关闭。<br>
+_beginthread创建的线程应使用_endthread关闭。<br>
+_beginthreadex创建的线程应使用_endthreadex关闭</strong>。<br>
+AfxBeginThread创建的线程，如果是线程自己结束自己的线程（从CWinThread继承出来的）就用AfxEndThread。如果外部调用的话可以用PostThreadMessage(m_nThreadID, WM_QUIT,0,0);给这个线程发送消息，线程就会结束的，其中的m_nThreadID是线程ID。</p>
+<pre><code class="language-c++">void main()
+{
+	……
+	HANDLE hThread = CreateThread(NULL,0,ThreadFunc,NULL,0,NULL);
+	CloseHandle(hThread);
+	……
+}
+</code></pre>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span>有些新手可能会有个疑问，为什么在刚创建完线程之后就把句柄关掉了？<br>
+<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span>要特别注意句柄和实例区别，句柄只是对实例对象的引用，用以操作对象。我们使用CreateThread创建了一个线程实例（可将线程整体看作一个对象），返回的线程句柄只是提供了一个方法（类似于指针）让我们可以访问或操作线程对象。我们这里只需要让创建的线程执行必要的代码段就好了，之后并不需要在对其进行任何操作，所以可以直接将其CloseHandle掉，关闭句柄只是切断了访问线程的方式罢了，线程还是存在并运行着的。<br>
+<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span>然而，只是这样解释还是有所偏差，因为在很多使用CloseHandle关闭其他对象句柄的操作中都会释放对象占用的资源，而对于线程，在调用CloseHandle之后并不会终止线程，也就不会立马释放线程资源（实现中线程还必须继续运行），调用CloseHandle之后系统会递减线程内核对象的使用计数，当线程执行完毕（线程函数执行完）之后也会递减此线程内核对象使用计数，当计数为0时才会释放线程资源！<br>
+反过来看，如果不使用CloseHandle关闭线程句柄，那么系统就会一直保持着对此线程内核对象的引用，这样，即使线程执行完毕，使用计数也不会为0，所以线程资源不会被释放。<br>
+<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span>因此，CloseHandle关闭线程句柄是释放线程资源的必要途径，但不会影响线程的正常运行！所以CloseHandle的调用位置非常灵活，即可在线程刚创建出来之后紧接着调用，也可以在线程执行完之后才调用!</p>
+<h2 id="线程性质">线程性质</h2>
+<p>下图显示了系统在创建线程和对线程进行初始化时必须做些什么工作。让我们仔细看一看这个图，以便确切地了解发生的具体情况。调用 CreateThread可使系统创建一个线程内核对象。该对象的初始使用计数是2（在线程停止运行和从CreateThread返回的句柄关闭之前，线程内核对象不会被撤消）。线程的内核对象的其他属性也被初始化，暂停计数被设置为 1，退出代码始终为STILL_ACTIVE（0x103），该对象设置为未通知状态。<br>
+<img src="https://hensonguo.github.io/post-images/1685540017427.jpg" alt="" loading="lazy"><br>
+<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span><strong>一旦内核对象创建完成，系统就分配用于线程的堆栈的内存。该内存是从进程的地址空间分配而来的，因为线程并不拥有它自己的地址空间</strong>。然后系统将两个值写入新线程的堆栈的上端（线程堆栈总是从内存的高地址向低地址建立）。写入堆栈的第一个值是传递给CreateThread的pvParam参数的值。紧靠它的下面是传递给CreateThread的pfnStartAddr参数的值。<br>
+<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span><strong>每个线程都有它自己的一组CPU寄存器，称为线程的上下文</strong>。该上下文反映了线程上次运行时该线程的 CPU寄存器的状态。线程的这组 CPU寄存器保存在一个CONTEXT结构（在WinNT.h头文件中作了定义）中。CONTEXT结构本身则包含在线程的内核对象中。<br>
+<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span><strong>指令指针和堆栈指针寄存器是线程上下文中两个最重要的寄存器</strong>。记住，线程总是在进程的上下文中运行的。因此，这些地址都用于标识拥有线程的进程地址空间中的内存。当线程的内核对象被初始化时，CONTEXT结构的堆栈指针寄存器被设置为线程堆栈上用来放置pfnStart-Addr的地址。指令指针寄存器置为称为 BaseThreadStart的未文档化（和未输出）的函数的地址中。该函数包含在Kernel32.dll模块中（这也是实现CreateThread函数的地方）。</p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#%E7%BA%BF%E7%A8%8B">线程</a></li>
+<li><a href="#%E5%88%9B%E5%BB%BA%E7%BA%BF%E7%A8%8B">创建线程</a></li>
+<li><a href="#%E7%BB%88%E6%AD%A2%E7%BA%BF%E7%A8%8B">终止线程</a></li>
+<li><a href="#%E7%BA%BF%E7%A8%8B%E8%B5%84%E6%BA%90%E9%87%8A%E6%94%BE">线程资源释放</a></li>
+<li><a href="#%E7%BA%BF%E7%A8%8B%E6%80%A7%E8%B4%A8">线程性质</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://hensonguo.github.io/post/windows-he-xin-bian-cheng-jin-cheng/">
+              <h3 class="post-title">
+                windows核心编程-进程
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://hensonguo.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

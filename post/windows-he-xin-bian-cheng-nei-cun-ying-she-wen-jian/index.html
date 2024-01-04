@@ -1,0 +1,535 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>windows核心编程-内存映射文件 | Icode</title>
+<link rel="shortcut icon" href="https://hensonguo.github.io/favicon.ico?v=1704354032694">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://hensonguo.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="windows核心编程-内存映射文件 | Icode - Atom Feed" href="https://hensonguo.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="与虚拟内存一样，内存映射文件可以用来保留一个地址空间的区域，并将物理存储器提交给该区域。它们之间的差别是，物理存储器来自一个已经位于磁盘上的文件，而不是系统的页文件。一旦该文件被映射，就可以访问它，就像整个文件已经加载内存一样。
+内存映射文..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://hensonguo.github.io">
+  <img class="avatar" src="https://hensonguo.github.io/images/avatar.png?v=1704354032694" alt="">
+  </a>
+  <h1 class="site-title">
+    Icode
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              windows核心编程-内存映射文件
+            </h2>
+            <div class="post-info">
+              <span>
+                2023-06-15
+              </span>
+              <span>
+                22 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <p><strong><font color=red>与虚拟内存一样，内存映射文件可以用来保留一个地址空间的区域，并将物理存储器提交给该区域。它们之间的差别是，物理存储器来自一个已经位于磁盘上的文件，而不是系统的页文件。一旦该文件被映射，就可以访问它，就像整个文件已经加载内存一样。</font></strong></p>
+<p>内存映射文件可以用于3个不同的目的：<br>
+<strong>1) 系统使用内存映射文件，以便加载和执行.exe和DLL文件。<font color=red>（exe和dll都是通过内存映射文件的方式，这也是为什么其他进程可以共享这些文件而不必再次重新加载，减小内存）</font>这可以大大节省页文件空间和应用程序启动运行所需的时间。<br>
+2) 可以使用内存映射文件来访问磁盘上的数据文件。这使你可以不必对文件执行I/O操作，并且可以不必对文件内容进行缓存。<br>
+3) 可以使用内存映射文件，使同一台计算机上运行的多个进程能够相互之间共享数据。<font color=red>Windows确实提供了其他一些方法，以便在进程之间进行数据通信，但是这些方法都是使用内存映射文件来实现的</font>，这使得内存映射文件成为单个计算机上的多个进程互相进行通信的最有效的方法。</strong></p>
+<br>
+<h2 id="内存映射的可执行文件和dll文件">内存映射的可执行文件和DLL文件</h2>
+<p>当线程调用CreateProcess时，系统将执行下列操作步骤：</p>
+<ol>
+<li>系统找出在调用CreateProcess时设定的.exe文件。如果找不到这个.exe文件，进程将无法创建，CreateProcess将返回FALSE。</li>
+<li>系统创建一个新进程内核对象。</li>
+<li>系统为这个新进程创建一个私有地址空间。</li>
+<li>系统保留一个足够大的地址空间区域，用于存放该.exe文件。</li>
+<li>系统注意到支持已保留区域的物理存储器是在磁盘上的 .exe文件中，而不是在系统的页文件中。</li>
+</ol>
+<p>当. exe文件被映射到进程的地址空间中之后，系统将访问 . exe文件的一个部分，该部分列出了包含 .exe文件中的代码要调用的函数的 DLL文件。然后，系统为每个 DLL文件调用LoadLibrary函数，如果任何一个 DLL需要更多的DLL，那么系统将调用 LoadLibrary函数，以便加载这些DLL。每当调用LoadLibrary来加载一个DLL时，系统将执行下列操作步骤，它们均类似上面的第4和第5个步骤：</p>
+<ol>
+<li>系统保留一个足够大的地址空间区域，用于存放该 D L L文件。该区域需要的位置在DLL文件本身中设定。</li>
+<li>如果系统无法在该D L L的首选基地址上保留一个区域，其原因可能是该区域已经被另一个DLL或. exe占用，也可能是因为该区域不够大，此时系统将设法寻找另一个地址空间的区域来保留该DLL。如果一个DLL无法加载到它的首选基地址，这将是非常不利的，原因有二。首先，如果系统没有再定位信息，它就无法加载该DLL（可以在D L L创建时，使用链接程序的/FIXED开关，从DLL中删除再定位信息，这能够使DLL变得比较小，但是这也意味着该DLL必须加载到它的首选地址中，否则它就根本无法加载）。第二，系统必须在 DLL中执行某些再定位操作。</li>
+<li>系统会注意到支持已保留区域的物理存储器位于磁盘上的 D L L文件中，而不是在系统的页文件中。如果由DLL无法加载到它的首选基地址，Windows必须执行再定位操作，那么系统也将注意到DLL的某些物理存储器已经被映射到页文件中。</li>
+</ol>
+<p>如果由于某个原因系统无法映射.exe和所有必要的DLL文件，那么系统就会向用户显示一个消息框，并且释放进程的地址空间和进程对象。 CreateProcess函数将向调用者返回 FALSE，调用者可以调用GetLastError函数，以便更好地了解为什么无法创建该进程。</p>
+<p>当所有的. exe和DLL文件都被映射到进程的地址空间之后，系统就可以开始执行 . exe文件的启动代码。当 .exe文件被映射后，系统将负责所有的分页、缓冲和高速缓存的处理。</p>
+<p>1）可执行文件或DLL的多个实例<strong>不能共享静态数据</strong><br>
+通过使用内存映射文件，同一个应用程序的多个正在运行的实例就能够共享RAM中的相同代码和数据。进程使用的是一个平面地址空间。当编译和链接你的程序时，所有的代码和数据都被合并在一起，组成一个很大的结构。数据与代码被分开，但仅限于跟在. exe文件中的代码后面的数据而已 。</p>
+<p>作为一个例子，假设应用程序的第二个实例正在运行。系统只是将包含文件的代码和数据的虚拟内存页面映射到第二个应用程序的地址空间，如图 1 7 - 2所示。如果应用程序的一个实例改变了驻留在数据页面中的某些全局变量，那么该应用程序的所有实例的内存内容都将改变。这种类型的改变可能带来灾难性的后果，因此是决不允许的。</p>
+<p>系统运用内存管理系统的copy-on-write（写入时拷贝）特性来防止进行这种改变。每当应用程序尝试将数据写入它的内存映射文件时，系统就会抓住这种尝试，为包含应用程序尝试写入数据的内存页面分配一个新内存块，再拷贝该页面的内容，并允许该应用程序将数据写入这个新分配的内存块。结果，同一个应用程序的所有其他实例的运行都不会受到影响。图17-3显示了当应用程序的第一个实例尝试改变数据页面 2时出现的情况。<br>
+<img src="https://hensonguo.github.io/post-images/1686822170748.jpg" alt="" loading="lazy"><br>
+系统分配一个新的虚拟内存页面，并且将数据页面2的内容拷贝到新页面中。第一个实例的地址空间发生了变更，这样，新数据页面就被映射到与原始地址页面相同位置上的地址空间中。这时系统就可以让进程修改全局变量，而不必担心改变同一个应用程序的另一个实例的数据。</p>
+<p>2）在可执行文件或DLL的多个实例之间<strong>共享静态数据</strong><br>
+全局数据和静态数据不能被同一个.exe或DLL文件的多个映像共享，这是个安全的默认设置。但是，在某些情况下，让一个.exe文件的多个映像共享一个变量的实例是非常有用和方便的。</p>
+<p>例如，Windows没有提供任何简便的方法来确定用户是否在运行应用程序的多个实例。但是，如果能够让所有实例共享单个全局变量，那么这个全局变量就能够反映正在运行的实例的数量。当用户启动应用程序的一个实例时，新实例的线程能够简单地查看全局变量的值（它已经被另一个实例更新）；如果这个数量大于 1，那么第二个实例就能够通知用户，该应用程序只有一个实例可以运行，而第二个实例将终止运行。</p>
+<p>每个.exe或DLL文件的映像都由许多节组成。按照规定，每个标准节的名字均以圆点开头。例如，当编译你的程序时，编译器会将所有代码放入一个名叫.text的节中。该编译器还将所有未经初始化的数据放入一个.bss节，而已经初始化的所有数据则放入.data节中。每一节都拥有与其相关的一组属性，这些属性如表 17-1所示。<br>
+<img src="https://hensonguo.github.io/post-images/1686823168549.jpg" alt="" loading="lazy"></p>
+<p>表17-2显示了比较常见的一些节的名字，并且说明了每一节的作用。除了编译器和链接程序创建的标准节外，也可以在使用下面的命令进行编译时创建自己的节：<br>
+<img src="https://hensonguo.github.io/post-images/1686823348907.jpg" alt="" loading="lazy"></p>
+<p>我可以创建一个称为 <strong>Shared</strong> 的节，它包含单个LONG值，如下所示：<br>
+···<br>
+#pragma data_seg(&quot;Shared&quot;)<br>
+LONG g_lInstanceCount = 0;<br>
+#pragma data_seg()<br>
+···<br>
+当编译器对这个代码进行编译时，它创建一个新节，称为 Shared，并将它在编译指示后面看到的所有已经初始化（initialized）的数据变量放入这个新节中。在上面这个例子中，变量放入Shared节中。该变量后面的#pragma dataseg()一行告诉编译器停止将已经初始化的变量放入Shared节，并且开始将它们放回到默认数据节中。需要记住的是，编译器只将已经初始化的变量放入新节中。</p>
+<br>
+<h2 id="内存映射数据文件">内存映射数据文件</h2>
+<p>我们先来看看如果不使用内存映射文件的处理流程是怎样的，首先我们得先读出磁盘文件的内容到内存中，然后修改，最后回写到磁盘上。第一步读磁盘文件是要经过一次系统调用的，它首先将文件内容从磁盘拷贝到内核空间的一个缓冲区，然后再将这些数据拷贝到用户空间，实际上是两次数据拷贝。第三步回写也一样也要经过两次数据拷贝。</p>
+<p>所以我们基本上会有四次数据的拷贝了，因为大文件数据量很大，几十GB甚至更大，所以拷贝的开销是非常大的。</p>
+<p><strong>而内存映射文件是操作系统的提供的一种机制，可以减少这种不必要的数据拷贝，从而提高效率。它由mmap()将文件直接映射到用户空间，mmap()并没有进行数据拷贝，真正的数据拷贝是在缺页中断处理时进行的，由于mmap()将文件直接映射到用户空间，所以中断处理函数根据这个映射关系，直接将文件从硬盘拷贝到用户空间，所以只进行了一次数据拷贝 ，比read进行两次数据拷贝要好上一倍，因此，内存映射的效率要比read/write效率高。</strong></p>
+<p>内存映射，并不是将文件加载到内存。<br>
+内存映射首先申请一段地址空间，并映射到物理存储器，而这里的物理存储器就是文件所在的磁盘，类似虚拟内存（pagefile）；<br>
+当有需要时，程序不需要先把它加到内存，而是直接从磁盘读取。从这里看，<strong>IO操作减少了</strong>（不需要先加载到内存）</p>
+<p>打开步骤：</p>
+<ol>
+<li>创建或打开一个文件内核对象，该对象用于标识磁盘上你想用作内存映射文件的文件。</li>
+</ol>
+<pre><code>HANDLE CreateFile(
+ LPCTSTR lpFileName,    // 指向文件名的指针 
+ DWORD dwDesiredAccess,    // 访问模式（写 / 读） 
+ DWORD dwShareMode,    // 共享模式 
+ LPSECURITY_ATTRIBUTES lpSecurityAttributes, // 指向安全属性的指针 
+ DWORD dwCreationDisposition,   // 如何创建 
+ DWORD dwFlagsAndAttributes,   // 文件属性 
+ HANDLE hTemplateFile    // 用于复制文件句柄 
+);
+</code></pre>
+<ol start="2">
+<li>创建一个文件映射内核对象，告诉系统该文件的大小和你打算如何访问该文件。</li>
+</ol>
+<pre><code>HANDLE CreateFileMapping(
+HANDLE hFile,                       //物理文件句柄
+LPSECURITY_ATTRIBUTES lpAttributes, //安全设置
+DWORD flProtect,                    //保护设置
+DWORD dwMaximumSizeHigh,            //高位文件大小
+DWORD dwMaximumSizeLow,             //低位文件大小
+LPCTSTR lpName                      //共享内存名称
+);
+</code></pre>
+<ol start="3">
+<li>让系统将文件映射对象的全部或一部分映射到你的进程地址空间中。</li>
+</ol>
+<pre><code>LPVOID MapViewOfFile(
+  [in] HANDLE hFileMappingObject,
+  [in] DWORD  dwDesiredAccess,
+  [in] DWORD  dwFileOffsetHigh,
+  [in] DWORD  dwFileOffsetLow,
+  [in] SIZE_T dwNumberOfBytesToMap
+);
+</code></pre>
+<p>清除步骤：</p>
+<ol>
+<li>告诉系统从你的进程的地址空间中撤消文件映射内核对象的映像。</li>
+</ol>
+<pre><code>BOOL UnmapViewOfFile(
+  [in] LPCVOID lpBaseAddress //该值必须与调用MapViewOfFile函数返回的值相同
+);
+</code></pre>
+<ol start="2">
+<li>关闭文件映射内核对象。</li>
+</ol>
+<pre><code>CloseHandle(hFileMapping);
+</code></pre>
+<ol start="3">
+<li>关闭文件内核对象。</li>
+</ol>
+<pre><code>CloseHandle(hFile);
+</code></pre>
+<br>
+<h2 id="内存映射文件与数据视图的相关性">内存映射文件与数据视图的相关性</h2>
+<p>系统允许映射一个文件的相同数据的多个视图。只要映射相同的文件映射对象 ，系统就会确保映射的 视图 数据的相关性。</p>
+<p>例如，如果你的应用程序改变了一个视图中的文件内容，那么所有其他视图均被更新以反映这个变化。<strong>这是因为尽管页面多次被映射到进程 的虚拟地址空间，但是系统只将 数据放在单个 RAM 页面上 。</strong> 如果多个进程映射单个数据文件的视图，那么数据仍然是相关的，因为在数据文件中，每个 RAM 页面只有一个实例 —— 正是这个 RAM 页面被映射到多个进程的地址空间。</p>
+<p>注意： Windows 允许创建若干个由单个数据文件支持的文件映射对象。 Windows 不能保证这些不同的文件映射对象 的视图具有相关性。 它只能保证单个文件映射对象的多个视图具有相关性。</p>
+<pre><code class="language-c++">// ------------------------------------------------------------
+// 功能描述    :  内存映射文件与数据视图的相关性
+//              本例子中，改变视图 1 的数据，结果视图 2 的数据，也跟着变了
+//
+// ------------------------------------------------------------
+
+#include &quot;stdafx.h&quot;
+#include &quot;windows.h&quot;
+#include &lt;iostream&gt;
+using namespace std ;
+
+int _tmain (int argc , _TCHAR * argv [])
+{
+   // 注意请在 c 盘，自己创建一个 kuan.txt 文件，并写入内容
+   HANDLE hFile = ::CreateFile (L &quot;C://kuan.txt&quot; ,
+      GENERIC_READ | GENERIC_WRITE ,
+      0,
+      NULL ,
+      OPEN_ALWAYS ,
+      FILE_ATTRIBUTE_NORMAL ,
+      NULL );
+
+   HANDLE hFileMapping = ::CreateFileMapping (hFile ,
+      NULL ,
+      PAGE_READWRITE ,
+      0, 0,
+      NULL );
+
+   // 注意 dwDesiredAccess 为 FILE_MAP_WRITE
+   PBYTE pbFile1 = (PBYTE )::MapViewOfFile (hFileMapping , FILE_MAP_WRITE , 0, 0, 0);
+   PBYTE pbFile2 = (PBYTE )::MapViewOfFile (hFileMapping , FILE_MAP_WRITE , 0, 0, 0);
+
+   cout &lt;&lt; &quot;View1 ： &quot; &lt;&lt; pbFile1 &lt;&lt; endl ;
+   cout &lt;&lt; &quot;View2 ： &quot; &lt;&lt; pbFile2 &lt;&lt; endl ;
+
+   // 改变视图
+   char szTemp [] = &quot;fangyukuan_kfmmcz****&quot; ;
+   memcpy (pbFile1 , szTemp , strlen (szTemp ));
+
+   // 结果视图和都变了
+   cout &lt;&lt; &quot;View1 ： &quot; &lt;&lt; pbFile1 &lt;&lt; endl ;
+   cout &lt;&lt; &quot;View2 ： &quot; &lt;&lt; pbFile2 &lt;&lt; endl ;
+
+   ::UnmapViewOfFile (pbFile1 );
+   ::UnmapViewOfFile (pbFile2 );
+
+   ::CloseHandle (hFileMapping );
+   ::CloseHandle (hFile );
+
+   return 0;
+}
+</code></pre>
+<br>
+<h2 id="设定内存映射文件的基地址">设定内存映射文件的基地址</h2>
+<p><strong>可以使用 MapViewOfFileEx 函数，建议系统把文件映射到指定的地址。</strong></p>
+<p>其他参数与 MapViewOfFile 相同，最后一个参数 pvBaseeAddress 指定目标地址。同 VirtualAlloc ，<strong>指定的地址必须是分配粒度(64K)整数倍</strong>。否者返回NULL，GetLastError 返回 ERROR_MAPPED_ALIGNMENT。</p>
+<p>如果无法将文件映射到指定地址(通常是文件太大)，返回NULL。不会尝试去找一个够大的地址空间。</p>
+<br>
+<h2 id="使用内存映射文件在进程之间共享数据">使用内存映射文件在进程之间共享数据</h2>
+<p><strong>Windows提供了多种机制允许进程之间能够共享数据。比如，WM_COPYDATA消息，剪贴板，邮件槽（mailslot），管道（pipe），套接字（socket）等。在同一台机器上<font color=red>共享数据最底层的机制就是内存映射文件。</font></strong></p>
+<p>例子：</p>
+<p>第一个进程</p>
+<p>该进程首先调用CreateFileMapping创建文件映射对象，可以看到传入了INVALID_HANDLE_VALUE参数，这表明该文件映射对象从页交换文件中调拨物理存储器。另外，该文件映射对象命名为“Global\MyFileMappingObject”。</p>
+<p>接着，调用MapViewOfFile创建文件映射对象的视图，并将其返回值赋给pBuf，再调用CopyMemory函数将一个字符串写到该视图中去以让其他进程访问。</p>
+<p>当进程不再需要使用文件映射对象，需要调用CloseHandle关闭其句柄。</p>
+<pre><code class="language-c++">#include &lt;windows.h&gt;
+#include &lt;conio.h&gt;
+#include &quot;stdafx.h&quot;
+ 
+#define BUF_SIZE 256
+TCHAR sName[] = _T(&quot;Global\\MyFileMappingObject&quot;);
+TCHAR sNick[] = _T(&quot;Message from process 1!&quot;);
+ 
+ 
+int _tmain(int argc, _TCHAR* argv[])
+{
+	HANDLE hMapFile;
+	LPCTSTR pBuf;
+ 
+	hMapFile = CreateFileMapping(INVALID_HANDLE_VALUE, 
+		NULL, PAGE_READWRITE, 0, BUF_SIZE, sName);
+	if (hMapFile == NULL) {
+		_tprintf(TEXT(&quot;Could not create file mapping object (%d).\n&quot;), GetLastError());
+		return 1;
+	}
+ 
+	pBuf = (LPCTSTR)MapViewOfFile(hMapFile, FILE_MAP_ALL_ACCESS, 0, 0, BUF_SIZE);
+	if (pBuf == NULL) {
+		_tprintf(TEXT(&quot;Could not map view of file (%d).\n&quot;), GetLastError());
+		CloseHandle(hMapFile);
+ 
+		return 1;
+	}
+ 
+	CopyMemory((PVOID)pBuf, sNick, (_tcslen(sNick) * sizeof(TCHAR)));
+	_getch();
+	
+	UnmapViewOfFile(pBuf);
+ 
+	CloseHandle(hMapFile);
+ 
+	return 0;
+}
+</code></pre>
+<p>第二个进程</p>
+<p>第二个进程首先调用OpenFileMapping函数开打开命名为“Global\MyFileMappingObject”的文件映射对象。然后调用MapViewOfFile来获得视图的指针，pBuf。获得该指针后，便可以像使用一般的字符串一要来操作该字符串，调用MessgeBox可以显示该来自进程1的字符串。</p>
+<pre><code class="language-c++">#include &lt;windows.h&gt;
+#include &quot;stdafx.h&quot;
+ 
+#define BUF_SIZE 256
+TCHAR szName[]= _T(&quot;Global\\MyFileMappingObject&quot;);
+ 
+int _tmain(int argc, _TCHAR* argv[])
+{
+	HANDLE hMapFile;
+	LPCTSTR pBuf;
+ 
+	hMapFile = OpenFileMapping(FILE_MAP_READ, FALSE, szName);
+ 
+	if (hMapFile == NULL) {
+		_tprintf(TEXT(&quot;Could not open file mapping object (%d).\n&quot;),  GetLastError());
+ 
+		return 1;
+	}
+ 
+ 
+	pBuf = (LPTSTR)MapViewOfFile(hMapFile, FILE_MAP_READ, 0, 0, BUF_SIZE);
+	if (pBuf == NULL) {
+		_tprintf(TEXT(&quot;Could not map view of file (%d).\n&quot;), GetLastError());
+		CloseHandle(hMapFile);
+ 
+		return 1;
+	}
+ 
+	MessageBox(NULL, pBuf, _T(&quot;Process2&quot;), MB_OK);
+ 
+	UnmapViewOfFile(pBuf);
+	
+	CloseHandle(hMapFile);
+ 
+	return 0;
+}
+</code></pre>
+<br>
+<h2 id="页文件支持的内存映射文件">页文件支持的内存映射文件</h2>
+<p><strong>它不必调用CreateFile函数，只需要调用CreateFileMapping函数，并且传递INVALID_HANDLE_VALUE作为hFile参数</strong>。<font color=red>这将告诉系统，你不是创建其物理存储器驻留在磁盘上的文件中的文件映射对象，相反，你想让系统从它的页文件中提交物理存储器</font>。分配的存储器的数量由CreateFileMapping函数的dwMaximumSizeHigh和dwMaximumSizeLow两个参数来决定。当创建了文件映射对象并且将它的一个视图映射到进程的地址空间之后，就可以像使用任何内存区域那样使用它。</p>
+<p>如果你想要与其他进程共享该数据，可调用CreateFileMapping函数，并传递一个以0结尾的字符串作为pszName参数。然后，想要访问该存储器的其他进程就可以调用CreateFileMapping或OpenFileMapping函数，并传递相同的名字。</p>
+<br>
+<h2 id="稀疏提交的内存映射文件">稀疏提交的内存映射文件</h2>
+<p>CreateFileMapping创建映射文件<br>
+第三个参数主要有三个值PAGE_READONLY,PAGE_READWRITE,PAGE_WRITECOPY 这三个值得意思我就不在做描述了，其实还有SEC_COMMIT,SEC_IMAGE,SEC_NOCACHE,SEC_RESERVE，我想大家应该知道<strong>MEM_COMMIT和MEM_RESERVE标志的意思(VirtualAlloc函数，前面有讲)，那么SEC_COMMIT和SEC_RESERVE也是差不多的意思，前者是<font color=red>保留</font>进程空间的地址，后者是将地址<font color=red>提交</font>到物理存储器</strong>。如果打个比方，使用SEC_RESRVE就是一个空的容器，容器之中并没有的实际的东西，SEC_COMMIT表示容器是满的<br>
+这两个标志，只有在创建由系统的页文件支持的内存映射文件时才有效（存储器来自于页文件中），使用起来颇为不便</p>
+<p>那么有没有存储器来自于磁盘文件的类似的用法呢，有（要不然就白讲了）<br>
+NT文件系统(NTFS)提供了对稀疏文件的支持，看下什么是NTFS吧<br>
+<img src="https://hensonguo.github.io/post-images/1688044548526.png" alt="" loading="lazy"></p>
+<p>如果是这种文件系统就支持稀疏文件<br>
+下面我们讲讲怎么用吧</p>
+<ol>
+<li>我们要用系统函数检查是否支持稀疏文件</li>
+</ol>
+<pre><code class="language-c++">    memset(g_Volume, 0, MAX_PATH);
+    GetCurrentDirectory(MAX_PATH,g_szPath);
+    strncpy_s(g_Volume, g_szPath, 3);
+    DWORD dwFileSystemFlags = 0;
+    bool bOK=GetVolumeInformation(g_Volume, NULL, 0, NULL, NULL, &amp;dwFileSystemFlags, NULL, 0);//获取磁盘信息
+    bOK = bOK &amp;&amp; (dwFileSystemFlags&amp;FILE_SUPPORTS_SPARSE_FILES);//dwFileSystemFlags&amp;FILE_SUPPORTS_SPARSE_FILES查看标志位判断对稀疏文件的支持
+</code></pre>
+<ol start="2">
+<li>创建文件，这次使用CreateFile函数(过于简单我就不说了</li>
+<li>使用DeviceIoControl</li>
+</ol>
+<pre><code class="language-c+">DWORD dw;
+bool ret = DeviceIoControl(hFile, FSCTL_SET_SPARSE, NULL, 0, NULL, 0, &amp;dw, NULL);//FSCTL_SET_SPARSE设置接下来创建的内存映射文件为稀疏文件
+</code></pre>
+<ol start="4">
+<li>CreateFileMapping</li>
+<li>MapViewOfFile得到内存指针，对于稀疏文件，你读每个每个字节内存，它的填充都为0，若是想写入数据，用通常的方法直接对内存赋值即可</li>
+<li>使用完了之后，进行一系列的清除操作</li>
+</ol>
+<pre><code class="language-c++">#include &lt;windows.h&gt;
+#include &lt;iostream&gt;
+#include &lt;string&gt;
+#include &lt;winioctl.h&gt;
+using namespace std;
+#define FL (1024*1024)
+#define FH 0
+char g_szPath[MAX_PATH];
+char g_Volume[MAX_PATH];
+//(3797960)
+int main()
+{
+    //先检查当前磁盘是否支持稀疏文件
+    memset(g_Volume, 0, MAX_PATH);
+    GetCurrentDirectory(MAX_PATH,g_szPath);
+    strncpy_s(g_Volume, g_szPath, 3);
+    DWORD dwFileSystemFlags = 0;
+    bool bOK=GetVolumeInformation(g_Volume, NULL, 0, NULL, NULL, &amp;dwFileSystemFlags, NULL, 0);//获取磁盘信息
+    bOK = bOK &amp;&amp; (dwFileSystemFlags&amp;FILE_SUPPORTS_SPARSE_FILES);//dwFileSystemFlags&amp;FILE_SUPPORTS_SPARSE_FILES查看标志位判断对稀疏文件的支持
+    if (!bOK)
+    {
+        //如果系统不支持稀疏文件，就直接关闭程序
+        return 1;
+    }
+    DWORD dw;
+    string FileName = &quot;MMF&quot;;
+    HANDLE hFile = CreateFile(FileName.c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    int err = GetLastError();
+    if (hFile == INVALID_HANDLE_VALUE)
+    {
+        cout &lt;&lt; &quot;打开文件失败&quot; &lt;&lt; endl;
+        return 1;
+    }
+    //bool ret=DeviceIoControl(hFile,FSCTL_SET_SPARSE,NULL,0,NULL,0,&amp;dw,NULL);
+    bool ret = DeviceIoControl(hFile, FSCTL_SET_SPARSE, NULL, 0, NULL, 0, &amp;dw, NULL);//设置稀疏文件
+    err = GetLastError();
+    if (!ret)
+    {
+        //err=GetLastError();
+        cout &lt;&lt; &quot;err no:&quot; &lt;&lt; err &lt;&lt; endl;
+        return 2;
+    }
+    HANDLE hFileMapping = ::CreateFileMapping(hFile, NULL, PAGE_READWRITE, 0, 1024 * 1024, NULL);
+    if (!hFileMapping)
+    {
+        CloseHandle(hFileMapping);
+        cout &lt;&lt; &quot;创建文件映像失败&quot; &lt;&lt; endl;
+        return 2;
+    }
+    PBYTE pFile = (PBYTE)MapViewOfFile(hFileMapping, FILE_MAP_ALL_ACCESS, 0, 0, 0);
+    UnmapViewOfFile(pFile);
+    CloseHandle(hFileMapping);
+    CloseHandle(hFile);
+    system(&quot;pause&quot;);
+    return 0;
+}
+</code></pre>
+<p>创建好的文件时这样子的:<br>
+<img src="https://hensonguo.github.io/post-images/1688044857705.png" alt="" loading="lazy"><br>
+<strong>虽然可以容纳的字节数为1MB，但是由于并没有分配内存，所以，实际大小只有4KB<br>
+我们来看看为什么大小为4KB,而不是0KB</strong></p>
+<p>文件在磁盘上所占的空间不是以Byte来衡量 的，而是以簇来衡量的<br>
+扇区是磁盘最小的物理存储单元，但由于操作系统无法对数目众多的扇区进行寻址，所以操作系统就将相邻的扇区组合在一起，形成一个簇，然后再对簇进行管理<br>
+操作系统规定一个簇中只能放置一个文件的内容，<strong>因此文件实际所占用的物理空间大小，只能是簇的整数倍；而如果文件实际大小小于一簇，它也要占一簇的空间</strong><br>
+也就是说簇是文件存放的基本单位，那么一簇是多少字节呢<br>
+<img src="https://hensonguo.github.io/post-images/1688044976590.png" alt="" loading="lazy"><br>
+可以看出，这就是占用4KB的原因</p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#%E5%86%85%E5%AD%98%E6%98%A0%E5%B0%84%E7%9A%84%E5%8F%AF%E6%89%A7%E8%A1%8C%E6%96%87%E4%BB%B6%E5%92%8Cdll%E6%96%87%E4%BB%B6">内存映射的可执行文件和DLL文件</a></li>
+<li><a href="#%E5%86%85%E5%AD%98%E6%98%A0%E5%B0%84%E6%95%B0%E6%8D%AE%E6%96%87%E4%BB%B6">内存映射数据文件</a></li>
+<li><a href="#%E5%86%85%E5%AD%98%E6%98%A0%E5%B0%84%E6%96%87%E4%BB%B6%E4%B8%8E%E6%95%B0%E6%8D%AE%E8%A7%86%E5%9B%BE%E7%9A%84%E7%9B%B8%E5%85%B3%E6%80%A7">内存映射文件与数据视图的相关性</a></li>
+<li><a href="#%E8%AE%BE%E5%AE%9A%E5%86%85%E5%AD%98%E6%98%A0%E5%B0%84%E6%96%87%E4%BB%B6%E7%9A%84%E5%9F%BA%E5%9C%B0%E5%9D%80">设定内存映射文件的基地址</a></li>
+<li><a href="#%E4%BD%BF%E7%94%A8%E5%86%85%E5%AD%98%E6%98%A0%E5%B0%84%E6%96%87%E4%BB%B6%E5%9C%A8%E8%BF%9B%E7%A8%8B%E4%B9%8B%E9%97%B4%E5%85%B1%E4%BA%AB%E6%95%B0%E6%8D%AE">使用内存映射文件在进程之间共享数据</a></li>
+<li><a href="#%E9%A1%B5%E6%96%87%E4%BB%B6%E6%94%AF%E6%8C%81%E7%9A%84%E5%86%85%E5%AD%98%E6%98%A0%E5%B0%84%E6%96%87%E4%BB%B6">页文件支持的内存映射文件</a></li>
+<li><a href="#%E7%A8%80%E7%96%8F%E6%8F%90%E4%BA%A4%E7%9A%84%E5%86%85%E5%AD%98%E6%98%A0%E5%B0%84%E6%96%87%E4%BB%B6">稀疏提交的内存映射文件</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://hensonguo.github.io/post/windows-he-xin-bian-cheng-xian-cheng-de-dui-zhan/">
+              <h3 class="post-title">
+                windows核心编程-线程的堆栈
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://hensonguo.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

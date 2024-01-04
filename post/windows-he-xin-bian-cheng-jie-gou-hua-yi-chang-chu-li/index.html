@@ -1,0 +1,544 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Windows核心编程-结构化异常处理 | Icode</title>
+<link rel="shortcut icon" href="https://hensonguo.github.io/favicon.ico?v=1704354032694">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://hensonguo.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="Windows核心编程-结构化异常处理 | Icode - Atom Feed" href="https://hensonguo.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="结构化异常处理，SEH（Structured Exception Handling）
+1、结束处理程序
+注意：不要将结构化异常处理同 C++的异常处理相混淆。C++异常处理是一种不同形式的异常处理，其形式是使用C++关键字catch和thr..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://hensonguo.github.io">
+  <img class="avatar" src="https://hensonguo.github.io/images/avatar.png?v=1704354032694" alt="">
+  </a>
+  <h1 class="site-title">
+    Icode
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              Windows核心编程-结构化异常处理
+            </h2>
+            <div class="post-info">
+              <span>
+                2023-07-13
+              </span>
+              <span>
+                16 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <p>结构化异常处理，SEH（Structured Exception Handling）</p>
+<h2 id="1-结束处理程序">1、结束处理程序</h2>
+<p><font color=green>注意：不要将结构化异常处理同 C++的异常处理相混淆。C++异常处理是一种不同形式的异常处理，其形式是使用C++关键字catch和throw。</font>微软的Visual C++也支持C++的异常处理，并且在内部实现上利用了已经引入到编译程序和 Windows操作系统的结构化异常处理的功能。</p>
+<p><strong>SEH实际包含两个主要功能：<font color=red>结束处理（ termination handling）和异常处理（exceptionhandling）</font></strong></p>
+<pre><code class="language-c++">__try
+{ //Guard body
+...
+}
+__finally
+{ // Terminal Handler
+...
+}
+</code></pre>
+<p>__try和__finally关键字用来标出结束处理程序两段代码的轮廓。<strong>在上面的代码段中，操作系统和编译程序共同来确保结束处理程序中的__finally 代码块能够被执行，不管保护体（try块）是如何退出的。不论你在保护体中使用 return，还是goto，或者是longjump，结束处理程序（finally块）都将被调用。</strong></p>
+<p>总之，c++异常处理顺序是：<br>
+<strong><font color=red>1.try 2.finally 3. try里的return或者finally之后的代码</font></strong></p>
+<br>
+<h3 id="c异常处理的情况">C++异常处理的情况</h3>
+<p><strong>情况1 释放信标情况</strong></p>
+<pre><code class="language-c++">DwORD Funcenstein1( ) {
+	DWORD dwTemp;
+	//1. Do any processing here.
+	__try {
+	//2. Request permission to access
+	dwTemp = g_dwProtectedData ;
+	}
+	__fina1ly {
+	 //3.A1low others to use protected data.Re1easeSemaphore( g_hSem,1，NULL);
+	}
+	//4. Continue processing.
+	return(dwTemp);
+}
+</code></pre>
+<p><strong>情况2 释放信标 try中加入return</strong></p>
+<pre><code class="language-c++">DwORD dwTemp;
+		// 1. Do any processing here.:
+
+	__try {
+		// 2. Request permission to access
+		// protected data， and then 'use it.
+		waitForSing1e0bject(g_hSem,INFINITE);
+		g_dwProtectedData = 5;
+		dwTemp = g_dwProtectedData ;
+		//4.Return the new value.
+		return(dwTemp) ;
+	}
+	__fina1ly {
+		//3.Al1ow others to use protected 
+		data.Re1easeSemaphore( g_hSem，1，NULL);
+	}
+	// Continue processing--this code
+	// wi11 never execute in this version.dwTemp = 9;
+	return(dwTemp );
+}
+</code></pre>
+<p>结果是，返回5。因为当提前return时，finally会先执行，然后再执行try内的return。保证信标总会被释放。这样就不会造成一个线程一直占有信标，否则将意味着所有其他等待信标的线程永远不会被分配CPU时间。</p>
+<p><strong>情况3 释放信标 在try内使用Goto</strong></p>
+<pre><code class="language-c++">DwORD Funcenstein3( ) {
+	DwORD dwTemp;
+	//1. Do any processing here.
+	__try {
+		//2. Request permission to access
+		//protected data， and then use it.
+		WaitForSingle0bject( g_hSem，INFINITE);g_dwProtectedData = 5;
+		dwTemp = gdwProtectedData;
+		//Try to jump over the fina11y b1ock.
+		goto ReturnValue;
+	}
+	__fina11y {
+		//3.Al1ow others to use protected data.
+		Re1easeSemaphore( g_hSem，1.NULL);
+	}
+	dwTemp = 9;
+	//4. Continue processing.
+    Returnvalue:
+	return(dwTemp);
+}
+</code></pre>
+<p>结果是：goto不会执行。会先try到goto时先finally在到retunrn(dwTemp)。</p>
+<p>当编译程序看到try块中的goto语句，它首先生成一个局部展开来执行finally 块中的内容。这一次，在 finally 块中的代码执行之后，在 ReturnValue 标号之后的代码将执行，因为在try块和finally中都没有返回发生。这里的代码使函数返回 5。而且，由于中断了从try块到finally块的自然流程，可能要蒙受很大的性能损失（取决于运行程序的CPU）。</p>
+<p><strong>情况4 释放信标 try调用函数抛异常</strong></p>
+<pre><code class="language-c++">DMORD Funcfurter1(){
+	DWORD dwTemp;
+    //1. Do any processing here.
+	__try{
+		//2. Request permission to access
+		//protected data. and then use it.
+		WaitForSing1e0bject( g_hSem，INFINITE);
+		dwTemp = Funcinator( g_dwProtectedData) ;
+	}
+	__finally {
+		//3.A11ow others to use protected data.
+		ReleaseSemaphore( g .hSem，1，NULL);
+	)
+	//4. Continue processing.
+	return( dwTemp);
+)
+</code></pre>
+<p>现在假想一下， try块中的Funcinator函数调用包含一个错误，会引起一个无效内存访问。如果没有SEH，在这种情况下，将会给用户显示一个很常见的 Application Error对话框。当用户忽略这个错误对话框，该进程就结束了。当这个进程结束（由于一个无效内存访问），信标仍将被占用并且永远不会被释放，这时候，任何等待信标的其他进程中的线程将不会被分配 CPU时间。但若将对ReleaseSemaphore的调用放在finally块中，就可以保证信标获得释放，即使某些其他函数会引起内存访问错误。</p>
+<p>如果结束处理程序足够强，能够捕捉由于无效内存访问而结束的进程，我们就可以相信它也能够捕捉setjump和longjump的结合，还有那些简单语句如break和continue。</p>
+<p><strong>情况5 循环中使用try-finally</strong></p>
+<pre><code class="language-c++">DWORD FuncaDoodleDoo( ) {
+    DWORD dwTemp = 0;
+	
+    while (dwTemp &lt; 10){
+		__try {
+			if ( dwTemp == 2)
+				continue;
+			if ( dwTemp == 3 )
+				break;
+		}
+   	   __fina11y {
+		 	dwTemp+t;
+       }
+	   dwTemp++;
+  }
+  dwTemp += 10;
+  return(dwTemp);
+}
+</code></pre>
+<p>满足if条件时将先执行finally，再执行continue，break，最终的值是14</p>
+<p>尽管结束处理程序可以捕捉try块过早退出的大多数情况，<strong>但当线程或进程被结束时，它不能引起finally块中的代码执行。<font color=green>当调用ExitThread或ExitPrcess时，将立即结束线程或进程，而不会执行finally块中的任何代码。</font>另外，如果由于某个程序调用TerminateThread或TerminateProcess，线程或进程将死掉，finally块中的代码也不执行。某些 C运行期函数（例如abort）要调用ExitProcess，也使finally块中的代码不能执行。虽然没有办法阻止其他程序结束你的一个线程或进程，但你可以阻止你自己过早调用 ExitThread和ExitProcess。</strong></p>
+<p><strong>情况6 在finally中返回</strong></p>
+<pre><code class="language-c++">DwORD dwTemp;
+		// 1. Do any processing here.:
+
+	__try {
+		// 2. Request permission to access
+		// protected data， and then 'use it.
+		waitForSing1e0bject(g_hSem,INFINITE);
+		g_dwProtectedData = 5;
+		dwTemp = g_dwProtectedData ;
+		//4.Return the new value.
+		return(dwTemp) ;
+	}
+	__fina1ly {
+		//3.Al1ow others to use protected 
+		data.Re1easeSemaphore( g_hSem，1，NULL);
+        return(103);
+	}
+	// Continue processing--this code
+	// wi11 never execute in this version.dwTemp = 9;
+	return(dwTemp );
+}
+</code></pre>
+<p>返回是103，我们已经看到结束处理程序在补救try块中的过早退出的执行方面很有效，但也看到结束处理程序由于要阻止try块的过早退出而产生了我们不希望有的结果。<strong><font color=green>更好的办法是在结束处理程序的try块中避免任何会引起过早退出的语句。实际上，最好将 return、continue、break、goto等语句从结束处理程序的try块和finally块中移出去，放在结束处理程序的外面。这样做会使编译程序产生较小的代码，因为不需要再捕捉 try块中的过早退出，也使编译程序产生更快的代码（因为执行局部展开的指令也少）。另外，代码也更容易阅读和维护。</font></strong></p>
+<p><strong>代码优化</strong></p>
+<pre><code class="language-c++">Bool Funcarama1{
+    HANDLE hFile = INVALID_HANDLE_VALUE;
+    PVOID pvBuf = NULL;
+    DWORD dwNumBytesRead;
+    BOOL fOk;
+
+    hFile = CreateFile(&quot;SOMEDATA.DAT&quot;, GEMERIC_READ, FILE_SHARE_READ, OPEN_EXISTING, 0, NULL);
+    if (hFile == INVALID_HANDLE_VALUE)
+    {
+        return(FALSE);
+    }
+    pvBuf = VirtualAlloc(NULL, 1024, MEM_COMMIT, PAGE_READWRITE);
+    if(pvBuf == NULL)
+    {
+        CloseHandle(hFile);
+        return(FALSE);
+    }
+    fOk = ReadFile(hFile, pvBuf, 1024, &amp;dwNumBytesRead, NULL);
+    if(!fOk || dwNumBytesRead == 0){
+        VirtualFree(pvBuf, MEM_RELEASE | MEM_DECOMMIT);
+        CloseHandle(hFile);
+        return(FALSE);
+    }
+    // do some ...
+    //...
+    VirtualFree(pvBuf, MEM_RELEASE | MEM_DECOMMIT);
+    CloseHandle(hFile);
+    return(True);
+}
+</code></pre>
+<p>优化后：</p>
+<pre><code class="language-c++">Bool Funcarama1{
+    HANDLE hFile = INVALID_HANDLE_VALUE;
+    PVOID pvBuf = NULL;
+
+    __try {
+        DWORD dwNumBytesRead;
+        BOOL fOk;
+
+        hFile = CreateFile(&quot;SOMEDATA.DAT&quot;, GEMERIC_READ, FILE_SHARE_READ, OPEN_EXISTING, 0, NULL);
+        if (hFile == INVALID_HANDLE_VALUE)
+        {
+            return(FALSE);
+        }
+        pvBuf = VirtualAlloc(NULL, 1024, MEM_COMMIT, PAGE_READWRITE);
+        if(pvBuf == NULL)
+        {
+            return(FALSE);
+        }
+        fOk = ReadFile(hFile, pvBuf, 1024, &amp;dwNumBytesRead, NULL);
+        if(!fOk || dwNumBytesRead == 0){
+            return(FALSE);
+        }
+        // do some ...
+        //...
+    }
+    __fina1ly {
+        if (pvBuf != NULL)
+            VirtualFree(pvBuf, MEM_RELEASE | MEM_DECOMMIT);
+        if (hFile != INVALID_HANDLE_VALUE)
+            CloseHandle(hFile);
+    }
+    return(True);
+}
+</code></pre>
+<p><strong>最终的边界</strong><br>
+应该尽可能避免在 try块中使用return语句。<br>
+为了帮助避免在try块中使用return语句，微软在其C/C++编译程序中增加了另一个关键字--leave。</p>
+<pre><code class="language-c++">Bool Funcarama1{
+    HANDLE hFile = INVALID_HANDLE_VALUE;
+    PVOID pvBuf = NULL;
+    BOOL fFunctionOk = FALSE;
+
+    __try {
+        DWORD dwNumBytesRead;
+        BOOL fOk;
+
+        hFile = CreateFile(&quot;SOMEDATA.DAT&quot;, GEMERIC_READ, FILE_SHARE_READ, OPEN_EXISTING, 0, NULL);
+        if (hFile == INVALID_HANDLE_VALUE)
+        {
+            --leave;
+        }
+        pvBuf = VirtualAlloc(NULL, 1024, MEM_COMMIT, PAGE_READWRITE);
+        if(pvBuf == NULL)
+        {
+            --leave;
+        }
+        fOk = ReadFile(hFile, pvBuf, 1024, &amp;dwNumBytesRead, NULL);
+        if(!fOk || dwNumBytesRead == 0){
+            --leave;
+        }
+        // do some ...
+        //...
+        fFunctionOk = TRUE;
+    }
+    __fina1ly {
+        if (pvBuf != NULL)
+            VirtualFree(pvBuf, MEM_RELEASE | MEM_DECOMMIT);
+        if (hFile != INVALID_HANDLE_VALUE)
+            CloseHandle(hFile);
+    }
+    return(True);
+}
+</code></pre>
+<p>在try块中使用--leave关键字会引起跳转到 try块的结尾。可以认为是跳转到try块的右大括号。由于控制流自然地从try块中退出并进入finally块，所以不产生系统开销。当然，需要引入一个新的Boolean型变量fFunctionOk，用来指示函数是成功或失败。这是比较小的代价。</p>
+<p>当按照这种方式利用结束处理程序来设计函数时，要记住在进入 try块之前，要将所有资源句柄初始化为无效的值。然后，在finally块中，查看哪些资源被成功的分配，就可以知道哪些要释放。另外一种确定需要释放资源的办法是对成功分配的资源设置一个标志。然后， finally块中的代码可以检查标志的状态，来确定资源是否要释放。</p>
+<br>
+<h2 id="2-异常处理程序和软件异常">2、异常处理程序和软件异常</h2>
+<pre><code class="language-c++">__try
+{ //Guard body
+...
+}
+__except(exception filter)
+{ // Terminal Handler
+...
+}
+</code></pre>
+<p>注意--except关键字。每当你建立一个try块，它必须跟随一个finally块或一个except块。一个try 块之后不能既有finally块又有except块。但可以在try-except块中嵌套try-finally块，反过来也可以。</p>
+<p><strong><font color=red>EXCEPTION_CONTINUE_EXECUTION (–1) 异常被忽略</font>，控制流将在异常出现的点之后，继续恢复运行。<br>
+<font color=red>EXCEPTION_CONTINUE_SEARCH (0) 异常不被识别</font>，也即当前的这个__except模块不是这个异常错误所对应的正确的异常处理模块。系统将继续到上一层的try-except域中继续查找一个恰当的__except模块。<br>
+<font color=red>EXCEPTION_EXECUTE_HANDLER (1) 异常已经被识别</font>，也即当前的这个异常错误，系统已经找到了并能够确认，这个__except模块就是正确的异常处理模块。控制流将进入到__except模块中。</strong></p>
+<p>参考：<br>
+<a href="https://www.cnblogs.com/renleiguanchashi/p/16923164.html">https://www.cnblogs.com/renleiguanchashi/p/16923164.html</a></p>
+<br>
+<h2 id="3-未处理异常和c异常">3、未处理异常和C++异常</h2>
+<p>前一章讨论了当一个异常过滤器返回EXCEPTION_CONTINUE_SEARCH时会发生什么事情。返回EXCEPTION_CONTINUE_SEARCH 是告诉系统继续上溯调用树，去寻找另外的异常过滤器。但是当每个过滤器都返回EXCEPTION_CONTINUE_SEARCH时会出现什么情况呢？在这种情况下，就出现了所谓的“未处理异常”（Unhandled exception）。</p>
+<p><font color=green>每个线程开始执行，实际上是利用 Kernel32.dll中的一个函数来调用BaseProcessStart或BaseThreadStart</font>。这两个函数实际是一样的，区别在于一个函数用于进程的主线程（Primary thread）：</p>
+<pre><code class="language-c++">VOID BaseThreadStart(PTHREAD_START_ROUTINE pfnStartAddr, PVOID pvParam){
+    __try
+    {
+        ExitThread((pfnStartAddr)(pvParam));
+    }
+    __except(UnhandledExceptionFilter(GetExceptionInformation()))
+    {
+        ExitProcess(GetExceptionCode());
+    }
+}
+
+// 上述UnhandledExceptionFilter的返回值和结果
+// EXCEPTION_EXECUTE_HANDLER 执行ExitProcess，进程退出
+// EXCEPTION_CONTINUE_EXECUTION 从抛出异常处再次执行
+// EXCEPTION_CONTINUE_SEARCH 未处理异常
+</code></pre>
+<p>注意这两个函数都包含一个SEH框架。每个函数都有一个try块，并从这个try块里调用主线程或辅助线程的进入点函数。所以，当线程引发一个异常，所有过滤器都返回EXCEPTION_CONTINUE_SEARCH时，将会自动调用一个由系统提供的特殊过滤器函数：UnhandledExceptionFilter。</p>
+<pre><code>LONG UnhandledExceptionFilter(PEXCEPTION_POINTERS pExceptionInfo);
+</code></pre>
+<p>这个函数负责显示一个消息框，指出有一个进程的线程存在未处理的异常，并且能让用户结束或调试这个进程。<br>
+<img src="https://hensonguo.github.io/post-images/1689250852410.jpg" alt="" loading="lazy"></p>
+<p>在消息框中的异常描述之后，又提供给用户两种选择。第一种选择是点击关闭按钮，这将导致UnhandledExceptionFilter返回EXCEPTION_EXECUTE_HANDLER。这又引起全局展开的发生，所有的finally块都要执行，然后BaseProcessStart或BaseThreadStart中的处理程序执行。这两个处理程序都叫ExitProcess，意思是退出进程，这就是程序结束的原因。</p>
+<p>点击调试按钮时，UnhandledExceptionFilter试图加载一个调试程序，并将这个调试程序挂接在进程上。通过将调试程序附在进程上，可以检查全局、局部和静态变量的状态，设置断点，检查调用树，重新启动进程，以及调试一个进程时可以做的任何事情。</p>
+<br>
+<h3 id="31-即时调试">3.1 即时调试</h3>
+<p>UnhandledExceptionFilter调用调试程序，需要查看下面的注册表子关键字：<br>
+<img src="https://hensonguo.github.io/post-images/1689251412198.jpg" alt="" loading="lazy"><br>
+这一行代码是告诉系统要将哪一个程序作为调试程序运行。当然也可以选择其他调试程序。UnhandledExceptionFilter还在这个命令行中向调试程序传递两个参数。第一个参数是被调试进程的 ID。第二个参数规定一个可继承的手工复位事件，这个事件是由UnhandledExceptionFilter按无信号状态建立的。厂商必须实现他们的调试程序，这样才能认识指定进程I D和事件句柄的- p和- e选项。</p>
+<p>在进程 ID和事件句柄都合并到这个串中之后， UnhandledExceptionFilter通过调用CreateProcess来执行调试程序。 这时，调试程序进程开始运行并检查它的命令行参数。如果存在- p选项，调试程序取得进程ID，并通过调用DebugActiveProcess将自身挂接在该进程上。</p>
+<pre><code>BOOL DebugActiveProcess(DWORD dwProcessID);
+</code></pre>
+<p>一旦调试程序完成自身的挂接，操作系统将被调试者（debugger）的状态通报给调试程序。例如，系统将告诉调试程序，在被调试的进程中有多少线程？哪些 DDL加载到被调试进程的地址空间中？调试程序需要花时间来积累这些数据，以准备调试进程。在这些准备工作进行的时候，UnhandledExceptionFilter中的线程必须等待。为此，这要调用 WaitForSingleObject函数并传递已经建立的手工复位事件的句柄作为参数。这个事件是按无信号状态建立起来的，所以被调试进程的线程要立即被挂起以等待事件。</p>
+<br>
+<h3 id="32-关闭异常消息框">3.2 关闭异常消息框</h3>
+<p>有时候，在异常发生时，你可能不想在屏幕上显示异常消息框。例如，你可能不想让这些消息框出现在你产品的发售版本中。如果出现了消息框，很容易导致最终用户意外地启动调试程序来调试你的程序。最终用户只需点击一下消息框中的 Cancel按钮，就进入了不熟悉的、令人恐惶的区域—调试程序。可以使用几种不同的方法来防止这种消息框的出现。</p>
+<br>
+<h4 id="321-强制进程终止运行">3.2.1 强制进程终止运行</h4>
+<p>为防止UnhandledExceptionFilter显示异常消息框，可以调用下面的SetErrorMode函数，并向它传递一个SEM_NOGPFAULTERRORBOX标识符：</p>
+<pre><code>UINT SetErrorModel(UNIT fuErrorMode);
+</code></pre>
+<p>然后，当调用UnhandledExceptionFilter函数来处理异常时，看到已经设置了这个标志，就会立即返回EXCEPTION_EXECUTE_HANDLER。这将导致全局展开并执行BaseProcessStart或BaseThreadStart中的处理程序。该处理程序结束进程。</p>
+<p>笔者并不喜欢这种方式。在这种方式下，用户完全没有得到警告，程序只是自行消失。</p>
+<br>
+<h4 id="322-包装一个线程函数">3.2.2 包装一个线程函数</h4>
+<p>使用另外一种办法也可以避免出现这个消息框，就是针对主线程进入点函数（ main、wmain、WinMain或wWinMain）的整个内容安排一个try-except块。保证异常过滤器的结果值总是<font color=red>EXCEPTION_EXECUTE_HANDLER</font>，这样就保证异常得到处理，防止了系统再调用UnhandledExceptionFilter函数。</p>
+<p>在你的异常处理程序中，你可以显示一个对话框，在上面显示一些有关异常的诊断信息。用户可以记录下这些信息，并通报给你公司的客户服务部门，以便能够找到程序的问题根源。你应该建立这个对话框，这样用户只能结束程序而不能调用调试程序。</p>
+<p>这种方法的缺点是它只能捕捉进程的主线程中发生的异常。如果其他线程在运行，并且其中有一个线程发生了一个未处理异常，系统就要调用内部的UnhandledExceptionFilter函数。为了改正这一点，需要在所有的辅助线程进入点函数中包含 try-except块。</p>
+<br>
+<h4 id="323-包装一个线程函数">3.2.3 包装一个线程函数</h4>
+<p>Windows还提供另外一个函数，SetUnhandledExceptionFilter，利用它可以按SEH格式包装所有的线程函数：</p>
+<pre><code>PTOP_LEVEL_EXCEPTION_FILTER SetUnhandledExceptionFilter(
+    PTOP_LEVEL_EXCEPTION_FILTER pTopLevelExceptionFilter);
+</code></pre>
+<p>在进程调用这些函数之后，进程的任何线程中若发生一个未处理的异常，就会导致调用程序自己的异常过滤器。需要将这个过滤器的地址作为参数传递给 SetUnhandledExceptionFilter。</p>
+<p>过滤器函数原型必须是下面的样子：</p>
+<pre><code>LONG UnhandledExceptionFilter(PEXCEPTION_POINTERS pExceptionInfo);
+</code></pre>
+<p>程序员可以在自己的异常过滤器中执行任何想做的处理，但要返回三个 EXCEPTION_ *标识符中的一个。表25-1给出了当返回各标识符时所发生的事。<br>
+<img src="https://hensonguo.github.io/post-images/1689254128647.jpg" alt="" loading="lazy"></p>
+<br>
+<h3 id="33-程序员自己调用unhandledexceptionfilter">3.3 程序员自己调用UnhandledExceptionFilter</h3>
+<pre><code class="language-c++">void Funcadelic(){
+    __try{
+
+    }
+    __except(ExpFltr(GetExceptionInformation())){
+
+    }
+}
+
+LONG ExpFltr(PEXCEPTION_POINTERS pEP){
+    DWORD dwExceptionCode = pEP-&gt;ExceptionRecord.ExceptionCode;
+    if (dwExceptionCode == EXCEPTION_ACCESS_VIOLATION)
+    {
+        return(EXCEPTION_CONTINUE_EXECUTION);
+    }
+    return(UnHandledExceptionFilter(pEP));
+}
+</code></pre>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#1-%E7%BB%93%E6%9D%9F%E5%A4%84%E7%90%86%E7%A8%8B%E5%BA%8F">1、结束处理程序</a>
+<ul>
+<li><a href="#c%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86%E7%9A%84%E6%83%85%E5%86%B5">C++异常处理的情况</a></li>
+</ul>
+</li>
+<li><a href="#2-%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86%E7%A8%8B%E5%BA%8F%E5%92%8C%E8%BD%AF%E4%BB%B6%E5%BC%82%E5%B8%B8">2、异常处理程序和软件异常</a></li>
+<li><a href="#3-%E6%9C%AA%E5%A4%84%E7%90%86%E5%BC%82%E5%B8%B8%E5%92%8Cc%E5%BC%82%E5%B8%B8">3、未处理异常和C++异常</a>
+<ul>
+<li><a href="#31-%E5%8D%B3%E6%97%B6%E8%B0%83%E8%AF%95">3.1 即时调试</a></li>
+<li><a href="#32-%E5%85%B3%E9%97%AD%E5%BC%82%E5%B8%B8%E6%B6%88%E6%81%AF%E6%A1%86">3.2 关闭异常消息框</a>
+<ul>
+<li><a href="#321-%E5%BC%BA%E5%88%B6%E8%BF%9B%E7%A8%8B%E7%BB%88%E6%AD%A2%E8%BF%90%E8%A1%8C">3.2.1 强制进程终止运行</a></li>
+<li><a href="#322-%E5%8C%85%E8%A3%85%E4%B8%80%E4%B8%AA%E7%BA%BF%E7%A8%8B%E5%87%BD%E6%95%B0">3.2.2 包装一个线程函数</a></li>
+<li><a href="#323-%E5%8C%85%E8%A3%85%E4%B8%80%E4%B8%AA%E7%BA%BF%E7%A8%8B%E5%87%BD%E6%95%B0">3.2.3 包装一个线程函数</a></li>
+</ul>
+</li>
+<li><a href="#33-%E7%A8%8B%E5%BA%8F%E5%91%98%E8%87%AA%E5%B7%B1%E8%B0%83%E7%94%A8unhandledexceptionfilter">3.3 程序员自己调用UnhandledExceptionFilter</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://hensonguo.github.io/post/windows-he-xin-bian-cheng-zhu-ru-dll-he-lan-jie-api/">
+              <h3 class="post-title">
+                Windows核心编程-注入DLL和拦截API
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://hensonguo.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

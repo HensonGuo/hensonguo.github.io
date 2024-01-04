@@ -1,0 +1,182 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>QT跨平台 | Icode</title>
+<link rel="shortcut icon" href="https://hensonguo.github.io/favicon.ico?v=1704354032694">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://hensonguo.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="QT跨平台 | Icode - Atom Feed" href="https://hensonguo.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="1、概述
+\qquadQt工具包是一个完整封装的C 类库（可以类比MFC），并且使用一次编写，随处编译的方式，可用于构建多平台图形用户界面。
+\qquadQt提供了一套跨平台的API，可以直接调用其函数，同时支持Linux、Windows和..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://hensonguo.github.io">
+  <img class="avatar" src="https://hensonguo.github.io/images/avatar.png?v=1704354032694" alt="">
+  </a>
+  <h1 class="site-title">
+    Icode
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              QT跨平台
+            </h2>
+            <div class="post-info">
+              <span>
+                2023-04-13
+              </span>
+              <span>
+                3 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <p>1、概述<br>
+<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span>Qt工具包是一个完整封装的C 类库（可以类比MFC），并且使用一次编写，随处编译的方式，可用于构建多平台图形用户界面。<br>
+<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span>Qt提供了一套跨平台的API，可以直接调用其函数，同时支持Linux、Windows和MacOS等多个操作系统。</p>
+<p>2、QT跨平台<br>
+<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span>qt在不同操作系统下都实现有不同的底层类库，然后再暴露出一个公共的应用层接口，我们做的开发就是基于这个公共的应用层接口来完成。所谓的跨平台是指基于qt写的代码是跨平台，而不是编译出来的文件跨平台，同一份代码需要放到另一个平台上时，需要用另一个平台的类库重新编译。一个简要的qt框架跨平台实现原理图：<br>
+<img src="https://hensonguo.github.io/post-images/1681376174821.png" alt="" loading="lazy"></p>
+<p>3、QT编译器的选择<br>
+<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span>一般取决于你需要依赖的第三方库是哪来的。如果你的第三方库是msvc的，能可能就必须msvc，如果第三方库是mingw的可能就必须mingw。<br>
+<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span>像我们多平台开发的话，用的库基本上一定是Linux能用的库，而Linux能用的库一定是在mingw下支持会比较好。（mingw甚至能 include unistd.h 之类的Linux专用头文件），那就首选mingw。但如果有第三方库比如商业库需要引入，而它们的库是msvc库，就必须使用msvc了。<br>
+所以你用哪个编译真的不取决于你想用哪个，取决于你习惯用来自哪个平台的第三方库。如果是多平台Qt开发肯定是选择mingw更好。<br>
+<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span>而且WebEngine是MSVC特有的，用于网页开发，Linux上可以通过安装库来解决</p>
+<p>4、如何跨平台<br>
+<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span>（1）、避免使用平台相关的特性：在编写代码时，要避免使用平台相关的特性或者库，否则会导致代码无法跨平台。例如，在使用文件路径时，要使用Qt提供的跨平台的QDir类，而不是直接使用Windows或者Linux的文件路径。<br>
+<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span>（2）、使用Qt Creator集成开发环境：Qt Creator是Qt官方提供的跨平台IDE，可以用来创建和构建Qt项目，同时也支持多种操作系统。<br>
+<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span>（3）、使用Qt的预处理器宏：Qt提供了一些预处理器宏，可以根据不同的操作系统进行编译。例如，使用#ifdef Q_OS_WIN32来判断是否为Windows操作系统，使用#ifdef Q_OS_LINUX来判断是否为Linux操作系统。<br>
+<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span>（4）、使用静态链接库：为了保证程序能够在不同的操作系统上运行，可以将Qt库和其他第三方库打包成静态链接库，这样可以使程序更加独立和可移植。</p>
+
+              </div>
+              <div class="toc-container">
+                
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://hensonguo.github.io/post/zi-fu-chuan-chu-li-zong-jie/">
+              <h3 class="post-title">
+                字符串处理总结
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://hensonguo.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

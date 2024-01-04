@@ -1,0 +1,238 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>H264 | Icode</title>
+<link rel="shortcut icon" href="https://hensonguo.github.io/favicon.ico?v=1704354032694">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://hensonguo.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="H264 | Icode - Atom Feed" href="https://hensonguo.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="1.什么是h264编码标准？
+H.264是一种视频压缩标准，也被称为MPEG-4 Part 10，或AVC（Advanced Video Coding）。它是一种高效的压缩算法，可在保持视频质量的同时减少文件大小。
+
+2. h264编码标准..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://hensonguo.github.io">
+  <img class="avatar" src="https://hensonguo.github.io/images/avatar.png?v=1704354032694" alt="">
+  </a>
+  <h1 class="site-title">
+    Icode
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              H264
+            </h2>
+            <div class="post-info">
+              <span>
+                2023-10-09
+              </span>
+              <span>
+                5 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <h3 id="1什么是h264编码标准">1.什么是h264编码标准？</h3>
+<p>H.264是一种视频压缩标准，也被称为MPEG-4 Part 10，或AVC（Advanced Video Coding）。它是一种高效的压缩算法，可在保持视频质量的同时减少文件大小。</p>
+<br>
+<h3 id="2-h264编码标准的优点是什么">2. h264编码标准的优点是什么？</h3>
+<p>H.264编码标准具有以下优点：</p>
+<ul>
+<li>高压缩比：相对于其他压缩标准，H.264可以在保持视频质量的同时减小文件大小。</li>
+<li>高质量视频：H.264可以提供高质量的视频，最高可以达到1080p分辨率。</li>
+<li>适用于多种应用：H.264可以用于多种应用，包括流媒体、视频会议、移动设备等。</li>
+<li>低延迟：H.264可以提供低延迟的视频传输，适用于实时应用，如视频会议和直播。</li>
+</ul>
+<br>
+<h3 id="3h264编码标准的缺点是什么">3.h264编码标准的缺点是什么？</h3>
+<p>H.264编码标准的缺点包括：</p>
+<ul>
+<li>高算力需求：H.264编码需要大量的计算资源，因此在低端设备上可能会出现性能问题。</li>
+<li>版权问题：H.264是一种专利技术，使用H.264编码需要支付专利费用。</li>
+<li>不适用于低码率：H.264在低码率下的表现不如其他编码标准。</li>
+</ul>
+<br>
+<h3 id="4什么是h264的i帧-p帧和b帧">4.什么是H.264的I帧、P帧和B帧？</h3>
+<p>H.264编码标准使用三种帧类型：</p>
+<ul>
+<li>I帧（Intra Frame）：I帧是一种关键帧，它是视频序列中的第一帧，也是其他帧的参考帧。I帧包含完整的图像信息，不依赖于其他帧。</li>
+<li>P帧（Predictive Frame）：P帧是一种预测帧，它依赖于前一帧的I帧或P帧，并通过运动估计和运动补偿来预测当前帧的图像信息。</li>
+<li>B帧（Bidirectional Frame）：B帧是一种双向预测帧，它依赖于前一帧和后一帧的I帧或P帧，并通过双向运动估计和运动补偿来预测当前帧的图像信息。</li>
+</ul>
+<br>
+<h3 id="5h264编码中的运动估计和运动补偿是什么">5.H.264编码中的运动估计和运动补偿是什么？</h3>
+<p>运动估计和运动补偿是H.264编码中的两个重要概念。运动估计是指通过比较两个帧之间的像素差异来估计当前帧中的运动信息。运动补偿是指通过使用运动估计的结果来对当前帧进行预测，从而减小编码后的数据量。运动补偿可以使用单向预测（P帧）或双向预测（B帧）来实现。通过运动估计和运动补偿，H.264可以在保持视频质量的同时减少数据量。</p>
+<br>
+<h3 id="6什么是x264">6.什么是x264？</h3>
+<ul>
+<li>h264是一种视频编码标准，x264是一种实现h264标准的开源软件库。</li>
+<li>x264相对于其他h264编码器，具有更高的压缩比和更好的视频质量，但需要更高的计算资源。</li>
+<li>x264编码器通过使用先进的压缩算法和优化的编码参数，可以实现高效的视频压缩率。此外，x264还支持多种压缩模式和自适应压缩技术，以进一步提高视频压缩率。</li>
+</ul>
+<br>
+<h3 id="7h264可以硬编码吗">7.h264可以硬编码吗</h3>
+<p>是的，h264可以进行硬件编码，这种编码方式通常使用专门的硬件编码器来完成。硬件编码可以提高编码速度和效率，并减少计算机的负载。许多现代的图形处理器（GPU）和其他硬件设备都支持h264硬件编码。</p>
+<br>
+<h3 id="8x264是软编还是硬编">8.x264是软编还是硬编</h3>
+<p>264是软编，它是一种开源的视频编码库，可以将视频流压缩成H.264/MPEG-4 AVC格式，以实现更高效的视频传输和存储。它不依赖于特定的硬件设备，而是通过软件算法实现视频编码。</p>
+<br>
+<h3 id="9h264和mpeg4的区别">9.h264和mpeg4的区别</h3>
+<p>H.264和MPEG-4都是视频编码标准，它们有以下几点区别：</p>
+<ol>
+<li>压缩效率：H.264比MPEG-4更先进，可以在相同的比特率下提供更高的视频质量，或者在相同的视频质量下减少文件大小。</li>
+<li>处理速度：H.264需要更多的计算资源来进行编码和解码，因此相对于MPEG-4来说，处理速度可能会更慢。</li>
+<li>支持的分辨率：H.264支持更高的分辨率和帧率，可以处理更高清晰度的视频。</li>
+<li>应用场景：H.264适用于需要高质量视频和较小文件大小的应用场景，如高清视频、流媒体和视频会议等；MPEG-4适用于低比特率和较小分辨率的应用场景，如移动设备视频和视频邮件等。</li>
+</ol>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li>
+<ul>
+<li><a href="#1%E4%BB%80%E4%B9%88%E6%98%AFh264%E7%BC%96%E7%A0%81%E6%A0%87%E5%87%86">1.什么是h264编码标准？</a></li>
+<li><a href="#2-h264%E7%BC%96%E7%A0%81%E6%A0%87%E5%87%86%E7%9A%84%E4%BC%98%E7%82%B9%E6%98%AF%E4%BB%80%E4%B9%88">2. h264编码标准的优点是什么？</a></li>
+<li><a href="#3h264%E7%BC%96%E7%A0%81%E6%A0%87%E5%87%86%E7%9A%84%E7%BC%BA%E7%82%B9%E6%98%AF%E4%BB%80%E4%B9%88">3.h264编码标准的缺点是什么？</a></li>
+<li><a href="#4%E4%BB%80%E4%B9%88%E6%98%AFh264%E7%9A%84i%E5%B8%A7-p%E5%B8%A7%E5%92%8Cb%E5%B8%A7">4.什么是H.264的I帧、P帧和B帧？</a></li>
+<li><a href="#5h264%E7%BC%96%E7%A0%81%E4%B8%AD%E7%9A%84%E8%BF%90%E5%8A%A8%E4%BC%B0%E8%AE%A1%E5%92%8C%E8%BF%90%E5%8A%A8%E8%A1%A5%E5%81%BF%E6%98%AF%E4%BB%80%E4%B9%88">5.H.264编码中的运动估计和运动补偿是什么？</a></li>
+<li><a href="#6%E4%BB%80%E4%B9%88%E6%98%AFx264">6.什么是x264？</a></li>
+<li><a href="#7h264%E5%8F%AF%E4%BB%A5%E7%A1%AC%E7%BC%96%E7%A0%81%E5%90%97">7.h264可以硬编码吗</a></li>
+<li><a href="#8x264%E6%98%AF%E8%BD%AF%E7%BC%96%E8%BF%98%E6%98%AF%E7%A1%AC%E7%BC%96">8.x264是软编还是硬编</a></li>
+<li><a href="#9h264%E5%92%8Cmpeg4%E7%9A%84%E5%8C%BA%E5%88%AB">9.h264和mpeg4的区别</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://hensonguo.github.io/post/mian-shi-ti-hui-zong-3/">
+              <h3 class="post-title">
+                面试题汇总3
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://hensonguo.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

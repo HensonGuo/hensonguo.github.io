@@ -1,0 +1,192 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>visual studio设置 | Icode</title>
+<link rel="shortcut icon" href="https://hensonguo.github.io/favicon.ico?v=1704354032694">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://hensonguo.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="visual studio设置 | Icode - Atom Feed" href="https://hensonguo.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="Visual Studio中VC++目录与C/C++及链接器的包含目录、库目录的区别
+分析
+最初的VC++目录对应于Microsoft Windows的SDK，它的变量也是Windows的环境变量（PATH），而C/C++中的设置不是设置环..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://hensonguo.github.io">
+  <img class="avatar" src="https://hensonguo.github.io/images/avatar.png?v=1704354032694" alt="">
+  </a>
+  <h1 class="site-title">
+    Icode
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              visual studio设置
+            </h2>
+            <div class="post-info">
+              <span>
+                2023-03-30
+              </span>
+              <span>
+                2 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <h3 id="visual-studio中vc目录与cc及链接器的包含目录-库目录的区别">Visual Studio中VC++目录与C/C++及链接器的包含目录、库目录的区别</h3>
+<p><strong>分析</strong></p>
+<p>最初的VC++目录对应于Microsoft Windows的SDK，它的变量也是Windows的环境变量（PATH），而C/C++中的设置不是设置环境变量，它是设置命令行参数的，只针对当前工程。即：“VC++目录”影响全局，只要是电脑上这个VS创建的工程，都会被这个设置影响，而C/C++只影响单个工程。</p>
+<p><strong>区别</strong></p>
+<p>但是，在VS2010之后，VC++目录也只会影响单个工程了。之后版本VS的主要区别：VC++目录是一个Windows环境变量，C/C++是命令行参数，这是本质区别；相同的项，VC++目录中的包含目录对应C/C++中的附加包含目录，VC++目录中的库目录对应链接器中的附加库目录，二者效果相同。</p>
+<h3 id="项目属性props配置文件">项目属性（.props配置文件）</h3>
+<p>.props 文件是 Visual Studio 中的一种工程属性表文件（project property sheet），用于定义工程的编译和链接选项，包括编译器选项、链接器选项、附加包含目录、附加库目录等。通过使用 .props 文件，可以方便地在多个工程中共享相同的编译和链接选项，提高工作效率。</p>
+<p>方法：<br>
+1：打开属性管理器，视图-&gt;其他窗口-&gt;属性管理器<br>
+2：在属性管理器视图中选中项目-&gt;右键-&gt;添加属性表</p>
+<br>
+<h3 id="vs-点击文件自动定位到解决方案资源管理器中文件所在目录位置">VS 点击文件自动定位到解决方案资源管理器中文件所在目录位置</h3>
+<p>Tools-&gt;Option-&gt;Projects And Solutions-&gt;General, tick “track Active Item in Solution Explorer”</p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li>
+<ul>
+<li><a href="#visual-studio%E4%B8%ADvc%E7%9B%AE%E5%BD%95%E4%B8%8Ecc%E5%8F%8A%E9%93%BE%E6%8E%A5%E5%99%A8%E7%9A%84%E5%8C%85%E5%90%AB%E7%9B%AE%E5%BD%95-%E5%BA%93%E7%9B%AE%E5%BD%95%E7%9A%84%E5%8C%BA%E5%88%AB">Visual Studio中VC++目录与C/C++及链接器的包含目录、库目录的区别</a></li>
+<li><a href="#%E9%A1%B9%E7%9B%AE%E5%B1%9E%E6%80%A7props%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6">项目属性（.props配置文件）</a></li>
+<li><a href="#vs-%E7%82%B9%E5%87%BB%E6%96%87%E4%BB%B6%E8%87%AA%E5%8A%A8%E5%AE%9A%E4%BD%8D%E5%88%B0%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E8%B5%84%E6%BA%90%E7%AE%A1%E7%90%86%E5%99%A8%E4%B8%AD%E6%96%87%E4%BB%B6%E6%89%80%E5%9C%A8%E7%9B%AE%E5%BD%95%E4%BD%8D%E7%BD%AE">VS 点击文件自动定位到解决方案资源管理器中文件所在目录位置</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://hensonguo.github.io/post/qt-chang-jian-wen-ti-hui-zong/">
+              <h3 class="post-title">
+                QT常见问题汇总
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://hensonguo.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

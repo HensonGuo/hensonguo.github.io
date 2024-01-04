@@ -1,0 +1,544 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>windows核心编程-线程与内核对象的同步 | Icode</title>
+<link rel="shortcut icon" href="https://hensonguo.github.io/favicon.ico?v=1704354032694">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://hensonguo.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="windows核心编程-线程与内核对象的同步 | Icode - Atom Feed" href="https://hensonguo.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="\qquad上一章介绍了如何使用允许线程保留在用户方式中的机制来实现线程同步的方法。用户方式同步的优点是它的同步速度非常快。如果强调线程的运行速度，那么首先应该确定用户方式的线程同步机制是否适合需要。
+\qquad 虽然用户方式的线程同步机..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://hensonguo.github.io">
+  <img class="avatar" src="https://hensonguo.github.io/images/avatar.png?v=1704354032694" alt="">
+  </a>
+  <h1 class="site-title">
+    Icode
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              windows核心编程-线程与内核对象的同步
+            </h2>
+            <div class="post-info">
+              <span>
+                2023-06-01
+              </span>
+              <span>
+                27 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span>上一章介绍了如何使用允许线程保留在用户方式中的机制来实现线程同步的方法。用户方式同步的优点是它的同步速度非常快。如果强调线程的运行速度，那么首先应该确定用户方式的线程同步机制是否适合需要。</p>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span> <strong>虽然用户方式的线程同步机制具有速度快的优点，但是它也有其局限性。对于许多应用程序来说，这种机制是不适用的。例如，互锁函数家族只能在单值上运行，根本无法使线程进入等待状态。可以使用关键代码段使线程进入等待状态，但是只能用这些代码段对单个进程中的线程实施同步。还有，使用关键代码段时，很容易陷入死锁状态，因为在等待进入关键代码段时无法设定超时值。</strong></p>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span>本章将要介绍如何使用内核对象来实现线程的同步。你将会看到，<strong>内核对象机制的适应性远远优于用户方式机制。实际上，内核对象机制的唯一不足之处是它的速度比较慢</strong>。当调用本章中提到的任何新函数时，调用线程必须从用户方式转为内核方式。这个转换需要很大的代价：往返一次需要占用 x86平台上的大约1000个CPU周期，当然，这还不包括执行内核方式代码，即实现线程调用的函数的代码所需的时间。</p>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span><strong>当进程正在运行的时候，进程内核对象处于未通知状态，当进程终止运行的时候，它就变为已通知状态</strong>。进程内核对象中是个布尔值，当对象创建时，该值被初始化为 FALSE（未通知状态） 。当进程终止运行时，操作系统自动将对应的对象布尔值改为 TRUE，表示该对象已经得到通知。</p>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span>如果编写的代码是用于检查进程是否仍在运行，那么只需要调用一个函数，让操作系统去</p>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span>检查进程对象的布尔值，这非常简单。你也可能想要告诉系统使线程进入等待状态，然后当布尔值从FALSE改为TRUE时自动唤醒该线程。这样，你可以编写一个代码，在这个代码中，需要等待子进程终止运行的父进程中的线程只需要使自己进入睡眠状态，直到标识子进程的内核对象变为已通知状态即可。你将会看到，Microsoft的Windows提供了一些能够非常容易地完成这些操作的函数。</p>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span>刚才讲了Microsoft为进程内核对象定义了一些规则。实际上，线程内核对象也遵循同样的规则。即线程内核对象总是在未通知状态中创建。当线程终止运行时，操作系统会自动将线程对象的状态改为已通知状态。因此，可以将相同的方法用于应用程序，以确定线程是否不再运行。与进程内核对象一样，线程内核对象也可以处于已通知状态或未通知状态。</p>
+<h2 id="等待函数">等待函数</h2>
+<p>等待函数可使线程自愿进入等待状态，直到一个特定的内核对象变为已通知状态为止。这些等待函数中最常用的是WaitForSingObject：</p>
+<pre><code>DWORD WaitForSingObject(
+HANDLE hObject,
+DWORD dwMilliseconds);
+</code></pre>
+<p>当线程调用该函数时，第一个参数 hObject标识一个能够支持被通知 /未通知的内核对象（前面列出的任何一种对象都适用） 。第二个参数dwMilliseconds允许该线程指明，为了等待该对象变为已通知状态，它将等待多长时间。</p>
+<pre><code class="language-c++">DWORD dwRet = WaitForSingleObject(hThread, 5000);
+if (dwRet == WAIT_OBJECT_0)
+{
+    cout &lt;&lt; &quot;创建的线程执行结束&quot; &lt;&lt; endl;
+}
+if (dwRet == WAIT_TIMEOUT)
+{
+    cout &lt;&lt; &quot;等待超时&quot; &lt;&lt; endl;
+}
+if (dwRet == WAIT_ABANDONED)
+{
+    cout &lt;&lt; &quot;Abandoned&quot; &lt;&lt; endl;
+}
+</code></pre>
+<p>WaitForMultipleObjects 等待多个内核对象：</p>
+<pre><code>DWORD WaitForMultipleObjects(
+    DWORD dwCount,
+    CONST HANDLE*phObjects,
+    BOOL fWaitAll,
+    DWORD dwMilliseconds
+);
+</code></pre>
+<p>fWaitAll TRUE表示等待所有内核对象变为已通知状态，此函数才返回，FALSE表示有任何一个内核对象变为已通知状态就返回，返回WAIT_OBJRCT_0与dwCount-1之间的一个值，表示句柄数组的索引下标即哪个对象变为了已通知状态</p>
+<pre><code class="language-c++">int nIndex = WaitForMultipleObjects(2, pThis-&gt;m_hEvent, FALSE,500);     
+if (nIndex == WAIT_OBJECT_0 + 1)   
+{  
+    //第二个事件发生   //ExitThread(0);   //break;    
+}   
+else if (nIndex == WAIT_OBJECT_0) //第一个事件发生    
+{   
+    //第一个事件   
+}    
+else if (nIndex == WAIT_TIMEOUT) //超时500毫秒    
+{   
+    //超时可作定时用    
+} 
+</code></pre>
+<h2 id="事件内核对象">事件内核对象</h2>
+<p>在所有的内核对象中，事件内核对象是个最基本的对象。它们包含一个使用计数（与所有内核对象一样） ，一个用于指明该事件是个自动重置的事件还是一个人工重置的事件的布尔值，另一个用于指明该事件处于已通知状态还是未通知状态的布尔值。</p>
+<pre><code>HANDLE CreateEvent(
+  PSECURITY_ATTRIBUTES psa, //安全属性
+  BOOL fManualReset, //是否人工重置
+  BOOL fInitialState, //初始通知状态
+  PCTSTR pszName //事件名称
+);
+</code></pre>
+<p>适用于一个线程执行一部分初始化，然后通知另一个线程执行剩余的操作<br>
+SetEvent更改状态为已通知<br>
+ResetEvent更改状态为未通知<br>
+自动重置的副作用会在等到该对象时把状态改为未通知，所以自动的时候不必调用ResetEvent，而人工的时候需要调用<br>
+人工重置时会把等待的所有线程变为可调度状态，而自动重置则是把其中的一个线程变为可调度状态，并且不可控</p>
+<pre><code class="language-c++">#include &lt;iostream&gt;
+#include &lt;afx.h&gt;
+#include &lt;process.h&gt;
+
+using namespace std;
+HANDLE hUp;
+CRITICAL_SECTION g_data;
+int arr[10];
+HANDLE hEvent; //使用手动重置为无信号状态，初始化时有信号状态
+
+UINT __stdcall Add(LPVOID lParam)
+{
+
+    DWORD dReturn = WaitForSingleObject(hEvent,INFINITE); //有信号时才能得到
+    for (int i = 0; i&lt;10;i++ )
+    {
+       arr[i]=i;//0-9
+    }
+
+    for (int i = 0;i &lt; 10; i++)
+    {
+       cout&lt;&lt;arr[i]&lt;&lt;&quot; &quot;;
+    }
+
+    cout&lt;&lt;endl;
+    ResetEvent(hEvent);//重置为无信号状态
+    return 1;
+}
+
+UINT __stdcall Add2(LPVOID lParam)
+{
+    for (int i = 0; i&lt;100 ;i++)
+    {
+       arr [i] = i+100;//10`1
+    }
+
+    for (int i = 0;i &lt; 10; i++)
+    {
+       cout&lt;&lt;arr[i]&lt;&lt;&quot; &quot;;
+    }
+
+    cout&lt;&lt;endl;
+    SetEvent(hEvent);
+//MFC中，CEvent g_event; g_event.SetEvent();
+    return 1;
+}
+
+int main()
+{
+    hEvent = CreateEvent(NULL,TRUE,FALSE, NULL);
+    hUp=(HANDLE)_beginthreadex(NULL, 0, Add, NULL, NULL, 0);
+    hUp=(HANDLE)_beginthreadex(NULL, 0, Add2, NULL, NULL, 0);
+    Sleep(5000);
+}
+</code></pre>
+<h2 id="等待定时器内核对象">等待定时器内核对象</h2>
+<p>等待定时器是在某个时间或按规定的间隔时间发出自己的信号通知的内核对象。它们通常用来在某个时间执行某个操作。<br>
+若要创建等待定时器，只需要调用CreateWaitableTimer函数：</p>
+<pre><code>HANDLE CreateWaitableTimer(
+  PSECURITY_ATTRIBUTES psa,
+  BOOL fManualReset,
+  PCTSTR pszName
+);
+</code></pre>
+<p>进程可以获得它自己的与进程相关的现有等待定时器的句柄，方法是调用OpenWaitableTimer函数：</p>
+<pre><code>HANDLE OpenWaitableTimer(
+    DWORD dwDesiredAccess,
+    BOOL bInheritHandle,
+    PCTSTR pszName
+);
+</code></pre>
+<p>等待定时器对象总是在未通知状态中创建。必须调用SetWaitableTimer函数来告诉定时器你想在何时让它成为已通知状态：</p>
+<pre><code>BOOL SetWaitableTimer(
+    HANDLE hTimer,
+    const LARGE_INTEGER *pDueTime,
+    LONG lPeriod,
+    PTIMERAPCROUTINE pfnCompletionRoutine,
+    PVOID pvArgToCompletionRoutine,
+    BOOL fResume
+);
+</code></pre>
+<p>这个函数带有若干个参数，使用时很容易搞混。显然， hTimer参数用于指明你要设置的定时器。pDueTime和lPeriod两个参数是一道使用的。pDueTime参数用于指明定时器何时应该第一次报时，而lPeriod参数则用于指明此后定时器应该间隔多长时间报时一次。</p>
+<p>取消定时器</p>
+<pre><code>BOOL CancelWaitableTimer(HANDLE hTimer);
+</code></pre>
+<h2 id="让等待定时器给apc项排队">让等待定时器给APC项排队</h2>
+<p>当规定的时间到来时，就向定时器发出通知信号。但是，如果到了规定的时间，你愿意让定时器给一个A P C排队，那么你必须传递定时器A P C例程的地址，而这个例程是你必须实现的。该函数应该类似下面的形式：</p>
+<pre><code class="language-c++">#include &quot;stdafx.h&quot;
+#include&lt;iostream&gt;
+#include&lt;windows.h&gt;
+#include&lt;ctime&gt;
+using namespace std;
+ 
+VOID APIENTRY TimerAPCRoutine( PVOID pvArgToCompletionRoutine,DWORD dwTimerLowValue,DWORD dwTimerHighValue)
+{
+       static DWORD tl=dwTimerLowValue;
+	   cout&lt;&lt;&quot;high:&quot;&lt;&lt;dwTimerHighValue&lt;&lt;&quot; low: &quot;&lt;&lt;dwTimerLowValue-tl&lt;&lt;endl;
+	   tl=dwTimerLowValue;
+}
+ 
+void main()
+{
+      HANDLE hTimer = CreateWaitableTimer( NULL,FALSE,NULL );
+      LARGE_INTEGER li;
+      li.QuadPart = 0;
+       
+	  if( !SetWaitableTimer( hTimer,&amp;li,2*1000,TimerAPCRoutine,NULL,FALSE ))
+	  {
+			CloseHandle( hTimer );
+			return;
+		}
+ 
+		while ( 1 )
+		{            
+			//SleepEx( 10000,TRUE );
+            //只按照APC定时节奏启动
+            SleepEx( -1,TRUE );		
+		}
+		CloseHandle( hTimer );
+		getchar();
+}
+</code></pre>
+<p>我已经将该函数命名为TimerAPCRoutine，不过可以根据需要给它赋予任何一个名字。该函数可以在定时器报时的时候由调用SetWaitableTimer函数的同一个线程来调用，但是只有在调用线程处于待命状态下才能调用。换句话说，该线程必须正在 SleepEx , WaitForSngleObjectEx，WaitForMultipleObjectsEx，MsgWaitForMultipleObjectsEx或SingleObject-AndWait等函数的调用中等待。如果该线程不在这些函数中的某个函数中等待，系统将不给定时器 A P C例程排队。这可以防止线程的A P C队列中塞满定时器A P C通知，这会浪费系统中的大量内存。</p>
+<p>只有当所有的APC项都已经处理之后，待命的函数才会返回。因此，必须确保定时器再次变为已通知状态之前，TimerAPCRoutine函数完成它的运行，这样，APC项的排队速度就不会比它被处理的速度快。</p>
+<p>用WaitForSngleObjectEx函数实际上是两次等待该定时器，一次是以待命方式等待，一次是等待内核对象句柄。当定时器变为已通知状态时，等待就成功了，线程被唤醒，这将使该线程摆脱待命状态，而 A P C例程则没有被调用。前面讲过，通常没有理由使用带有等待定时器的A P C例程，因为你始终都可以等待定时器变为已通知状态，然后做你想要做的事情。</p>
+<h2 id="信标内核对象">信标内核对象</h2>
+<p><strong>信标内核对象用于对资源进行计数。</strong> 它们与所有内核对象一样，包含一个使用数量，但是它们也包含另外两个带符号的3 2位值，一个是最大资源数量，一个是当前资源数量。最大资源数量用于标识信标能够控制的资源的最大数量，而当前资源数量则用于标识当前可以使用的资源的数量。</p>
+<p>1）使用规则：<br>
+• 如果当前资源的数量大于0，则发出信标信号。<br>
+• 如果当前资源数量是0，则不发出信标信号。<br>
+• 系统决不允许当前资源的数量为负值。<br>
+• 当前资源数量决不能大于最大资源数量。</p>
+<p>2）创建信号量：</p>
+<pre><code>HANDLE CreateSemaphore(
+    PSECURITY_ATTRIBUTE psa,
+    LONG lInitialCount,
+    LONG lMaximumCount,
+    PCTSTR pszName
+);
+</code></pre>
+<p>lMaximumCount参数用于告诉系统，应用程序处理的最大资源数量是多少。由于这是个带<br>
+符号的3 2位值，因此最多可以拥有2 147 483 647个资源。lInitialCount参数用于指明开始时（当<br>
+前）这些资源中有多少可供使用。当我的服务器进程初始化时，没有任何客户机请求，因此我<br>
+调用下面这个CreateSemaphore函数：</p>
+<pre><code class="language-c++">HANDLE hsem = CreateSemaphore(NULL, 0, 5 NULL);
+</code></pre>
+<p>该函数创建了一个信标，其最大资源数量为 5，但是开始时可以使用的资源为0（由于偶然<br>
+的原因，该内核对象的使用数量是1，因为我刚刚创建了这个内核对象，请不要与计数器搞混）。<br>
+由于当前资源数量被初始化为0，因此不发出信标信号。等待信标的所有线程均进入等待状态。</p>
+<p>通过调用等待函数，传递负责保护资源的信标的句柄，线程就能够获得对该资源的访问权。<br>
+从内部来说，该等待函数要检查信标的当前资源数量，如果它的值大于0（信标已经发出信号），<br>
+那么计数器递减1，调用线程保持可调度状态。信标的出色之处在于它们能够以原子操作方式<br>
+来执行测试和设置操作，这就是说，当向信标申请一个资源时，操作系统就要检查是否有这个<br>
+资源可供使用，同时将可用资源的数量递减，而不让另一个线程加以干扰。只有当资源数量递<br>
+减后，系统才允许另一个线程申请对资源的访问权。</p>
+<p>获得有信标相关的句柄：</p>
+<pre><code>HANDLE OpenSemaphore(
+    DWORD fdwAccess,
+    BOOL bInheritHandle,
+    PCTSTR pszName
+);
+</code></pre>
+<p>3）释放信标<br>
+如果该等待函数确定信标的当前资源数量是 0（信标没有发出通知信号），那么系统就调用<br>
+函数进入等待状态。当另一个线程将对信标的当前资源数量进行递增时，系统会记住该等待线<br>
+程（或多个线程），并允许它变为可调度状态（相应地递减它的当前资源数量）。<br>
+通过调用ReleaseSemaphore函数，线程就能够对信标的当前资源数量进行递增：</p>
+<pre><code>BOOL ReleaseSemaphore(
+    HANDLE hsem,
+    LONG lReleaseCount,
+    PLONG plPreviousCount
+);
+</code></pre>
+<p>该函数只是将lReleaseCount中的值添加给信标的当前资源数量。通常情况下，为lReleaseCount参数传递1，但是，不一定非要传递这个值。我常常传递 2或更大的值。该函数也能够在它的*plPreviousCount中返回当前资源数量的原始值。实际上几乎没有应用程序关心这<br>
+个值，因此可以传递N ULL，将它忽略。</p>
+<p>有时，有必要知道信标的当前资源数量而不修改这个数量，但是没有一个函数可以用来查询信标的当前资源数量的值。起先我认为调用 ReleaseSemaphore并为lReleaseCount参数传递0，也许会在* plPreviousCount中返回资源的实际数量。但是这样做是不行的， ReleaseSemaphore用0填入这个变量。接着，我试图传递一个非常大的数字，作为第二个参数，希望它不会影响当前资源数量，因为它将取代最大值。同样， ReleaseSemaphore用0填入* plPrevious。可惜，如果不对它进行修改，就没有办法得到信标的当前资源数量。</p>
+<h2 id="互斥对象内核对象">互斥对象内核对象</h2>
+<p><strong>互斥对象（mutex）内核对象能够确保线程拥有对单个资源的互斥访问权。</strong> 实际上互斥对象是因此而得名的。互斥对象包含一个使用数量，一个线程 ID和一个递归计数器。互斥对象的行为特性与关键代码段相同，但是互斥对象属于内核对象，而关键代码段则属于用户方式对象。这意味着互斥对象的运行速度比关键代码段要慢。但是这也意味着不同进程中的多个线程能够访问单个互斥对象，并且这意味着线程在等待访问资源时可以设定一个超时值。</p>
+<p>1）使用规则：<br>
+• 如果线程I D是0（这是个无效I D），互斥对象不被任何线程所拥有，并且发出该互斥对象<br>
+的通知信号。<br>
+• 如果I D是个非0数字，那么一个线程就拥有互斥对象，并且不发出该互斥对象的通知信<br>
+号。<br>
+• 与所有其他内核对象不同， 互斥对象在操作系统中拥有特殊的代码，允许它们违反正常<br>
+的规则（后面将要介绍这个异常情况）。</p>
+<p>2）创建互斥对象</p>
+<pre><code>HANDLE CreateMutex(
+    PSECURITY_ATTRIBUTES psa,
+    BOOL fInitialOwner,
+    PCTSTR pszName);
+</code></pre>
+<p>获得互斥对象相关的句柄：</p>
+<pre><code>HANDLE OpenMutex(
+    DWORD fdwAccess,
+    BOOL bInheritHandle,
+    PCTSTR pszName
+);
+</code></pre>
+<p>fInitialOwner参数用于控制互斥对象的初始状态。如果传递 FALSE（这是通常情况下传递的值），那么互斥对象的I D和递归计数器均被设置为0。这意味着该互斥对象没有被任何线程所拥有，因此要发出它的通知信号。</p>
+<p>如果为fInitialOwner参数传递TRUE，那么该对象的线程 ID被设置为调用线程的 ID，递归计数器被设置为1。由于I D是个非0数字，因此该互斥对象开始时不发出通知信号。</p>
+<p>通过调用一个等待函数，并传递负责保护资源的互斥对象的句柄，线程就能够获得对共享资源的访问权。在内部，等待函数要检查线程的 ID，以了解它是否是0（互斥对象发出通知信号）。如果线程ID是0，那么该线程ID被设置为调用线程的 ID，递归计数器被设置为 1，同时，调用线程保持可调度状态。</p>
+<p>如果等待函数发现ID不是0（不发出互斥对象的通知信号），那么调用线程便进入等待状态。系统将记住这个情况，并且在互斥对象的 ID重新设置为0时，将线程 D设置为等待线程的ID，将递归计数器设置为 1，并且允许等待线程再次成为可调度线程。与所有情况一样，对互斥内核对象进行的检查和修改都是以原子操作方式进行的。</p>
+<p>对于互斥对象来说，正常的内核对象的已通知和未通知规则存在一个特殊的异常情况。比如说，一个线程试图等待一个未通知的互斥对象。在这种情况下，该线程通常被置于等待状态。然而，系统要查看试图获取互斥对象的线程的 I D是否与互斥对象中记录的线程I D相同。如果两个线程I D相同，即使互斥对象处于未通知状态，系统也允许该线程保持可调度状态。我们不认为该“异常”行为特性适用于系统中的任何地方的其他内核对象。每当线程成功地等待互斥对象时，该对象的递归计数器就递增。若要使递归计数器的值大于 1，唯一的方法是线程多次等待相同的互斥对象，以便利用这个异常规则。</p>
+<p>3）释放互斥对象<br>
+一旦线程成功地等待到一个互斥对象，该线程就知道它已经拥有对受保护资源的独占访问权。试图访问该资源的任何其他线程（通过等待相同的互斥对象）均被置于等待状态中。当目前拥有对资源的访问权的线程不再需要它的访问权时，它必须调用 ReleaseMutex函数来释放该互斥对象：</p>
+<pre><code>BOOL ReleaseMutex(HANDLE hMutex);
+</code></pre>
+<p>该函数将对象的递归计数器递减 1。如果线程多次成功地等待一个互斥对象，在互斥对象的递归计数器变成0之前，该线程必须以同样的次数调用 ReleaseMutex函数。当递归计数器到达0时，该线程ID也被置为0，同时该对象变为已通知状态。</p>
+<p>4）释放问题：<br>
+互斥对象不同于所有其他内核对象，因为互斥对象有一个“线程所有权”的概念。本章介绍的其他内核对象中，没有一种对象能够记住哪个线程成功地等待到该对象，只有互斥对象能够对此保持跟踪。互斥对象的线程所有权概念是互斥对象为什么会拥有特殊异常规则的原因，这个异常规则使得线程能够获取该互斥对象，尽管它没有发出通知。</p>
+<p>这个异常规则不仅适用于试图获取互斥对象的线程，而且适用于试图释放互斥对象的线程。当一个线程调用ReleaseMutex函数时，该函数要查看调用线程的ID是否与互斥对象中的线程ID相匹配。如果两个I D相匹配，递归计数器就会像前面介绍的那样递减。如果两个线程的 ID不匹配，那么ReleaseMutex函数将不进行任何操作，而是将 FALSE（表示失败）返回给调用者。此时调用GetLastError，将返回ERROR_NOT_OWNER（试图释放不是调用者拥有的互斥对象）。</p>
+<p>因此，如果在释放互斥对象之前，拥有互斥对象的线程终止运行（使用 ExitT hread、<br>
+TerminateThread、ExitProcess或TerminateProcess函数），那么互斥对象和正在等待互斥对象的<br>
+其他线程将会发生什么情况呢？答案是，系统将把该互斥对象视为已经被放弃——拥有互斥对象的线程决不会释放它，因为该线程已经终止运行。</p>
+<p>由于系统保持对所有互斥对象和线程内核对象的跟踪，因此它能准确的知道互斥对象何时被放弃。当一个互斥对象被放弃时，系统将自动把互斥对象的 I D复置为0，并将它的递归计数器复置为 0。然后，系统要查看目前是否有任何线程正在等待该互斥对象。如果有，系统将“公平地”选定一个等待线程，将 I D设置为选定的线程的I D，并将递归计数器设置为 1，同时，选定的线程变为可调度线程。</p>
+<p>这与前面的情况相同，差别在于等待函数并不将通常的 WAIT_OBJECT_0值返回给线程。相反，等待函数返回的是特殊的 WAIT_ABANDONED值。这个特殊的返回值（它只适用于互斥对象）用于指明线程正在等待的互斥对象是由另一个线程拥有的，而这另一个线程已经在它完成对共享资源的使用前终止运行。这不是可以进入的最佳情况。新调度的线程不知道目前资源处于何种状态，也许该资源已经完全被破坏了。在这种情况下必须自己决定应用程序应该怎么办。</p>
+<p>在实际运行环境中，大多数应用程序从不明确检查 WAIT_ABANDONED返回值，因为线<br>
+程很少是刚刚终止运行。</p>
+<p>5）互斥对象与关键代码段的比较<br>
+就等待线程的调度而言，互斥对象与关键代码段之间有着相同的特性。但是它们在其他属性方面却各不相同。<br>
+<img src="https://hensonguo.github.io/post-images/1685971521916.jpg" alt="" loading="lazy"></p>
+<h2 id="线程同步对象速查表">线程同步对象速查表</h2>
+<p>表9 - 2所示的速查表综合列出了各种内核对象与线程同步之间的相互关系。<br>
+<img src="https://hensonguo.github.io/post-images/1685971672133.jpg" alt="" loading="lazy"><br>
+<img src="https://hensonguo.github.io/post-images/1685971695302.jpg" alt="" loading="lazy"></p>
+<h2 id="其他的线程同步函数">其他的线程同步函数</h2>
+<p>和WaitForMultipleObjects是进行线程同步时使用得最多的函数。但是，Windows还提供了另外几个稍有不同的函数。如果理解了WaitForSingleObject和WaitForMultipleObjects函数，那么要理解其他函数如何运行，就不会遇到什么困难。本节简单地介绍一些这样的函数。</p>
+<p>1）<strong>异步设备I / O</strong><br>
+异步设备I / O使得线程能够启动一个读操作或写操作，但是不必等待读操作或写操作完成。例如，如果线程需要将一个大文件装入内存，那么该线程可以告诉系统将文件装入内存。然后，当系统加载该文件时，该线程可以忙于执行其他任务，如创建窗口、对内部数据结构进行初始化等等。当初始化操作完成时，该线程可以终止自己的运行，等待系统通知它文件已经读取。</p>
+<p>设备对象是可以同步的内核对象，这意味着可以调用WaitForSingleObject函数，传递文件、套接字和通信端口的句柄。当系统执行异步 I / O时，设备对象处于未通知状态。一旦操作完成，系统就将对象的状态改为已通知状态，这样，该线程就知道操作已经完成。此时，该线程就可以继续运行。</p>
+<p>2）<strong>WaitForInputIdle</strong><br>
+线程也可以调用WaitForInputIdle来终止自己的运行：</p>
+<pre><code>DWORD WaitForInputIdle(
+    HANDLE hProcess,
+    DWORD dwMilliseconds
+);
+</code></pre>
+<p>该函数将一直处于等待状态，直到 hProcess标识的进程在创建应用程序的第一个窗口的线程中已经没有尚未处理的输入为止。这个函数可以用于父进程。父进程产生子进程，以便执行某些操作。当父进程的线程调用CreateProcess时，该父进程的线程将在子进程初始化时继续运行。父进程的线程可能需要获得子进程创建的窗口的句柄。如果父进程的线程想要知道子进程何时完成初始化，唯一的办法是等待，直到子进程不再处理任何输入为止。因此，当调用CreateProcess后，父进程的线程就调用WaitForInputIdle。</p>
+<p>当需要将击键输入纳入应用程序时，也可以调用 WaitForInputIdle。比如说，可以将下面的消息显示在应用程序的主窗口：<br>
+<img src="https://hensonguo.github.io/post-images/1685972153673.jpg" alt="" loading="lazy"></p>
+<p>3）<strong>MsgWaitForMultipleObjects ( Ex )</strong><br>
+线程可以调用MsgWaitForMultipleObjects或MsgWaitForMultipleObjectsEx函数，让线程等<br>
+待它自己的消息：</p>
+<pre><code>DWORD MsgWaitForMultipleObjects(
+  [in] DWORD        nCount,
+  [in] const HANDLE *pHandles,
+  [in] BOOL         fWaitAll,
+  [in] DWORD        dwMilliseconds,
+  [in] DWORD        dwWakeMask
+);
+</code></pre>
+<pre><code>DWORD MsgWaitForMultipleObjectsEx(
+  [in] DWORD        nCount,
+  [in] const HANDLE *pHandles,
+  [in] DWORD        dwMilliseconds,
+  [in] DWORD        dwWakeMask,
+  [in] DWORD        dwFlags
+);
+</code></pre>
+<p>这些函数与WaitForMultipleObjects函数十分相似。差别在于它们允许线程在内核对象变成已通知状态或窗口消息需要调度到调用线程创建的窗口中时被调度。</p>
+<p>4）<strong>WaitForDebugEvent</strong><br>
+将非常出色的调试支持特性内置于操作系统之中。当调试程序启动运行时，它将自己附加给一个被调试程序。该调试程序只需闲置着，等待操作系统将与被调试程序相关的调试事件通知它。调试程序通过调用WaitForDebugEvent函数来等待这些事件的发生：</p>
+<pre><code>BOOL WaitForDebugEvent(
+  [out] LPDEBUG_EVENT lpDebugEvent,
+  [in]  DWORD         dwMilliseconds
+);
+</code></pre>
+<p>当调试程序调用该函数时，调试程序的线程终止运行，系统将调试事件已经发生的情况通知调试程序，方法是允许调用的WaitForDebugEvent函数返回。pde参数指向的结构在唤醒调试程序的线程之前由系统填入信息。该结构包含了关于刚刚发生的调试事件的信息。</p>
+<p>5）<strong>SingleObjectAndWait</strong><br>
+函数用于在单个原子方式的操作中发出关于内核对象的通知并等待另一个内核对象：</p>
+<pre><code>DWORD SingleObjectAndWait(
+    HANDLE hObjectToSingal,
+     HADNLE hObjectToWait,
+     DWORD dwMillioseconds,
+     BOOL bAlertable 
+);
+</code></pre>
+<p>hObjectToSingal：要成为触发状态的内核对象句柄。当调用该函数时，hObjectToSingal参数必须标识一个互斥对象、信标对象或事件。任何其他 类型的 对象将 导致 该函数 返回 WAIT_FAILED ，并使 GetLastError函 数返 回ERROR_INALID_HANDLE。在内部，该函数将观察对象的类型，并分别运行 ReleaseMutex、ReleaseSemaphore (其数量为1) 或ResetEvent中的相应参数。</p>
+<p>hObjectToWait：要等待的内核对象句柄。参数用于标识下列任何一个内核对象：互斥对象、信标、事件、定时器、进程、线程、作业、控制台输入和修改通知。与平常一样， dwMillioseconds参数指明该函数为了等待该对象变为已通知状态，应该等待多长时间，而 fAlertable标志则指明线程等待时该线程是否应该能够处理任何已经排队的异步过程调用。</p>
+<p>该函数返回下列几个值中的一个： WAIT_OBJECT_0、WAIT_TIMEOUT、WAIT_FAILED、WAIT_ABANDONED（本章前面已经介绍）或WAIT_IO_COMPLETION。</p>
+<p>该函数是对Windows的令人欢迎的一个补充，原因有二。首先，因为常常需要通知一个对象，等待另一个对象，用一个函数来执行两个操作可以节省许多处理时间。每次调用一个函数，使线程从用户方式代码变成内核方式代码，大约需要运行 1000个CPU周期。例如，运行下面的代码至少需要2000个CPU周期：</p>
+<p>ReleaseMutex(hMutex);<br>
+WaitForSingleObject(hEvent ,INFINITE);</p>
+<p>在高性能服务器应用程序中，SingleObjectAndWait函数能够节省大量的处理时间。</p>
+<p>前面提到过使用PulseEvent()函数时，如果线程还没准备好处于等待状态的话，那么这个触发脉冲就会丢失掉。例如下面的代码：<br>
+线程一：</p>
+<pre><code class="language-c++">SetEvent(hEvent1);
+WaiForSingleObject(hEvent2,INFINITE);
+</code></pre>
+<p>线程二：</p>
+<pre><code class="language-c++">WaiForSingleObject(hEvent1,INFINITE);
+PulseEvent(hEvent2);
+</code></pre>
+<p>上面代码就会发生：线程一等不到hEvent2的触发脉冲。<br>
+这时，Signal ObjectAndWait()函数就排上用场了。此函数保证线程一中的：使hEvent1变为有信号状态和等待hEvent2事件这两部以原子方式执行。对线程一进行以下修改：</p>
+<pre><code class="language-c++">//......
+SingleObjectAndWait(hEvent1,hEvent2,INFINITE,FALSE);
+//......
+</code></pre>
+<p>此函数保证，线程二在讲hEvent2触发为有信号的一瞬间，线程一肯定在等待状态中，所以肯定能等到的。</p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#%E7%AD%89%E5%BE%85%E5%87%BD%E6%95%B0">等待函数</a></li>
+<li><a href="#%E4%BA%8B%E4%BB%B6%E5%86%85%E6%A0%B8%E5%AF%B9%E8%B1%A1">事件内核对象</a></li>
+<li><a href="#%E7%AD%89%E5%BE%85%E5%AE%9A%E6%97%B6%E5%99%A8%E5%86%85%E6%A0%B8%E5%AF%B9%E8%B1%A1">等待定时器内核对象</a></li>
+<li><a href="#%E8%AE%A9%E7%AD%89%E5%BE%85%E5%AE%9A%E6%97%B6%E5%99%A8%E7%BB%99apc%E9%A1%B9%E6%8E%92%E9%98%9F">让等待定时器给APC项排队</a></li>
+<li><a href="#%E4%BF%A1%E6%A0%87%E5%86%85%E6%A0%B8%E5%AF%B9%E8%B1%A1">信标内核对象</a></li>
+<li><a href="#%E4%BA%92%E6%96%A5%E5%AF%B9%E8%B1%A1%E5%86%85%E6%A0%B8%E5%AF%B9%E8%B1%A1">互斥对象内核对象</a></li>
+<li><a href="#%E7%BA%BF%E7%A8%8B%E5%90%8C%E6%AD%A5%E5%AF%B9%E8%B1%A1%E9%80%9F%E6%9F%A5%E8%A1%A8">线程同步对象速查表</a></li>
+<li><a href="#%E5%85%B6%E4%BB%96%E7%9A%84%E7%BA%BF%E7%A8%8B%E5%90%8C%E6%AD%A5%E5%87%BD%E6%95%B0">其他的线程同步函数</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://hensonguo.github.io/post/windows-he-xin-bian-cheng-yong-hu-fang-shi-zhong-xian-cheng-de-tong-bu/">
+              <h3 class="post-title">
+                windows核心编程-用户方式中线程的同步
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://hensonguo.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

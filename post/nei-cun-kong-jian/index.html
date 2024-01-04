@@ -1,0 +1,288 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>内存详解 | Icode</title>
+<link rel="shortcut icon" href="https://hensonguo.github.io/favicon.ico?v=1704354032694">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://hensonguo.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="内存详解 | Icode - Atom Feed" href="https://hensonguo.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="1.什么是内存
+硬盘(ROM) 可以存储的东西很多，但其传输数据的速度较慢。所以需要运行程序或打开数据时，这些数据必须从硬盘等存储器上先传到另一种容量小但速度快得多的存储器，之后才送入CPU进行执行处理。这中间的存储器就是 内存(RAM)。..." />
+    <meta name="keywords" content="内存,C++" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://hensonguo.github.io">
+  <img class="avatar" src="https://hensonguo.github.io/images/avatar.png?v=1704354032694" alt="">
+  </a>
+  <h1 class="site-title">
+    Icode
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              内存详解
+            </h2>
+            <div class="post-info">
+              <span>
+                2022-09-05
+              </span>
+              <span>
+                7 min read
+              </span>
+              
+                <a href="https://hensonguo.github.io/tag/tqj2z-KW8/" class="post-tag">
+                  # 内存
+                </a>
+              
+                <a href="https://hensonguo.github.io/tag/blFelWlDF/" class="post-tag">
+                  # C++
+                </a>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <h3 id="1什么是内存">1.什么是内存</h3>
+<p><strong>硬盘(ROM)</strong> 可以存储的东西很多，但其传输数据的速度较慢。所以需要运行程序或打开数据时，这些数据必须从硬盘等存储器上先传到另一种容量小但速度快得多的存储器，之后才送入CPU进行执行处理。这中间的存储器就是 <strong>内存(RAM)</strong>。</p>
+<h3 id="2什么是内存地址">2.什么是内存地址</h3>
+<ul>
+<li>内存地址只是一个编号，代表一个内存空间；（ 内存地址是16进制保存的，一个内存（内存空间）是一个字节（8bit））</li>
+<li>内存地址所执行的内存单元大小就是1字节，跟内存地址位数无关（1字节=8bit）；</li>
+</ul>
+<h3 id="3内存空间如何分配的">3.内存空间如何分配的</h3>
+<p>定义一个int类型的变量，找到一个空间伪4个字节的空间<br>
+<img src="https://hensonguo.github.io/post-images/1662383349486.jpg" alt="" loading="lazy"><br>
+变量a占用4个字节的空间，但是内存地址是第一个字节的地址，也就是说上面的变量a的内存地址是238</p>
+<h3 id="4内存地址的占用大小">4.内存地址的占用大小</h3>
+<ul>
+<li>16位操作系统的内存地址占用大小是16位，即2字节</li>
+<li>32位操作系统的内存地址占用大小是32位，即4字节</li>
+<li>64位操作系统的内存地址占用大小是64位，即8字节</li>
+<li>128位操作系统的内存地址占用大小是128位，即16字节<br>
+<img src="https://hensonguo.github.io/post-images/1662430566465.jpg" alt="" loading="lazy"><br>
+32位的CPU理论最多支持4GB的内存空间,CPU只能寻址2的32次方（4GB）<br>
+4位16进制表示的内存地址和用8位16进制表示的内存地址，其实都是代表一个8bit的存储空间而已：<br>
+<img src="https://hensonguo.github.io/post-images/1662430657816.jpg" alt="" loading="lazy"></li>
+</ul>
+<h3 id="5常用数据类型占用内存大小">5.常用数据类型占用内存大小</h3>
+<table class="reference">
+<tbody><tr><th>类型</th><th>位</th><th>范围</th></tr>
+<tr><td>char</td><td>1 个字节</td><td>-128 到 127 或者 0 到 255</td></tr>
+<tr><td>unsigned char</td><td>1 个字节</td><td>0 到 255</td></tr>
+<tr><td>signed char</td><td>1 个字节</td><td>-128 到 127</td></tr>
+<tr><td>int</td><td>4 个字节</td><td>-2147483648 到 2147483647</td></tr>
+<tr><td>unsigned int</td><td>4 个字节</td><td>0 到 4294967295</td></tr>
+<tr><td>signed int</td><td>4 个字节</td><td>-2147483648 到 2147483647</td></tr>
+<tr><td>short int</td><td>2 个字节</td><td>-32768 到 32767</td></tr>
+<tr><td>unsigned short int</td><td>2 个字节</td><td>0 到 65,535</td></tr>
+<tr><td>signed short int</td><td>2 个字节</td><td>-32768 到 32767</td></tr>
+<tr><td>long int</td><td>8 个字节</td><td>-9,223,372,036,854,775,808 到 9,223,372,036,854,775,807</td></tr>
+<tr><td>signed long int</td><td>8 个字节</td><td>-9,223,372,036,854,775,808 到 9,223,372,036,854,775,807</td></tr>
+<tr><td>unsigned long int</td><td>8 个字节</td><td>0 到 18,446,744,073,709,551,615</td></tr>
+<tr><td>float</td><td>4 个字节</td><td>精度型占4个字节（32位）内存空间，+/- 3.4e +/- 38 (~7 个数字)</td></tr>
+<tr><td>double</td><td>8 个字节</td><td>双精度型占8 个字节（64位）内存空间，+/- 1.7e +/- 308 (~15 个数字)</td></tr>
+<tr><td>long double</td><td>16 个字节</td><td>长双精度型 16 个字节（128位）内存空间，可提供18-19位有效数字。</td></tr>
+<tr><td>wchar_t</td><td>2 或 4 个字节</td><td>1 个宽字符</td></tr>
+</tbody></table>
+<figure data-type="image" tabindex="1"><img src="https://hensonguo.github.io/post-images/1662431460894.jpg" alt="" loading="lazy"></figure>
+<h3 id="6内存模型分区">6.内存模型分区</h3>
+<p>1、栈区（stack）― 由编译器自动分配释放 ，存放函数的参数值，局部变量的值等。其操作方式类似于数据结构中的栈。<br>
+2、堆区（heap）― 一般由程序员分配释放， 若程序员不释放，程序结束时可能由OS回收 。注意它与数据结构中的堆是两回事，分配方式倒是类似于链表。<br>
+3、全局区（静态区）（static）― 全局变量和静态变量的存储是放在一块的，初始化的全局变量和静态变量在一块区域， 未初始化的全局变量和未初始化的静态变量在相邻的另一块区域。 - 程序结束后有系统释放<br>
+4、文字常量区 ― 常量字符串就是放在这里的。 程序结束后由系统释放<br>
+5、程序代码区 ― 存放函数体的二进制代码。<br>
+全局变量程序开始运行的时候被加载。局部变量则分配在堆栈里面</p>
+<h3 id="7进程中的地址空间">7.进程中的地址空间</h3>
+<figure data-type="image" tabindex="2"><img src="https://hensonguo.github.io/post-images/1662555722579.jpg" alt="" loading="lazy"></figure>
+<h3 id="8数组中内存地址">8.数组中内存地址</h3>
+<pre><code class="language-c++">int main(void)
+{
+	int a[5] = { 1,2,3,4,5 };
+	int* ptr = (int*)(&amp;a + 1);
+	printf(&quot;%d,%d&quot;, *(a + 1), *(ptr-1));
+	return 0;
+}
+</code></pre>
+<p>假如数组a的地址是0x00{1,2,3,4,5}<br>
+那么数组中对应数据存储的地址分别是 0x00 0x04 0x08 0x0c 0x10，数组地址为数组中第一个数据的地址<br>
+&amp;a+1表示数组地址整体位移1位，地址变为0x14{v1,v2,v3,v4,v5}，其中v为14后内存地址对应的值<br>
+a+1表示地址位置+1，为0x04，*(a+1) = 2<br>
+所以输出的值是2、5</p>
+<p>char数组存储的都是对应的字符常量指针<br>
+<img src="https://hensonguo.github.io/post-images/1662446440941.jpg" alt="" loading="lazy"><br>
+假如数组a的地址是0x00{addr1(&quot;1&quot;), addr2(&quot;2&quot;),...}<br>
+那么0x00 存储的是addr1，0x04存储的是addr2</p>
+<pre><code class="language-c++">int main(void)
+{
+    const char* names[3] = { &quot;sun&quot;,&quot;bin&quot;,&quot;sunbin&quot; };
+    cout &lt;&lt; *names &lt;&lt; endl; //数组的第一个item的值
+	cout &lt;&lt; names &lt;&lt; endl;	//数组的地址，同是数组sum的地址，同是s的地址，存储地址即内存的起始位置
+	cout &lt;&lt; names[0] &lt;&lt; endl; //item1的值，类似函数ptr-&gt;func()
+	cout &lt;&lt; names[1] &lt;&lt; endl; //item2的值
+	cout &lt;&lt; *names[0] &lt;&lt; endl; //相当于var = *names, var[0]
+	cout &lt;&lt; *names[1] &lt;&lt; endl;
+}
+</code></pre>
+<h3 id="9结构体内存对齐">9.结构体内存对齐</h3>
+<p>变量一样，但是变量的顺序不一样，所占的内存也会不一样<br>
+<img src="https://hensonguo.github.io/post-images/1662621253647.jpg" alt="" loading="lazy"></p>
+<p>1.第一个成员在结构体变量偏移量为0的地址处。<br>
+2.其他成员变量要对齐到某个数字（对齐数）的整数倍的地址处。<br>
+3.结构体总大小为最大对齐数的整数倍（每个成员变量都有一个对齐数）。<br>
+4.如果嵌套了结构体，嵌套的结构体对齐到自己最大对齐数的整数倍处，结构体的整体大小就是所有所有最大的对齐数的整数倍（包含嵌套结构体的对齐数）。</p>
+<p>对齐数 = 编译器默认的对齐数与该成员大小的较小值。<br>
+<img src="https://hensonguo.github.io/post-images/1662621615100.jpg" alt="" loading="lazy"></p>
+<p><font color=red>为什么存在内存对齐</font><br>
+（1）平台原因，不是所有硬件可以访问任意地址处上的任意数据，某些平台只能在某些地址处读取特定类型数据，否则会硬件异常<br>
+（2）性能原因，为了访问未对齐的内存，处理器需要作两次内存访问；而对于对齐的内存，处理器仅需要一次访问。<br>
+应该以char char int int double double double这样的顺序排列结构体成员变量，减少内存的浪费。</p>
+<p><font color=red>修改对齐数</font><br>
+我使用的是vs2019的编译器，默认的对齐数是8，如果结构体在对齐方式不合适的时候，可以自己更改默认对齐数。这时候需要在程序开头使用 #pragma pack(设置的默认对齐数）。</p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li>
+<ul>
+<li><a href="#1%E4%BB%80%E4%B9%88%E6%98%AF%E5%86%85%E5%AD%98">1.什么是内存</a></li>
+<li><a href="#2%E4%BB%80%E4%B9%88%E6%98%AF%E5%86%85%E5%AD%98%E5%9C%B0%E5%9D%80">2.什么是内存地址</a></li>
+<li><a href="#3%E5%86%85%E5%AD%98%E7%A9%BA%E9%97%B4%E5%A6%82%E4%BD%95%E5%88%86%E9%85%8D%E7%9A%84">3.内存空间如何分配的</a></li>
+<li><a href="#4%E5%86%85%E5%AD%98%E5%9C%B0%E5%9D%80%E7%9A%84%E5%8D%A0%E7%94%A8%E5%A4%A7%E5%B0%8F">4.内存地址的占用大小</a></li>
+<li><a href="#5%E5%B8%B8%E7%94%A8%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B%E5%8D%A0%E7%94%A8%E5%86%85%E5%AD%98%E5%A4%A7%E5%B0%8F">5.常用数据类型占用内存大小</a></li>
+<li><a href="#6%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B%E5%88%86%E5%8C%BA">6.内存模型分区</a></li>
+<li><a href="#7%E8%BF%9B%E7%A8%8B%E4%B8%AD%E7%9A%84%E5%9C%B0%E5%9D%80%E7%A9%BA%E9%97%B4">7.进程中的地址空间</a></li>
+<li><a href="#8%E6%95%B0%E7%BB%84%E4%B8%AD%E5%86%85%E5%AD%98%E5%9C%B0%E5%9D%80">8.数组中内存地址</a></li>
+<li><a href="#9%E7%BB%93%E6%9E%84%E4%BD%93%E5%86%85%E5%AD%98%E5%AF%B9%E9%BD%90">9.结构体内存对齐</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://hensonguo.github.io/post/chang-yong-xiao-gong-ju-hui-zong/">
+              <h3 class="post-title">
+                常用小工具汇总
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://hensonguo.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

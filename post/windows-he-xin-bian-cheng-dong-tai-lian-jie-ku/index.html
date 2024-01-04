@@ -1,0 +1,438 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>windows核心编程-动态链接库 | Icode</title>
+<link rel="shortcut icon" href="https://hensonguo.github.io/favicon.ico?v=1704354032694">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://hensonguo.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="windows核心编程-动态链接库 | Icode - Atom Feed" href="https://hensonguo.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="1、常用DLL
+Windows API中的所有函数都包含在 D L L中。3个最重要的 D L L是：
+
+Kernel32.dll：它包含用于管理内存、进程和线程的各个函数；
+User32.dll：它包含用于执行用户界面任务（如窗口的创建和..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://hensonguo.github.io">
+  <img class="avatar" src="https://hensonguo.github.io/images/avatar.png?v=1704354032694" alt="">
+  </a>
+  <h1 class="site-title">
+    Icode
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              windows核心编程-动态链接库
+            </h2>
+            <div class="post-info">
+              <span>
+                2023-07-07
+              </span>
+              <span>
+                19 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <h2 id="1-常用dll">1、常用DLL</h2>
+<p>Windows API中的所有函数都包含在 D L L中。3个最重要的 D L L是：</p>
+<ul>
+<li><strong>Kernel32.dll：它包含用于管理内存、进程和线程的各个函数；</strong></li>
+<li><strong>User32.dll：它包含用于执行用户界面任务（如窗口的创建和消息的传送）的各个函数；</strong></li>
+<li><strong>GDI32.dll，它包含用于画图和显示文本的各个函数。</strong></li>
+</ul>
+<p>其他：</p>
+<ul>
+<li>AdvAPI32. dll 包含用于实现对象安全性、注册表操作和事件记录的函数；</li>
+<li>ComDlg32.dll 包含常用对话框（如File Open和File Save）；</li>
+<li>ComCtl32.dll 则支持所有的常用窗口控件。</li>
+</ul>
+<h2 id="2-使用dll的一些原因">2、使用DLL的一些原因</h2>
+<p>1)<strong>它们扩展了应用程序的特性</strong>。 由于 DLL能够动态地装入进程的地址空间，因此应用程序能够在运行时确定需要执行什么操作，然后装入相应的代码，以便根据需要执行这些操作。<br>
+2) <strong>它们可以用许多种编程语言来编写</strong>。 可以选择手头拥有的最好的语言来编写 DLL。系统允许Visual Basic程序加载C++ DLL、Cobol DLL和Fortran DLL等。<br>
+3) <strong>它们简化了软件项目的管理</strong>。 项目小组分工可以使用DLL，项目管理会容易一些。但是过多的DLL会使程序加载时间过长。<br>
+4) <strong>它们有助于节省内存</strong>。 <font color=red>如果两个或多个应用程序使用同一个 DLL，那么该DLL的页面只要放入RAM一次，所有的应用程序都可以共享它的各个页面</font>。 C/C++运行期库就是个极好的例子。许多应用程序都使用这个库。如果所有的应用程序都链接到这个静态库，那么sprintf、strcpy和malloc等函数的代码就要多次存在于内存中。但是，如果所有这些应用程序链接到DLL C/C++运行期库，那么这些函数的代码就只需要放入内存一次，这意味着内存的使用将更加有效。<br>
+5) <strong>它们有助于资源的共享</strong>。 DLL可以包含对话框模板、字符串、图标和位图等资源。多个应用程序能够使用DLL来共享这些资源。<br>
+6) <strong>它们有助于应用程序的本地化</strong>。 应用程序常常使用 DLL对自己进行本地化。例如，只包含代码而不包含用户界面组件的应用程序可以加载包含本地化用户界面组件的 DLL。<br>
+7) <strong>它们有助于解决平台差异</strong>。 它们有助于解决平台差异。不同版本的 Widnows配有不同的函数。开发人员常常想要调用新的函数（如果它们存在于主机的 Windows版本上的话）。但是，如果你的源代码包含了对一个新函数的调用，而你的应用程序将要在不能提供该函数的 Windows版本上运行，那么操作系统的加载程序将拒绝运行你的进程。即使你实际上从不调用该函数，情况也是这样。如果将这些新函数保存在 DLL中，那么应用程序就能够将它们加载到 Windows的老版本上。当然，你仍然可以成功地调用该函数。<br>
+8) <strong>它们可以用于一些特殊的目的</strong>。 Windows使得某些特性只能为 DLL所用。例如，只有当DLL中包含某个挂钩通知函数的时候，才能安装某些挂钩（使用 SetWindowsHookEx和SetWinEventHook来进行安装）。可以通过创建必须在DLL中生存的COM对象来扩展Windows Explorer的外壳程序。对于可以由We b浏览器加载的、用于创建内容丰富的 Web页的ActiveX控件来说,情况也是一样.</p>
+<h2 id="3-dll与进程的地址空间">3、DLL与进程的地址空间</h2>
+<p>DLL特点：</p>
+<ol>
+<li>DLL仅包含一组应用程序可以使用的自主函数。在DLL中通常没有用来处理消息循环或创建窗口的支持代码。应用程序（或另一个DLL）能够调用DLL中的函数条件：</li>
+<li>DLL文件 映像必须被映射到调用进程的地址空间中。</li>
+</ol>
+<p>DLL映射到调用进程的地址空间的方式：</p>
+<ul>
+<li>加载时的隐含链接</li>
+<li>运行期的显式链接</li>
+</ul>
+<p>注意：exe加载dll时也会加载dll的全局变量和静态变量的实例 到静态区。</p>
+<h2 id="4-关于跨dll释放-解释">4、关于跨DLL释放 解释</h2>
+<p>单个地址空间是由一个可执行模块和若干个 DLL模块组成的。<br>
+一般三种情况的模块：</p>
+<ul>
+<li>链接到静态版本的 C/C++运行期库的模块</li>
+<li>链接到一个DLL版本的 C/C++ 运行期库的模块</li>
+<li>不需要C/C++运行期库的模块</li>
+</ul>
+<p>静态运行时库（MT）： 编译时会包含一些C/C++运行时库，但是使用多个模块的大型软件来说，如果每个模块均选择静态链接C或C++运行库，程序运行时就会存在多个运行库。在链接时也会出现重复定义的问题。</p>
+<p>动态运行时库 （MD）： 程序在运行时动态的加载对应的DLL。程序体积变小，但一个很大的问题就是一旦找不到对应DLL,程序将无法运行（比如所要移植的电脑没有安装VC++）。</p>
+<p>假设使用VC6.0并选择使用MD选项构建，那么当用户使用VC2005来使用这个DLL时很可能出现找不到MSVCRT.DLL或MSVCP60.DLL的情况。</p>
+<p>当一个模块提供一个用于分配内存块的函数时，该模块也必须提供释放内存的函数。（谁申请内存 谁就去释放内存）</p>
+<h2 id="5-dll的总体运行情况">5、DLL的总体运行情况</h2>
+<p>当一个模块（比如一个可执行文件）使用DLL中的函数或变量时，将有若干个文件和组件参与发挥作用。如下图：<br>
+<img src="https://hensonguo.github.io/post-images/1688735260289.jpg" alt="" loading="lazy"></p>
+<p>创造DLL：</p>
+<ol>
+<li>建立带有输出原型/结构/符号的头文件。</li>
+<li>建立实现输出函数/变量的C/C++源文件。</li>
+<li>编译器为每个C/C++源文件生成 .obj模块　。</li>
+<li>链接程序将生成DLL的 .obj模块链接起来。</li>
+<li>如果至少输出一个函数/变量，那么链接程序也生成lib 文件。</li>
+</ol>
+<p>创造EXE：</p>
+<ol>
+<li>建立带有输入原型/结构/符号的头文件。</li>
+<li>建立引用输入函数/变量的C/C++源文件。</li>
+<li>编译器为每个C/C++源文件生成 .obj源文件。</li>
+<li>链接程序将各个 .obj模块链接起来，产生一个 .exe文件(它包含了所需要DLL模块的名字和输入符号的列表)。</li>
+</ol>
+<p>运行应用程序：</p>
+<ol>
+<li>加载程序为 .exe 创建地址空间。</li>
+<li>加载程序将需要的DLL加载到地址空间中进程的主线程开始执行；应用程序启动运行。</li>
+</ol>
+<p>几个文件解释<br>
+.h文件：一般是函数的声明，或者记录要导出函数的文件。<br>
+.cpp文件：一般就是函数的实现，一般不导出，只用于生成.obj文件。<br>
+.obj文件：cpp文件的编译后的产物。<br>
+.lib：列出所有已输出函数和变量的符号名。<br>
+.dll：记录函数的实现。<br>
+.exe :执行文件的所有二进制代码和全局/静态变量。</p>
+<p>简单的来说就是编译链接运行的过程：</p>
+<ol>
+<li>编译：把cpp编译成.obj。</li>
+<li>链接：就是链接所有.obj到一个文件（dll/exe）中。</li>
+<li>运行：为exe创建地址空间，加载dll到地址空间执行。</li>
+</ol>
+<br/>
+<h2 id="6-dll模块的显式加载和符号链接">6、DLL模块的显式加载和符号链接</h2>
+<p><strong>6.1 加载DLL方法：</strong><br>
+<strong>隐式加载</strong>：让应用程序的源代码只引用 DLL中包含的符号。这样，当应用程序启动运行时，加载程序就能够隐含加载（和链接）需要的DLL。<br>
+<strong>显示加载</strong>： 在应用程序运行时让应用程序显式加载需要的 DLL并且显式链接到需要的输出符号。换句话说，当应用程序运行时，它里面的线程能够决定它是否要调用 DLL中的函数。该线程可以将DLL显式加载到进程的地址空间，获得 DLL中包含的函数的虚拟内存地址，然后使用该内存地址调用该函数。</p>
+<br/>
+<p><strong>6.2 显式加载DLL模块 LoadLibrary</strong><br>
+进程中的线程都可以决定将一个 D L L映射到进程的地址空间，方法是调用下面两个函数中的一个：</p>
+<pre><code class="language-c++">HINSTANCE LoadLibrary(PCTSTR pSzDLLPathName);
+
+HINSTANCE LoadLibraryEx(
+	PCTSTR pSzDLLPathName,
+	HANDLE hF1le,
+	DWORD dwF1ags 
+);
+</code></pre>
+<p>作用：这两个函数均用于找出用户系统上的文件映像（使用上一章中介绍的搜索算法），并设法将D L L的文件映像映射到调用进程的地址空间中。</p>
+<p>pSzDLLPathName：加载的dll文件的路径。<br>
+HINSTANCE：用于标识文件映像映射到的虚拟内存地址。如果DLL不能被映射到进程的地址空间，则返回 NULL。若要了解关于错误的详细信息，可以调用GetLastError。<br>
+hFile：保留供将来使用，现在必须是 NULL。<br>
+dwFlags：必须将它设置为 0 。或者设置DONT_RESOLVE_DLL_REFERENCES、<br>
+LOAD_LIBRARY_AS_DATAFILE 和LOAD_WITH_ALTERED_SEARCH_PATH等标志的一个组合。</p>
+<p><strong>6.3 DONT_RESOLVE_DLL_REFERENCES</strong><br>
+用于告诉系统将DLL映射到调用进程的地址空间中。通常情况下，当DLL被映射到进程的地址空间中时，系统要调用 DLL中的一个特殊函数，即 DllMain（本章后面介绍）。该函数用于对 D L L进行初始化。</p>
+<p>作用：</p>
+<ul>
+<li>DONT_RESOLVE_DLL_REFERENCES标志使系统不必调用DllMain函数就能映射文件映像。</li>
+<li>当 DONT_RESOLVE_DLL_REFERENCES标志被设定时，系统并不自动将该DLL依赖的其他的DLL加载到进程的地址空间中。</li>
+</ul>
+<br/>
+<p><strong>6.4 LOAD_LIBRARY_AS_DATAFILE</strong><br>
+系统只是将DLL映射到进程的地址空间中，就像它是数据文件一样。系统并不花费额外的时间来准备执行文件中的任何代码。<br>
+<strong>加载只有资源没有函数的DLL</strong>时： 首先，如果有一个 DLL（它只包含资源，但不包含函数），那么可以设定这个标志，使 DLL的文件映像能够映射到进程的地址空间中</p>
+<br/>
+<p><strong>6.5 LOAD_WITH_ALTERED_SEARCH_PATH</strong><br>
+用于改变 LoadLibraryEx用来查找特定的DLL文件时使用的搜索算法。<br>
+如果设定了该标志，那么LoadLibraryEx 函数就按照下面的顺序来搜索文件：<br>
+<strong>1. pszDLLPathName参数中设定的目录。<br>
+2. 进程的当前目录。<br>
+3. Windows的系统目录。<br>
+4. Windows目录。<br>
+5. PATH环境变量中列出的目录。</strong></p>
+<br/>
+<p><strong>6.6 显式卸载DLL模块 FreeLibrary</strong></p>
+<pre><code class="language-c++">BOOL FreeLibrary(HINSTANCE hinstD11);
+</code></pre>
+<p>也可以通过调用下面的函数从进程的地址空间中卸载 DLL：</p>
+<pre><code class="language-c++">VOID FreeLibraryAndExitThread(
+	HINSTANCE hinstDll,
+	DWORD dwExitCode
+);
+</code></pre>
+<p>如果线程分开调用 FreeLibrary和ExitThread，就会出现一个严重的问题。这个问题是调用FreeLibrary会立即从进程的地址空间中卸载 DLL。当调用的FreeLibrary返回时，包含对ExitThread调用的代码就不再可以使用，因此线程将无法执行任何代码。这将导致访问违规，同时整个进程终止运行。</p>
+<p>LoadLibrary和LoadLibraryEx 这两个函数用于对与特定的库相关的进程使用计数进行递增；<br>
+FreeLibrary和FreeLibraryAndExitThread这两个函数则用于对库的每个进程的使用计数进行递减。</p>
+<br/>
+<p><strong>6.7 GetModuleFileName</strong><br>
+调用GetModuleFileName函数线程就能够确定D L L是否已经被映射到进程的地址空间中。<br>
+只有当尚未MyLib.dll被映射到进程的地址空间，才LoadLibrary</p>
+<pre><code class="language-c++">HINSTANCE hinstDll = GetModu1eHand1e(&quot;MyLib&quot;); // DLL extension assumed
+if (hinstDll == NULL) {
+	hinstDll = LoadLibrary(&quot;MyLib&quot;);ll DLL extension assumed}
+}
+</code></pre>
+<p>如果只有 DLL的HINSTANCE值，那么可以调用 GetModuleFileName函数，确定 DLL（或. e x e）的全路径名：</p>
+<pre><code class="language-c++">DWORD GetModuleFi1eName(
+	HINSTANCE hinstModule,
+	PTSTR pszPathName,
+	DWORD cchPath
+);
+</code></pre>
+<p>hinstModule：是D L L（或. e x e）的HINSTANCE 。<br>
+pszPathName：是该函数将文件映像的全路径名放入的<strong>缓存的地址</strong>。<br>
+cchPath：用于设定<strong>缓存的大小</strong>（以字符为计量单位）</p>
+<br>
+<p><strong>6.8 显式链接到一个输出符号</strong><br>
+一旦DLL模块被显式加载，线程就必须获取它要引用的符号的地址，方法是调用下面的函数：</p>
+<pre><code class="language-c++">FARPROC GetProcAddress(
+	HINSTANCE hinstD11,PCSTR pszSymbo1Name 
+);
+</code></pre>
+<p>hinstDll：调用LoadLibrary (Ex)或GetModuleFi1eName函数而返回的，它用于设定包含符号的D L L的句柄。<br>
+pszSymbolName：</p>
+<ol>
+<li>以 0结尾的字符串</li>
+</ol>
+<pre><code class="language-c++">FARPROC pfn = GetProcAddress(hinstD11，&quot;SomeFuncInDll&quot;);
+</code></pre>
+<ol start="2">
+<li>用于指明你想要其地址的符号的序号</li>
+</ol>
+<pre><code class="language-c++">FARPROC pfn = GetProcAddress(hinstDll，MAKEINTRESOURCE(2));
+</code></pre>
+<p>调用GetProcAddress的第一种方法比第二种方法要慢。<br>
+但非常不建议使用序号，因为当传递的 序号尚未分配给任何导出的函数，会返回非NULL值，误以为你已经拥有一个有效的地址。</p>
+<br>
+<h2 id="7-dll的进入点函数-dllmain">7、DLL的进入点函数 DllMain</h2>
+<p><font color=red>如果你创建一个只包含资源的DLL，就不必实现该函数。</font><br>
+如果确实需要在 D L L中接受通知信息，可以实现类似下面的进入点函数：</p>
+<pre><code class="language-c++">B00L WINAPI DllMain(HINSTANCE hinstDll,DWORD fdwReason,PVOID fImpLoad){
+	switch (fdwReason){ 
+		case DLL_PROCESS_ATTACH:
+			//The DLL is being mapped into the process's address space.
+			break;
+		case DLL_THREAD_ATTACH:
+			//A thread is being created.
+			break;
+		case DLL_THREAD_DETACH:
+			//A thread is exiting cleanly.
+			break;
+		case DLL_PROCESS_DETACH:
+			//The DlL is being unmapped from the process's address space.
+			break;
+	}
+	return(TRUE);//Used only for DLL_PROCESS_ATTACH
+}
+</code></pre>
+<p>hinstDll：包含了D L L的实例句柄，这个值用于标识D L L的文件映像被映射到进程的地址空间中的虚拟内存地址。<br>
+fImpLoad：如果D L L是隐含加载的，那么该参数将是个非 0值，如果D L L是显式加载的，那么它的值是0。<br>
+fdwReason：用于指明系统为什么调用该函数。该参数可以使用 4个值中的一个。</p>
+<p>必须记住，DLL使用DllMain函数来对它们进行初始化。<br>
+当你的DllMain函数执行时，同一个地址空间中的其他DLL可能尚未执行它们的DllMain函数。<br>
+这意味着它们尚未初始化，因此你应该避免调用从其他DLL中输入的函数。此外，你<strong>应该避免从DllMain内部调用LoadLibrary(Ex)和FreeLibrary函数，因为这些函数会形式一个依赖性循环。</strong></p>
+<p><strong>7.1 DLL_PROCESS_ATTACH通知</strong><br>
+当DLL被初次映射到进程的地址空间中时，系统将调用该 DLL的DllM a i n函数，给它传递参数fdwReason的值DLL_PROCESS_ATTACH。L。</p>
+<p><strong>7.2 DLL_PROCESS_DETACH通知</strong><br>
+D L L从进程的地址空间中被卸载时，系统将调用 D L L的DllMain函数，给它传递fdwReason的值DLL_PROCESS_DETACH。当D L L处理这个值时，它应该执行任何与进程相关的清除操作。</p>
+<p>注意：<br>
+<strong>如果因为系统中的某个线程<font color=red>调用了TerminateProcess而使进程终止运行，那么系统将不调用带有DLL_PROCESS_DETACH值的DLL的DllMain函数</font>。这意味着映射到进程的地址空间中的任何D LL都没有机会在进程终止运行之前执行任何清除操作。这可能导致数据的丢失。只有在迫不得已的情况下，才能使用 TerminateProcess函数。</strong></p>
+<p><strong>7.3 DLL_THREAD_ATTACH</strong><br>
+当在一个进程中创建线程时，系统要查看当前映射到该进程的地址空间中的所有 DLL文件映像，并调用每个文件映像的带有DLL_THREAD_ATTACH值的DllMain函数。</p>
+<br>
+<h2 id="8-延迟加载dll">8、延迟加载DLL</h2>
+<p><strong>它能够使 DLL的操作变得更加容易。这个特性称为延迟加载 DLL。延迟加载的 DLL是个隐含链接的DLL，它实际上要等到你的代码试图引用 DLL中包含的一个符号时才进行加载。</strong></p>
+<p><strong>应用场景：</strong></p>
+<ul>
+<li>应用初始化加载的DLL过多，导致程序初始化时间过长。使用延迟加载，在程序不同阶段分时加载DLL可以解决这个问题。</li>
+<li>新版本系统的函数，在老版本系统中不存在时，使用延迟加载，在加载dll之前判断系统版本，不存在则不运行新函数。</li>
+</ul>
+<br>
+<h2 id="9-函数转发器">9、函数转发器</h2>
+<p>函数转发器是DLL的输出节(导出段)中的一个项目，用于将对一个函数的调用转至另一个 DLL中的另一个函数。。例如，如果在 Windows 2000 的Kernel32.dll上运行Visual C++的DumpBin实用程序，那么将看到类似下面的一部分输出：<br>
+<img src="https://hensonguo.github.io/post-images/1689168201730.jpg" alt="" loading="lazy"><br>
+这个输出显示了4个转发函数。<font color=green>每当你的应用程序调用HeapAlloc、HeapFree、HeapReAlloc或HeapSize时，你的可执行模块就会自动与Kernel32.dll相链接。当激活你的可执行模块时，加载程序就加载 Kernel32.dll并看到转发的函数实际上包含在 NTDLL.dll中</font>。然后它也加载NTDLL.dll。当你的可执行模块调用 HeapAlloc时，它实际上调用的是 NTDLL.dll中的RtlAllocateHeap函数。系统中的任何地方都不存在HeapAlloc函数。</p>
+<p>如果调用下面的函数，GetProcAddress就会查看Kernel32的输出节，发现HeapAlloc是个转发函数，然后按递归方式调用GetProcAddress函数，查找NTDLL.dll的输出节中的RtlAllocateHeap。</p>
+<pre><code class="language-c++">GetProcAddress(GetModuleHandle(&quot;kernel32&quot;), &quot;HeapAlloc&quot;);
+</code></pre>
+<p>也可以利用DLL模块中的函数转发器。最容易的方法是像下面这样使用一个 pragma指令：</p>
+<pre><code class="language-c++">#pragma comment(linker, &quot;/export:SomeFunc=DllWork.SomeOtherFunc&quot;);
+</code></pre>
+<p>这个pragma告诉链接程序，被编译的 DLL应该输出一个名叫SomeFunc的函数。但是SomeFunc函数的实现实际上位于另一个名叫SomeOtherFunc的函数中，该函数包含在称为DllWork.dll的模块中。必须为你想要转发的每个函数创建一个单独的pragma代码行。</p>
+<br>
+<h2 id="10-已知的dll">10、已知的DLL</h2>
+<p><strong>操作系统提供的某些DLL得到了特殊的处理。这些DLL称为已知的DLL。它们与其他DLL基本相同，但是操作系统总是在同一个目录中查找它们，以便对它们进行加载操作</strong>。在注册表中有下面的关键字：</p>
+<pre><code>计算机\HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\KnownDLLs
+</code></pre>
+<p>这个关键字包含一组值的名字，这些名字是某些 DLL的名字。每个值名字都有一个数据值，该值恰好与带有.dll文件扩展名的值名字相同（不过，情况并非完全如此，我将在下面的例子中加以说明）。当LoadLibrary或LoadLibraryEx被调用时，这些函数首先查看是否传递了包含. dll扩展名的DLL名字。如果没有传递，那么它们将使用通常的搜索规则来搜索DLL。</p>
+<p>为了更好地说明情况，假设将下面的值添加给注册表关键字 KnownDLL:</p>
+<pre><code>value some: SomeLib
+value data: someOtherLib.dll
+</code></pre>
+<p>当调用下面的函数时，系统将使用通常的搜索规则来查找该文件：</p>
+<pre><code>LoadLibrary(SomeLib);
+</code></pre>
+<p>但是，如果调用下面的函数，系统将会发现有一个匹配的值名字（记住，当系统检查注册表的值名字时，它将删除扩展名.dll）。</p>
+<pre><code>LoadLibrary(SomeLib.dll);
+</code></pre>
+<p>这时，系统设法加载称为someOtherLib.dll的文件，而不是加载 SomeLib.dll。它首先在%SystemRoot%\System32目录中查找someOtherLib.dll。如果它在该目录中找到了文件，它就加载该文件。如果文件不在该目录中， LoadLibrary(Ex)运行失败并返回 NULL，同时，对GetLastError的调用将返回2（ERROR_FILE_NOT_FOUND）。</p>
+<br>
+<h2 id="10-改变模块的位置">10、改变模块的位置</h2>
+<p><strong>每个可执行模块和DLL模块都有一个首选的基地址，用于标识模块应该映射到的进程地址空间中的理想内存地址</strong>。当创建一个可执行模块时，链接程序将该模块的首选基地址设置为0x00400000。如果是DLL模块，链接程序设置的首选基地址是0x10000000。</p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#1-%E5%B8%B8%E7%94%A8dll">1、常用DLL</a></li>
+<li><a href="#2-%E4%BD%BF%E7%94%A8dll%E7%9A%84%E4%B8%80%E4%BA%9B%E5%8E%9F%E5%9B%A0">2、使用DLL的一些原因</a></li>
+<li><a href="#3-dll%E4%B8%8E%E8%BF%9B%E7%A8%8B%E7%9A%84%E5%9C%B0%E5%9D%80%E7%A9%BA%E9%97%B4">3、DLL与进程的地址空间</a></li>
+<li><a href="#4-%E5%85%B3%E4%BA%8E%E8%B7%A8dll%E9%87%8A%E6%94%BE-%E8%A7%A3%E9%87%8A">4、关于跨DLL释放 解释</a></li>
+<li><a href="#5-dll%E7%9A%84%E6%80%BB%E4%BD%93%E8%BF%90%E8%A1%8C%E6%83%85%E5%86%B5">5、DLL的总体运行情况</a></li>
+<li><a href="#6-dll%E6%A8%A1%E5%9D%97%E7%9A%84%E6%98%BE%E5%BC%8F%E5%8A%A0%E8%BD%BD%E5%92%8C%E7%AC%A6%E5%8F%B7%E9%93%BE%E6%8E%A5">6、DLL模块的显式加载和符号链接</a></li>
+<li><a href="#7-dll%E7%9A%84%E8%BF%9B%E5%85%A5%E7%82%B9%E5%87%BD%E6%95%B0-dllmain">7、DLL的进入点函数 DllMain</a></li>
+<li><a href="#8-%E5%BB%B6%E8%BF%9F%E5%8A%A0%E8%BD%BDdll">8、延迟加载DLL</a></li>
+<li><a href="#9-%E5%87%BD%E6%95%B0%E8%BD%AC%E5%8F%91%E5%99%A8">9、函数转发器</a></li>
+<li><a href="#10-%E5%B7%B2%E7%9F%A5%E7%9A%84dll">10、已知的DLL</a></li>
+<li><a href="#10-%E6%94%B9%E5%8F%98%E6%A8%A1%E5%9D%97%E7%9A%84%E4%BD%8D%E7%BD%AE">10、改变模块的位置</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://hensonguo.github.io/post/windows-nei-cun-guan-li-zong-jie/">
+              <h3 class="post-title">
+                windows内存管理总结
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://hensonguo.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

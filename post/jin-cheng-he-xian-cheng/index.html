@@ -1,0 +1,237 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>进程和线程 | Icode</title>
+<link rel="shortcut icon" href="https://hensonguo.github.io/favicon.ico?v=1704354032694">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://hensonguo.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="进程和线程 | Icode - Atom Feed" href="https://hensonguo.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="进程是系统进行资源分配和调度的基本单位。
+线程是系统调用的最小单位，包含再进程之中。
+每个程序为一个进程，进程中的每个任务为一个线程。
+进程间相互独立，进程内的线程是共享内存的。
+线程共享进程资源？共享哪些资源呢？
+线程运行的本质其实就是函..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://hensonguo.github.io">
+  <img class="avatar" src="https://hensonguo.github.io/images/avatar.png?v=1704354032694" alt="">
+  </a>
+  <h1 class="site-title">
+    Icode
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              进程和线程
+            </h2>
+            <div class="post-info">
+              <span>
+                2022-09-07
+              </span>
+              <span>
+                7 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <p>进程是系统进行资源分配和调度的基本单位。<br>
+线程是系统调用的最小单位，包含再进程之中。<br>
+每个程序为一个进程，进程中的每个任务为一个线程。<br>
+进程间相互独立，进程内的线程是共享内存的。</p>
+<h3 id="线程共享进程资源共享哪些资源呢">线程共享进程资源？共享哪些资源呢？</h3>
+<p>线程运行的本质其实就是函数的执行。<br>
+既然线程运行的本质就是函数的执行，那么函数执行都有哪些信息呢？</p>
+<p>函数运行时的信息保存在栈帧中，栈帧中保存了函数的返回值、调用其它函数的参数、该函数使用的局部变量以及该函数使用的寄存器信息，如图所示，假设函数 A 调用函数 B：<br>
+<img src="https://hensonguo.github.io/post-images/1662555722579.jpg" alt="" loading="lazy"></p>
+<p>函数运行时信息是保存在栈帧中的，因此每个线程都有自己独立的、私有的栈区。<br>
+<img src="https://hensonguo.github.io/post-images/1662555355718.jpg" alt="" loading="lazy"><br>
+同时函数运行时需要额外的寄存器来保存一些信息，像部分局部变量之类。这些寄存器也是线程私有的，一个线程不可能访问到另一个线程的这类寄存器信息。</p>
+<p>以上这些信息有一个统一的名字，就是线程上下文，thread context。</p>
+<p>我们也说过操作系统调度线程需要随时中断线程的运行并且需要线程被暂停后可以继续运行，操作系统之所以能实现这一点，依靠的就是线程上下文信息。</p>
+<p>现在你应该知道哪些是线程私有的了吧。</p>
+<p>除此之外，剩下的都是线程间共享资源（如下面的代码区，数据区，堆区）。</p>
+<h3 id="代码区">代码区</h3>
+<p>编译后的可执行机器指令<br>
+从可执行文件中加载到内存的，可执行程序中的代码区就是用来初始化进程地址空间中的代码区的。<br>
+<img src="https://hensonguo.github.io/post-images/1662556025399.jpg" alt="" loading="lazy"></p>
+<p>进程地址空间中的数据区，这里存放的就是所谓的全局变量。</p>
+<p>什么是全局变量？所谓全局变量就是那些你定义在函数之外的变量<br>
+<img src="https://hensonguo.github.io/post-images/1662556169181.jpg" alt="" loading="lazy"><br>
+在程序员运行期间，也就是 run time，数据区中的全局变量有且仅有一个实例，所有的线程都可以访问到该全局变量。<br>
+void func(){static int a = 10;}<br>
+虽然变量 a 定义在函数内部，但变量 a 依然具有全局变量的特性，也就是说变量 a 放在了进程地址空间的数据区域，即使函数执行完后该变量依然存在，而普通的局部变量随着函数调用结束和函数栈帧一起被回收掉了，但这里的变量 a 不会被回收，因为其被放到了数据区。</p>
+<p>这样的变量对每个线程来说也是可见的，也就是说每个线程都可以访问到该变量。</p>
+<h3 id="堆区">堆区</h3>
+<p>堆区是程序员比较熟悉的，我们在 C/C++中用 malloc 或者 new 出来的数据就存放在这个区域，很显然，只要知道变量的地址，也就是指针，任何一个线程都可以访问指针指向的数据，因此堆区也是线程共享的属于进程的资源。<br>
+<img src="https://hensonguo.github.io/post-images/1662556425838.jpg" alt="" loading="lazy"></p>
+<h3 id="栈区">栈区</h3>
+<p>唉，等等！刚不是说栈区是线程私有资源吗，怎么这会儿又说起栈区了？</p>
+<p>确实，从线程这个抽象的概念上来说，栈区是线程私有的，然而从实际的实现上看，栈区属于线程私有这一规则并没有严格遵守，这句话是什么意思？</p>
+<p>通常来说栈区是线程私有，既然有通常就有不通常的时候。</p>
+<p>不通常是因为不像进程地址空间之间的严格隔离，线程的栈区没有严格的隔离机制来保护，因此如果一个线程能拿到来自另一个线程栈帧上的指针，那么该线程就可以改变另一个线程的栈区，也就是说这些线程可以任意修改本属于另一个线程栈区中的变量。<br>
+<img src="https://hensonguo.github.io/post-images/1662556560539.jpg" alt="" loading="lazy"><br>
+这从某种程度上给了程序员极大的便利，但同时，这也会导致极其难以排查到的 bug。</p>
+<p>试想一下你的程序运行的好好的，结果某个时刻突然出问题，定位到出问题代码行后根本就排查不到原因，你当然是排查不到问题原因的，因为你的程序本来就没有任何问题，是别人的问题导致你的函数栈帧数据被写坏从而产生 bug，这样的问题通常很难排查到原因，需要对整体的项目代码非常熟悉，常用的一些 debug 工具这时可能已经没有多大作用了。</p>
+<h3 id="动态链接库">动态链接库</h3>
+<p>在Windows中就是我们熟悉的exe文件，在Linux世界中就是ELF文件，这些可以被操作系统直接运行的程序就是我们所说的可执行程序。</p>
+<p>那么可执行程序是怎么来的呢？有的同学可能会说，废话，不就是编译器生成的吗？实际上这个答案只答对了一半。</p>
+<p>假设我们的项目比较简单只有几个源码文件，编译器是怎么把这几个源代码文件转换为最终的一个可执行程序呢？</p>
+<p>原来，编译器在将可执行程序翻译成机器指令后，接下来还有一个重要的步骤，这就是链接，链接完成后生成的才是可执行程序。完成链接这一过程的就是链接器。<br>
+<img src="https://hensonguo.github.io/post-images/1662556847638.jpg" alt="" loading="lazy"></p>
+<p>其中链接器可以有两种链接方式，这就是静态链接和动态链接。静态链接的意思是说把所有的机器指令一股脑全部打包到可执行程序中，动态链接的意思是我们不把动态链接的部分打包到可执行程序，而是在可执行程序运行起来后去内存中找动态链接的那部分代码，这就是所谓的静态链接和动态链接。</p>
+<p>动态链接一个显而易见的好处就是可执行程序的大小会很小，就像我们在Windows下看一个exe文件可能很小，那么该exe很可能是动态链接的方式生成的。</p>
+<p>而动态链接的部分生成的库就是我们熟悉的动态链接库，在Windows下是以DLL结尾的文件，在Linux下是以so结尾的文件。说了这么多，这和线程共享资源有什么关系呢？</p>
+<p>原来如果一个程序是动态链接生成的，那么其地址空间中有一部分包含的就是动态链接库，否则程序就运行不起来了，这一部分的地址空间也是被所有线程所共享的<br>
+<img src="https://hensonguo.github.io/post-images/1662556922000.jpg" alt="" loading="lazy"></p>
+<h3 id="文件">文件</h3>
+<p>最后，如果程序在运行过程中打开了一些文件，那么进程地址空间中还保存有打开的文件信息，进程打开的文件也可以被所有的线程使用，这也属于线程间的共享资源。<br>
+<img src="https://hensonguo.github.io/post-images/1662556974706.jpg" alt="" loading="lazy"></p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li>
+<ul>
+<li><a href="#%E7%BA%BF%E7%A8%8B%E5%85%B1%E4%BA%AB%E8%BF%9B%E7%A8%8B%E8%B5%84%E6%BA%90%E5%85%B1%E4%BA%AB%E5%93%AA%E4%BA%9B%E8%B5%84%E6%BA%90%E5%91%A2">线程共享进程资源？共享哪些资源呢？</a></li>
+<li><a href="#%E4%BB%A3%E7%A0%81%E5%8C%BA">代码区</a></li>
+<li><a href="#%E5%A0%86%E5%8C%BA">堆区</a></li>
+<li><a href="#%E6%A0%88%E5%8C%BA">栈区</a></li>
+<li><a href="#%E5%8A%A8%E6%80%81%E9%93%BE%E6%8E%A5%E5%BA%93">动态链接库</a></li>
+<li><a href="#%E6%96%87%E4%BB%B6">文件</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://hensonguo.github.io/post/mian-shi-wen-ti-hui-zong-2/">
+              <h3 class="post-title">
+                面试问题汇总2
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://hensonguo.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

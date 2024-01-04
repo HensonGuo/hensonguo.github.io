@@ -1,0 +1,430 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>c++11之指针 | Icode</title>
+<link rel="shortcut icon" href="https://hensonguo.github.io/favicon.ico?v=1704354032694">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://hensonguo.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="c++11之指针 | Icode - Atom Feed" href="https://hensonguo.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="1、nullptr：初始化空指针
+C++98/03 标准中，将一个指针初始化为空指针的方式有 2 种：
+int *p = 0;
+int *p = NULL; //推荐使用
+
+C++ 中将 NULL 定义为字面常量 0，虽然能满足大部分场景的..." />
+    <meta name="keywords" content="c++11,C++" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://hensonguo.github.io">
+  <img class="avatar" src="https://hensonguo.github.io/images/avatar.png?v=1704354032694" alt="">
+  </a>
+  <h1 class="site-title">
+    Icode
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              c++11之指针
+            </h2>
+            <div class="post-info">
+              <span>
+                2022-10-12
+              </span>
+              <span>
+                10 min read
+              </span>
+              
+                <a href="https://hensonguo.github.io/tag/5hSqCQEO5/" class="post-tag">
+                  # c++11
+                </a>
+              
+                <a href="https://hensonguo.github.io/tag/blFelWlDF/" class="post-tag">
+                  # C++
+                </a>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <h2 id="1-nullptr初始化空指针">1、nullptr：初始化空指针</h2>
+<p>C++98/03 标准中，将一个指针初始化为空指针的方式有 2 种：</p>
+<pre><code class="language-c++">int *p = 0;
+int *p = NULL; //推荐使用
+</code></pre>
+<p>C++ 中将 NULL 定义为字面常量 0，虽然能满足大部分场景的需要，但个别情况下，它会导致程序的运行和我们的预期不符。例如：</p>
+<pre><code class="language-c++">#include &lt;iostream&gt;
+using namespace std;
+
+void isnull(void *c){
+    cout &lt;&lt; &quot;void*c&quot; &lt;&lt; endl;
+}
+void isnull(int n){
+    cout &lt;&lt; &quot;int n&quot; &lt;&lt; endl;
+}
+int main() {
+    isnull(0);
+    isnull(NULL);
+    return 0;
+}
+</code></pre>
+<p>程序执行结果为：</p>
+<pre><code>int n
+int n
+</code></pre>
+<p>C++ 98/03 标准中，如果我们想令 isnull(NULL) 实际调用的是 isnull(void* c)，就需要对 NULL（或者 0）进行强制类型转换：</p>
+<pre><code>isnull( (void*)NULL );
+isnull( (void*)0 );
+</code></pre>
+<p><font color=red>nullptr 是 nullptr_t 类型的右值常量，专用于初始化空类型指针。</font></p>
+<pre><code>int * a1 = nullptr;
+char * a2 = nullptr;
+double * a3 = nullptr;
+</code></pre>
+<p>上述例子中调用isnull(nullptr)则会输出void*c，符合预期</p>
+<br/>
+<h2 id="2-shared_ptr智能指针">2、shared_ptr智能指针</h2>
+<p>所谓智能指针，可以从字面上理解为“智能”的指针。具体来讲，智能指针和普通指针的用法是相似的，不同之处在于，<font color=green>智能指针可以在适当时机自动释放分配的内存。也就是说，使用智能指针可以很好地避免“忘记释放内存而导致内存泄漏”问题出现。由此可见，C++ 也逐渐开始支持垃圾回收机制了，尽管目前支持程度还有限。</font></p>
+<p>shared_ptr智能指针的创建:</p>
+<pre><code class="language-c++">std::shared_ptr&lt;int&gt; p1;             //不传入任何实参
+std::shared_ptr&lt;int&gt; p2(nullptr);    //传入空指针 nullptr
+</code></pre>
+<p>在构建 shared_ptr 智能指针，也可以明确其指向。例如：</p>
+<pre><code class="language-c++">std::shared_ptr&lt;int&gt; p3(new int(10));
+std::shared_ptr&lt;int&gt; p3 = std::make_shared&lt;int&gt;(10);
+//调用拷贝构造函数
+std::shared_ptr&lt;int&gt; p4(p3);//或者 std::shared_ptr&lt;int&gt; p4 = p3;
+//调用移动构造函数
+std::shared_ptr&lt;int&gt; p5(std::move(p4)); //或者 std::shared_ptr&lt;int&gt; p5 = std::move(p4);
+</code></pre>
+<p><font color=green>注意，同一普通指针不能同时为多个 shared_ptr 对象赋值，否则会导致程序发生异常</font>。例如：</p>
+<pre><code class="language-c++">int* ptr = new int;
+std::shared_ptr&lt;int&gt; p1(ptr);
+std::shared_ptr&lt;int&gt; p2(ptr);//错误
+</code></pre>
+<p><font color=green>自定义所指堆内存的释放规则:</font></p>
+<pre><code class="language-c++">//指定 default_delete 作为释放规则
+std::shared_ptr&lt;int&gt; p6(new int[10], std::default_delete&lt;int[]&gt;());
+
+//自定义释放规则
+void deleteInt(int*p) {
+    delete []p;
+}
+//初始化智能指针，并自定义释放规则
+std::shared_ptr&lt;int&gt; p7(new int[10], deleteInt);
+</code></pre>
+<p>实际上借助 lambda 表达式，我们还可以像如下这样初始化 p7，它们是完全相同的：</p>
+<pre><code class="language-c++">std::shared_ptr&lt;int&gt; p7(new int[10], [](int* p) {delete[]p; });
+</code></pre>
+<p><font color=green>使用std::shared_ptr智能指针时，不需要显式地调用delete操作来释放资源。std::shared_ptr会自动管理资源的生命周期，当所有指向该资源的std::shared_ptr对象都被销毁时，std::shared_ptr会自动调用delete操作来释放资源。</font></p>
+<p>shared_ptr<T>模板类常用成员方法：</p>
+<table>
+<tbody>
+<tr>
+<th>
+成员方法名</th>
+<th>
+功 能</th>
+</tr>
+<tr>
+<td>
+operator=()</td>
+<td>
+重载赋值号，使得同一类型的 shared_ptr 智能指针可以相互赋值。</td>
+</tr>
+<tr>
+<td>
+operator*()</td>
+<td>
+重载 * 号，获取当前 shared_ptr 智能指针对象指向的数据。</td>
+</tr>
+<tr>
+<td>
+operator-&gt;()</td>
+<td>
+重载 -&gt; 号，当智能指针指向的数据类型为自定义的结构体时，通过 -&gt; 运算符可以获取其内部的指定成员。</td>
+</tr>
+<tr>
+<td>
+swap()</td>
+<td>
+交换 2 个相同类型 shared_ptr 智能指针的内容。</td>
+</tr>
+<tr>
+<td>
+reset()</td>
+<td>
+当函数没有实参时，该函数会使当前 shared_ptr 所指堆内存的引用计数减 1，同时将当前对象重置为一个空指针；当为函数传递一个新申请的堆内存时，则调用该函数的 shared_ptr 对象会获得该存储空间的所有权，并且引用计数的初始值为 1。</td>
+</tr>
+<tr>
+<td>
+get()</td>
+<td>
+获得 shared_ptr 对象内部包含的普通指针。</td>
+</tr>
+<tr>
+<td>
+use_count()</td>
+<td>
+返回同当前 shared_ptr 对象（包括它）指向相同的所有 shared_ptr 对象的数量。</td>
+</tr>
+<tr>
+<td>
+unique()</td>
+<td>
+判断当前 shared_ptr 对象指向的堆内存，是否不再有其它 shared_ptr 对象再指向它。</td>
+</tr>
+<tr>
+<td>
+operator bool()</td>
+<td>
+判断当前 shared_ptr 对象是否为空智能指针，如果是空指针，返回 false；反之，返回 true。</td>
+</tr>
+</tbody>
+</table>
+<br/>
+<h2 id="3-unique_ptr智能指针">3、unique_ptr智能指针</h2>
+<p><font color=red>它持有对对象的独有权，即两个 unique_ptr 不能指向一个对象，不能进行复制操作只能进行移动操作。</font></p>
+<p>unique_ptr 之所以叫这个名字，是因为它只能<strong>指向一个对象</strong>，<font color=green>即当它指向其他对象时，之前所指向的对象会被摧毁。其次，当 unique_ptr 超出作用域时，指向的对象也会被自动摧毁，帮助程序员实现了自动释放的功能。</font></p>
+<p>定义：</p>
+<pre><code class="language-c++">// non-specialized 
+template &lt;class T, class D = default_delete&lt;T&gt;&gt; class unique_ptr;
+// array specialization   
+template &lt;class T, class D&gt; class unique_ptr&lt;T[],D&gt;;
+</code></pre>
+<p>其中 T 指其管理的对象类型，D 指该对象销毁时所调用的释放方法，可以使用自定义的删除器，他也有一个默认的实现，即 detele 操作。</p>
+<p>示例：</p>
+<pre><code class="language-c++">std::unique_ptr&lt;int&gt;p1(new int(5));
+std::unique_ptr&lt;int&gt;p2=p1;// 编译会出错
+std::unique_ptr&lt;int&gt;p3=std::move(p1);// 转移所有权, 现在那块内存归p3所有, p1成为无效的针.
+p3.reset();//释放内存.
+p1.reset();//无效
+</code></pre>
+<p>自定义删除器详解：</p>
+<pre><code class="language-c++">// unique_ptr destructor example
+#include &lt;iostream&gt;
+#include &lt;memory&gt;
+ 
+int main () {
+  // user-defined deleter
+  auto deleter = [](int*p){
+    delete p;
+    std::cout &lt;&lt; &quot;[deleter called]\n&quot;;
+  };
+  std::unique_ptr&lt;int,decltype(deleter)&gt; foo (new int,deleter);
+  std::cout &lt;&lt; &quot;foo &quot; &lt;&lt; (foo?&quot;is not&quot;:&quot;is&quot;) &lt;&lt; &quot; empty\n&quot;;
+  return 0; // [deleter called]
+}
+</code></pre>
+<p><font color=red>unique_ptr与shared_ptr区别是啥?</font></p>
+<ol>
+<li>
+<p>所有权：std::unique_ptr是<strong>独占所有权</strong>的智能指针，即同一时间只能有一个std::unique_ptr对象拥有该资源，而std::shared_ptr是共享所有权的智能指针，即多个std::shared_ptr对象可以共享同一个资源。</p>
+</li>
+<li>
+<p>性能：std::unique_ptr通常比std::shared_ptr<strong>更轻量级，因为它不需要维护一个引用计数</strong>，所以在性能要求较高的场合，可以优先考虑使用std::unique_ptr。</p>
+</li>
+<li>
+<p>适用场合：std::unique_ptr通常用于管理动态分配的单个对象，而std::shared_ptr通常用于管理动态分配的共享对象，例如容器、线程等。</p>
+</li>
+<li>
+<p>接口：std::unique_ptr和std::shared_ptr的接口略有不同，例如std::unique_ptr没有std::shared_ptr的make_shared和make_unique函数，std::unique_ptr的reset函数可以接受一个裸指针或一个std::unique_ptr对象，而std::shared_ptr的reset函数只能接受一个裸指针。</p>
+</li>
+<li>
+<p><strong>线程安全：std::shared_ptr是线程安全的，可以在多个线程之间共享，而std::unique_ptr不是线程安全的，需要在单个线程内使用</strong>。</p>
+</li>
+</ol>
+<br/>
+<h2 id="4-weak_ptr智能指针">4、weak_ptr智能指针</h2>
+<p><font color=red>share_ptr虽然已经很好用了，但是有一点share_ptr智能指针还是有内存泄露的情况，当两个对象相互使用一个shared_ptr成员变量指向对方，会造成循环引用，使引用计数失效，从而导致内存泄漏。这时，就需要配合使用weak_ptr。</font></p>
+<p>weak_ptr 是一种不控制对象生命周期的智能指针, 它指向一个 shared_ptr 管理的对象. 进行该对象的内存管理的是那个强引用的shared_ptr， weak_ptr只是提供了对管理对象的一个访问手段。weak_ptr 设计的目的是为配合 shared_ptr 而引入的一种智能指针来协助 shared_ptr 工作, 它只可以从一个 shared_ptr 或另一个 <font color=red>weak_ptr 对象构造, 它的构造和析构不会引起引用记数的增加或减少。weak_ptr是用来解决shared_ptr相互引用时的死锁问题</font>,如果说两个shared_ptr相互引用,那么这两个指针的引用计数永远不可能下降为0,资源永远不会释放。它是对对象的一种弱引用，不会增加对象的引用计数，和shared_ptr之间可以相互转化，shared_ptr可以直接赋值给它，它可以通过调用lock函数来获得shared_ptr。</p>
+<p>总结下来，weak_ptr有以下特点：<br>
+<strong>1）weak_ptr 通常情况下需要跟 shared_ptr 一起使用<br>
+2）构造和析构时引用计数不增加也不会减少<br>
+3）专门用来解决两个类中shared_ptr相互引用而导致的内存泄露问题</strong></p>
+<pre><code class="language-c++">#include &lt;iostream&gt;
+#include &lt;memory&gt;
+using namespace std;
+ 
+class B;    //声明
+class A
+{
+public:
+    weak_ptr&lt;B&gt; pb_;
+    ~A()
+    {
+        cout &lt;&lt; &quot;A delete\n&quot;;
+    }
+};
+ 
+ 
+class B
+{
+public:
+    shared_ptr&lt;A&gt; pa_;
+    ~B()
+    {
+        cout &lt;&lt; &quot;B delete\n&quot;;
+    }
+};
+ 
+ 
+void fun()
+{
+    shared_ptr&lt;B&gt; pb(new B());
+    shared_ptr&lt;A&gt; pa(new A());
+    cout &lt;&lt; pb.use_count() &lt;&lt; endl;    //1
+    cout &lt;&lt; pa.use_count() &lt;&lt; endl;    //1
+    pb-&gt;pa_ = pa;
+    cout &lt;&lt; pb.use_count() &lt;&lt; endl; 
+    cout &lt;&lt; pa.use_count() &lt;&lt; endl;
+    pa-&gt;pb_ = pb;
+    cout &lt;&lt; pb.use_count() &lt;&lt; endl;    //2
+    cout &lt;&lt; pa.use_count() &lt;&lt; endl;    //2
+}
+ 
+ 
+int main()
+{
+    fun();
+    return 0;
+}
+</code></pre>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#1-nullptr%E5%88%9D%E5%A7%8B%E5%8C%96%E7%A9%BA%E6%8C%87%E9%92%88">1、nullptr：初始化空指针</a></li>
+<li><a href="#2-shared_ptr%E6%99%BA%E8%83%BD%E6%8C%87%E9%92%88">2、shared_ptr智能指针</a></li>
+<li><a href="#3-unique_ptr%E6%99%BA%E8%83%BD%E6%8C%87%E9%92%88">3、unique_ptr智能指针</a></li>
+<li><a href="#4-weak_ptr%E6%99%BA%E8%83%BD%E6%8C%87%E9%92%88">4、weak_ptr智能指针</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://hensonguo.github.io/post/c11-zhi-you-zhi-yin-yong-yi-dong-gou-zao-han-shu-move/">
+              <h3 class="post-title">
+                c++11之右值引用、移动构造函数、move()
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://hensonguo.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

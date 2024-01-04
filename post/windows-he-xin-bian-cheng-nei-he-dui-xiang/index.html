@@ -1,0 +1,667 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>windows核心编程-内核对象 | Icode</title>
+<link rel="shortcut icon" href="https://hensonguo.github.io/favicon.ico?v=1704354032694">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://hensonguo.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="windows核心编程-内核对象 | Icode - Atom Feed" href="https://hensonguo.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="Windows会话和安全机制
+\qquadVista系统开始，Windows就建立了session(会话)的概念。Windows系统启动后就建立session0(会话0)，将公用服务载入session0(会话0)中，例如：通常将一些与硬件紧..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://hensonguo.github.io">
+  <img class="avatar" src="https://hensonguo.github.io/images/avatar.png?v=1704354032694" alt="">
+  </a>
+  <h1 class="site-title">
+    Icode
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              windows核心编程-内核对象
+            </h2>
+            <div class="post-info">
+              <span>
+                2023-05-29
+              </span>
+              <span>
+                41 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <h2 id="windows会话和安全机制">Windows会话和安全机制</h2>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span>Vista系统开始，Windows就建立了session(会话)的概念。Windows系统启动后就建立session0(会话0)，将公用服务载入session0(会话0)中，例如：通常将一些与硬件紧密相关的模块（如：中断处理程序等）、各种常用设备的驱动程序（声卡驱动、打印机驱动、显卡驱动）以及运行频率较高的模块（如：时钟管理、进程调度和许多模块所公用的一些基本操作），这些都放在内存，称为操作系统内核。<br>
+<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span>统启动后，第一个用户登陆了该系统，就建立起了session1(会话1)，那么当你运行所有的应用程序，魔兽啊，飞车啊，绝地求生啊，这些应用程序都是在session1(会话1)下运行。会话下运行多个程序会涉及多任务，例如：多个进程并发执行，那么就通过进程管理隔离实现多任务。当有另一个用户远程登陆，那么建立起session2(会话2)，session2(会话2)也有独有的应用程序—进程。如果依次有用户登录该系统，那么就顺序依次建立起新的会话，也依次拥有独有的应用程序—进程。采用这个设计后，系统核心组件就可以更好地与用户不慎启动的恶意软件隔离。不同用户的进程通过会话进行隔离，这就是多用户的过程，多用户是依靠会话进行隔离而实现用户之间相互独立，互不影响。<br>
+<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span>这里引出了会话Session的概念后，就要考虑安全机制问题。假如张三登陆了这个系统，建立起了会话1，然后系统就会给张三一个会话令牌，这个令牌包含了它的用户信息，还有该用户访问的权限、属于什么组等信息。在会话1下， 张三运行了一个程序，<strong>系统会给这个程序分配一个令牌，这个程序令牌就是继承于会话建立时获得的会话令牌，然后这个程序想要打开一个文件（内核对象），这个文件（内核对象）就会有一个安全描述符（SD），系统会根据程序令牌和文件的安全描述符相互匹配，安全描述符含有创建的用户、哪些用户或组允许访问此对象，哪些用户或组拒绝访问此对象。匹配之后发现这个用户属于安全描述符的拒绝访问名单内，那么这个程序就无法打开该文件，否则能够打开文件。</strong></p>
+<h2 id="什么是内核对象">什么是内核对象？</h2>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span>在系统和我们写的应用程序中，内核对象用于管理进程、线程和文件等诸多种类的大量资源。作为Windows开发人员，我们经常都要创建、打开和处理内核对象。当我们在会话中启动一个应用程序，那么当应用程序载入内存，就会生成一个进程（这是一个主调进程）。<strong>每个进程对应都有一个虚拟地址空间，然后由内存管理程序对虚拟地址空间和物理地址空间的转换。进程的虚拟内存空间分为内核层和应用层，<font color=red>每个内核对象，其实就是一块内存块，这个内存块位于操作系统的内核地址空间（内核层）</font>，而用户的应用程序运行在应用层</strong>，注意：这里都是说明在虚拟地址空间，然后会映射到真正的物理地址空间中。而<strong>内核对象是由操作系统内核分配的，并只能由操作系统内核访问。因此，应用程序不能直接操作内核对象，需要用Windows系统给定的函数来操作。每一个内核对象都有特定的创建函数和操作函数</strong>。所以，当一个主调进程里调用了创建一个内核对象函数，那么这个内核对象（内存块）就会在进程的虚拟内存空间的内核层里，实际映射到物理内存的操作系统内核区域。内核对象这个内存块是一个数据结构，其成员维护着与对象相关的信息。</p>
+<h2 id="使用计数和安全描述符">使用计数和安全描述符？</h2>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span><strong>内核对象这个内存块实际是一个数据结构，内核对象的结构分为两个部分：公用部分（安全描述符（security descriptor,SD），使用计数）和特有部分</strong>。其中特有部分，例如：进程内核对象有一个进程ID、一个基本的优先级和一个退出代码。使用计数是每一个内核对象都有的一个数据成员，当有一个内核对象被创建时，使用计数被设为1，当另一个进程获得对现有内核对象的访问后，使用计数就会递增，进程终止运行后，操作系统内核将自动递减此进程仍然打开的所有内核对象的使用计数，如果一旦内核对象的使用计数为0，操作系统内核就会销毁该内核对象。<strong>安全描述符描述了谁拥有内核对象，哪些组和用户被允许访问或使用此对象，哪些组和用户被拒绝访问或使用此对象</strong>。用于创建内核对象的所有函数几乎都有一个指向SECURITY_ATTRIBUTES结构的指针作为参数。下面给出这个结构的签名：</p>
+<pre><code class="language-c++">		typedef struct _SECURITY_ATTRIBUTES {
+  			DWORD  nLength;//结构的大小
+  			LPVOID lpSecurityDescriptor;//安全描述符
+ 			BOOL   bInheritHandle;//表示所创建的内核对象是否可被继承，一般是具有父子关系的进程才可以继承
+		} SECURITY_ATTRIBUTES;
+</code></pre>
+<p>如果想对我们创建的内核对象加以访问限制，就必须创建一个安全描述符。在Windows核心编程有这一内核对象的概念，而Windows程序设计又有着GDI对象（例如画笔，窗口，画刷，位图。）的概念，我们能知道的只有内核对象在内核层，而用户对象（例如：GDI对象）在应用层。那么我们要怎么区分一个对象是内核对象还是非内核对象？刚刚我们学习了安全描述符，<strong>每一个内核对象的创建函数基本都有一个SECURITY_ATTRIBUTES属性作为参数，所以很明显了。我们可以看创建对象的函数，如果创建对象的函数有安全描述符参数，那么这个函数创建的对象就是内核对象。</strong></p>
+<h2 id="内核对象句柄表">内核对象句柄表</h2>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span><strong>一个进程在初始化时，系统为进程分配了一个内核对象句柄表</strong>。下图显示了一个进程的句柄表。可以看出内核对象句柄表是一个由数据结构组成的数组，每个结构都包含索引、指向一个内核对象内存块的指针、一个访问掩码和一些标志（例如：是否可被继承的标志，在创建内核对象就被指定了）。<br>
+<img src="https://hensonguo.github.io/post-images/1685345165523.jpg" alt="" loading="lazy"></p>
+<h2 id="创建内核对象">创建内核对象</h2>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span><strong>一个进程首次初始化的时候，其内核对象句柄表为空</strong>。然后，当进程中的线程调用创建内核对象的函数时，比如CreateFileMapping，<strong>操作系统内核就为该对象分配一个内存块，并对它初始化。这时，操作系统内核对进程的句柄表进行扫描，找出一个空项。操作系统内核找到索引1位置上的结构并对它进行初始化。该指针成员将被设置为内核对象的数据结构的内存地址，访问屏蔽设置为全部访问权，同时，各个标志也作了设置。</strong> 我列举以下部分创建内核对象的函数签名：</p>
+<pre><code class="language-c++">HANDLE CreateThread(
+   PSECURITY_ATTRIBUTES psa,
+   size_t dwStackSize,
+   LPTHREAD_START_ROUTINE pfnStartAddress,
+   PVOID pvParam,
+   DWORD dwCreationFlags,
+   PDWORD pdwThreadId);
+
+HANDLE CreateFile(
+   PCTSTR pszFileName,
+   DWORD dwDesiredAccess,
+   DWORD dwShareMode,
+   PSECURITY_ATTRIBUTES psa,
+   DWORD dwCreationDisposition,
+   DWORD dwFlagsAndAttributes,
+   HANDLE hTemplateFile);
+
+HANDLE CreateFileMapping(
+   HANDLE hFile,
+   PSECURITY_ATTRIBUTES psa,
+   DWORD flProtect,
+   DWORD dwMaximumSizeHigh,
+   DWORD dwMaximumSizeLow,
+   PCTSTR pszName);
+
+HANDLE CreateSemaphore(
+   PSECURITY_ATTRIBUTES psa,
+   LONG lInitialCount,
+   LONG lMaximumCount,
+   PCTSTR pszName);
+</code></pre>
+<p>我们可以看到这些创建内核对象的函数签名，参数都有一个SECURITY_ATTRIBUTES结构参数，然后返回一个内核对象句柄，这个句柄值其实就是作为内核对象句柄表的索引来使用的，所以这些句柄是与当前这个进程相关的，无法供其他进程使用，如果我们真的在其他进程中使用它，那么实际引用的只是那个进程的句柄表中位于同一个索引的内核对象----只是索引值相同而已。那么要得到实际的句柄表的索引值，内核对象句柄值应该除以4才得到索引值。</p>
+<h2 id="关闭内核对象">关闭内核对象</h2>
+<p>无论怎样创建内核对象，都要向系统指明将通过调用CloseHandle函数来结束对该对象的操作，下面给出该函数的签名：</p>
+<pre><code class="language-c++">HRESULT CloseHandle( 
+   HANDLE hHandle  
+);
+</code></pre>
+<p>调用这个函数，函数内部会先检查主调进程的句柄表，看下主调进程对这个内核对象句柄是否有权访问。如果内核对象句柄是有效的，系统将获得内核对象的数据结构的地址，并将结构中的使用计数成员递减。如果使用计数变成0，内核对象将被销毁，并且清除对应内核对象句柄表中对应的记录项；如果使用计数递减后不为0，说明其他进程还在使用该内核对象，那么只清除对应内核对象句柄表中对应的记录项，不销毁内核对象。讲了这么多，有什么方法可以看见进程有多少个内核对象吗？当然有，微软提供了一个小工具：Process Explorer，下面图显示了我自己的应用程序，里面创建了一个名为&quot;ydm&quot;的互斥量内核对象，我将会关闭这个内核对象。下方的mutant类型这一行，就是我在内部创建的互斥量内核对象。<br>
+<img src="https://hensonguo.github.io/post-images/1685452044744.jpg" alt="" loading="lazy"></p>
+<h2 id="跨进程边界共享内核对象-使用对象句柄继承">跨进程边界共享内核对象-使用对象句柄继承</h2>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span>在每个进程中都有一个内核句柄表，这也就说明同一个内核对象其在不同的进程中其内核对象句柄值可能是不一样的。<strong>但是内核对象的作用很大程度上就在于能够在进程间共同访问，即跨进程边界共享内核对象</strong>。那我们怎么实现不同进程间共享同一个内核对象呢？Windows核心编程这本书给我们提供了三个方法实现这个功能。这一小节先讲使用对象句柄继承来实现跨进程边界共享内核对象。<br>
+只有在进程之间有一个父子关系时，才可以使用对象句柄继承。为了使子进程继承父进程的内核对象句柄表，必须执行以下几个步骤：</p>
+<p>1.当父进程创建一个内核对象时，父进程必须向系统指出它希望这个对象的句柄是可继承的。<strong>注意，这里说的继承是指继承内核对象句柄，而非内核对象</strong>。为了创建一个可以继承的内核对象句柄，父进程必须分配并初始化一个SECURITY_ATTRIBUTES结构，并将这个结构的地址传递给具体的Create*创建内核对象函数。下面举个鲜明的例子：</p>
+<pre><code class="language-c++">SECURITY_ATTRIBUTES sa;//安全属性结构
+sa.nLength=sizeof(sa);//结构大小
+sa.lpSecurityDescriptor=NULL;//安全描述符
+sa.bInheritHandle=TRUE;//指定内核对象是否可被继承
+
+HANDLE hMutex=CreateMutex(&amp;sa,FALSE,NULL);//创建一个互斥量内核对象
+</code></pre>
+<p>我们都知道内核对象句柄表的每个记录项含有索引、指向内核对象内存块的地址、访问掩码和标志，其中标志就是指是否可以继承。如果在创建内核对象的时候将NULL作为PSECURITY_ATTRIBUTES参数传入，则返回的句柄将是不可继承的，这个标志也会被设为0，如果bInheritHandle成员设为TRUE，则这个标志被设1</p>
+<p>2.父进程生成子进程，通过在主调进程内调用CreateProcess函数完成。下面给出CreateProcess的函数签名：</p>
+<pre><code class="language-c++">BOOL WINAPI CreateProcess(
+  _In_opt_    LPCTSTR               lpApplicationName,
+  _Inout_opt_ LPTSTR                lpCommandLine,
+  _In_opt_    LPSECURITY_ATTRIBUTES lpProcessAttributes,
+  _In_opt_    LPSECURITY_ATTRIBUTES lpThreadAttributes,
+  _In_        BOOL                  bInheritHandles,
+  _In_        DWORD                 dwCreationFlags,
+  _In_opt_    LPVOID                lpEnvironment,
+  _In_opt_    LPCTSTR               lpCurrentDirectory,
+  _In_        LPSTARTUPINFO         lpStartupInfo,
+  _Out_       LPPROCESS_INFORMATION lpProcessInformation
+);
+</code></pre>
+<p>注意参数bInheritHandles，如果设为TRUE，子进程就会继承父进程的“可继承的内核对象句柄”的值，注意：如果是父进程的“不可继承的内核对象句柄”，那么子进程就不会继承到。我说过每个进程都有一个内核对象句柄表，子进程也不例外。系统在创建子进程后会分配一个新的、空白的内核对象句柄表。总的执行流程如下：<strong>系统会先遍历父进程的内核对象句柄表，对它的每一个记录项进行检查，凡是包含一个有效的“可继承的内核对象句柄”的项，都会被完整地复制到子进程的内核对象句柄表，在子进程的内核对象句柄表中，复制项的位置与它在父进程句柄表中的位置完全一样，这一特性意味着：在父进程和子进程中，对每一个内核对象进行标识的内核对象句柄值是完全一样的。除了复制内核句柄表的记录项，系统还会递增内核对象的使用计数，因为两个进程现在都在使用这个内核对象。</strong> 记住一个要点：内核对象句柄的继承只会在生成子进程的时候发生，假如父进程后来又创建了新的内核对象，并同样将它们的句柄设为可继承的句柄，那么正在运行的子进程是不会继承这些新句柄的。前面都是先创建一个父进程的可继承的内核对象，父进程调用CreateProcess函数创建第一个子进程，然后系统自动将父进程可继承的内核对象句柄复制到子进程的内核对象句柄表中，然后创建第二个子进程，过程还是依然如此。但是我希望在创建第二个子进程时继承不到父进程的这一内核对象。简单来说，就是我们想控制哪些子进程能继承内核对象句柄，可以调用SetHandleInformation函数来改变已经创建好了的内核对象句柄的继承标志。那么只要在调用CreateProcess函数生成第二个子进程前调用SetHandleInformation函数关闭内核对象的继承标志，就可以实现我们目的啦。这个函数签名如下：</p>
+<pre><code class="language-c++">BOOL SetHandleInformation(
+   HANDLE hObject,//标识了一个有效的内核对象句柄，为什么有效？因为还是需要主调进程有访问权限。
+   DWORD dwMask,//告诉函数我们想更改哪个或者哪些标志
+   DWORD dwFlags);//指出把标志设为什么
+</code></pre>
+<p>下面给出参数2，dwMask的两种取值：</p>
+<pre><code class="language-c++">HANDLE_FLAG_INHERIT 0x00000001	
+If this flag is set, a child process created with the bInheritHandles parameter of CreateProcess set to TRUE will inherit the object handle. 
+HANDLE_FLAG_PROTECT_FROM_CLOSE  0x00000002	
+If this flag is set, calling the CloseHandle function will not close the object handle. 
+</code></pre>
+<p>1.如果要打开一个内核对象句柄的继承标志，可以这样写：</p>
+<pre><code class="language-c++">SetHandleInformation(hObj,HANDLE_FLAG_INHERIT,HANDLE_FLAG_INHERIT);
+</code></pre>
+<p>2.要关闭这个标志，可以这样写：</p>
+<pre><code class="language-c++">SetHandleInformation(hObj,HANDLE_FLAG_INHERIT,0);
+</code></pre>
+<p>3.HANDLE_FLAG_PROTECT_FROM_CLOSE标志是告诉系统不允许关闭内核对象句柄：</p>
+<pre><code class="language-c++">SetHandleInformation(hObj,HANDLE_FLAG_PROTECT_FROM_CLOSE,HANDLE_FLAG_PROTECT_FROM_CLOSE);//如果在这个函数之后调用CloseHandle关闭这个句柄就会报错
+</code></pre>
+<p>4.如果需要告诉系统允许关闭内核对象句柄，我们可以这样写：</p>
+<pre><code class="language-c++">SetHandleInformation(hObj,HANDLE_FLAG_PROTECT_FROM_CLOSE,0);//这时候在这个函数调用之后调用CloseHandle函数关闭内核对象句柄不会报错，成功关闭
+</code></pre>
+<p>5.我们可以通过GetHandleInformation函数获取指定内核对象句柄的当前标志。如果要检查一个内核对象句柄是否可以被继承，我们可以这样写：</p>
+<pre><code class="language-c++">DWORD dwFlags;
+GetHandleInformation(hObj,&amp;dwFlags);
+BOOL fHandleIsInheritable=(0!=(dwFlags &amp; HANDLE_FLAG_INHERIT));
+</code></pre>
+<br>
+<h2 id="跨进程边界共享内核对象-为对象命名">跨进程边界共享内核对象-为对象命名</h2>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span>跨进程边界共享内核对象的第二个方法是为对象命名，<strong><font color=red>简单来说就是内核对象有了名字，在进程间就可以根据这个名字找到内核对象，从而实现了进程间共享内核对象。</font></strong> 许多Windows提供的创建内核对象的函数中有<strong>一个名叫pszName的参数，这个参数就是用来设置所创内核对象的名字，如果向此参数传入NULL，相当于向系统表明我们要创建一个未命名的内核对象，简称为匿名内核对象</strong>。如果创建的是一个匿名内核对象，因为没有名字的缘故，所以要实现进程间的内核对象共享，可以使用上一节讲的继承技术或者最后一节讲的复制内核对象句柄。不管进程是子进程还是其他进程，如果要根据内核对象名称来实现进程间内核对象的共享，我们必须为此内核对象指定一个名称。那到底怎么利用内核对象的名称来实现进程间的内核对象共享呢，这就是我们这一节要讲的内容了。如果在创建内核对象函数中指定名称，则应该给名字参数传入一个“以0为终止符的名称字符串”的地址。需要注意的是，微软没有提供一个专门的机制来保证为内核对象指定的名称是唯一的，这什么意思？意思是假如我在会话1中运行两个来自不同公司的应用程序，那么在这两个应用程序中都需要创建一个命名内核对象，如果一不小心刚好内核对象名字一样呢，那就不是唯一了，懂了吧。<strong><font color=red>在同一个会话中，即使内核对象类型不同，在这个会话创建的所有内核对象都共享着同一个命名空间（这个命名空间就是本地命名空间-Local,</font></strong> 在后面内容会将本地命名空间和全局命名空间的区别和用法，你只要知道本地命名空间的范围是在会话内，而全局命名空间的范围是在所有会话之间）。例如以下代码：</p>
+<pre><code class="language-c++">HANDLE hMutex=CreateMutex(NULL,FALSE,TEXT(&quot;JeffObj&quot;));//创建一个名称叫JeffObj的互斥量内核对象
+HANDLE hSem=CreateSemaphore(NULL,1,1,TEXT(&quot;JeffObj&quot;));//创建一个名称叫JeffObj的信号量内核对象
+DWORD dwErrorCode=GetLastError();//获取错误代码
+</code></pre>
+<p>执行上述代码，我们可以调试出dwErrorCode的值为6（ERROR_INVALID_HANDLE），hMutex变量有值，但hSem变量的值为NULL。<br>
+现在我们知道如何命名内核对象了，接着就来看看如何以这种方式共享内核对象，包括父进程和子进程间的共享（这里不是指继承技术实现的共享），还有进程与其他无关联进程间的共享哦。我们进行这样的假设，先生成一个进程A，而进程B可以是进程A的子进程或者是其他应用程序生成的进程，并且进程A启动并调用了以下函数：</p>
+<pre><code class="language-c++">HANDLE hMutexProcessA=CreateMutex(NULL,FALSE,TEXT(&quot;JeffMutex&quot;));
+</code></pre>
+<p>这个函数调用创建了一个新的互斥量内核对象，并将其命名为&quot;JeffMutex&quot;。这时，进程B开始执行时，它执行了以下代码：</p>
+<pre><code class="language-c++">HANDLE hMutexProcessB=CreateMutex(NULL,FALSE,TEXT(&quot;JeffMutex&quot;));
+</code></pre>
+<p>当进程B调用上面的函数时，系统首先会查看本地命名空间是否存在一个名为“JeffMutex”的内核对象，如果不存在该名称的内核对象，那么进程B它会自动创建名为“JeffMutex”的内核对象。但若确实存在这样的一个对象（进程A已经先在本地命名空间创建这一名字的内核对象了），所以内核对象接着检查内核对象的类型，如果内核对象的类型也完全一样，那么系统就接着执行一次安全检查（如果类型不同了，直接返回NULL了，就不必要安全检查咯），验证调用者是否拥有对该内核对象的完全访问权限。如果有这一权限，那么系统就会在进程B的内核句柄表中查找一个空白记录项，并将其初始化为指向现有的内核对象，并且函数返回对应的进程B的内核对象句柄值（极有可能与进程A对应的内核对象句柄值不同），还有会产生一个叫ERROR_ALREADY_EXISTS的错误代码，一般利用这个错误代码来判断是否有两个实例在运行。但是如果在检查内核对象类型时就不匹配了或者调用者被拒绝访问，CreateMutext函数就会失败（返回NULL）。进程B调用CreateMutex成功之后，不会实际地创建一个互斥量内核对象，而是引用内核中的一个现有的互斥量内核对象，系统会为进程B分配一个新的句柄值。由于在进程B的句柄表中，用一个新的纪录项来引用了这个内核对象，所以这个互斥量内核对象的使用计数会被递增。还有一点要注意：进程B调用CreateMutex时，它会向函数传递安全属性参数和第二个参数，如果已经存在一个指定名称的内核对象，这些参数将会被省略，说明进程A的内核对象句柄可继承特性也会被初始化到进程B的内核对象句柄。好了，讲了这么多，我们已经实现了用名称来共享内核对象，但我们会发现一个问题就是，调用Create函数创建内核对象，就算内核对象不存在也会自动创建它，有没有一种函数在内核对象不存在的时候不会自动创建它，而是以调用失败来告终。Windows提供了另一个函数Open，下面举几个Open*函数的签名：</p>
+<pre><code class="language-c++">HANDLE WINAPI OpenMutex(
+  _In_ DWORD   dwDesiredAccess,
+  _In_ BOOL    bInheritHandle,
+  _In_ LPCTSTR lpName
+);
+
+HANDLE WINAPI OpenEvent(
+  _In_ DWORD   dwDesiredAccess,
+  _In_ BOOL    bInheritHandle,
+  _In_ LPCTSTR lpName
+);
+
+HANDLE WINAPI OpenSemaphore(
+  _In_ DWORD   dwDesiredAccess,
+  _In_ BOOL    bInheritHandle,
+  _In_ LPCTSTR lpName
+);
+</code></pre>
+<p>这些函数的最后一个参数pszName指出内核对象的名称，不能为这个参数传入NULL，必须传入一个以0为终止符的字符串作为地址。这些函数将在内核对象命名空间（本地命名空间）搜索，以查找一个匹配的对象，如果没有找到函数返回NULL，并且产生错误代码2（ERROR_FILE_NOT_FOUND）。如果找到了这样名称的内核对象，但类型不同，函数将返回NULL,并且产生错误代码6（ERROR_INVALID_HANDLE）。如果名称相同，类型也相同，系统会检查权限（利用dwDesiredAccess参数指定）是否允许。如果允许，则更新主调进程的句柄表，并使该内核对象的使用计数递增，如果参数2（bInheritHandle）同时指定为TRUE，那么返回的句柄就是可继承的。<strong>总结来说，调用Create和Open的区别就是如果内核对象不存在，Create函数会创建它，而Open函数则不会，如果内核对象不存在，它只是默默地调用失败。</strong><br>
+前面我们说过，微软没有提供一个专门的机制来保证我们创建的内核对象名是独一无二的。换句话来说，如果用户试图运行来自两个不同公司的应用程序，而且这两个程序都试图创建一个名为“MyObject”的对象，那么就会出现问题，因为假如先运行第一个应用程序（假设为程序A），先创建了一个名为“MyObject”的内核对象，那么当运行第二个应用程序（假设为程序B），这时程序内调用的Create*函数，就会在本地命名空间搜索名为“MyObject”的内核对象，肯定找的到，因为程序A已经创建好了，所以这时程序B就会以为已经有一个实例了，自然会出问题。<font color="red">为了保证名称的唯一性，我的建议是创建一个GUID（Globally Unique Identifier，全局唯一标识符） </font>。</p>
+<h2 id="guid全局唯一标识符">GUID（全局唯一标识符）</h2>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span><strong>全局唯一标识符(GUID，Globally Unique Identifier)是一种由算法生成的二进制长度为128位的数字标识符。GUID的总数达到32^128个，所以随机生成两个相同GUID的可能性极小</strong>，但并不为0。GUID的格式为：“xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx”，其中每个 x 是 0-9 或 a-f 范围内的一个4位十六进制数，所以每个x代表4个二进制位，所以4*32=128个二进制位，即GUID的总数达到32^128个。例如:6F9619FF-8B86-D011-B42D-00C04FC964FF 即为有效的 GUID 值。现在来教教怎么使用GUID生成器，我使用的VS版本是2013，我们点击菜单中的工具，然后找到创建GUID，选择第六个格式，点击右侧新建GUID就可以生成GUID啦，然后上面还有个复制，太人性化了，连复制都准备了，只要粘贴到我们想用的地方就可以了，例如下方图片那样：<br>
+<img src="https://hensonguo.github.io/post-images/1685453587230.jpg" alt="" loading="lazy"></p>
+<h2 id="防止运行一个应用程序的多个实例">防止运行一个应用程序的多个实例</h2>
+<p>接下来写的是测试代码，是实现防止运行一个应用程序的多个实例的例子。</p>
+<pre><code class="language-c++">#include&lt;Windows.h&gt;
+#include&lt;tchar.h&gt;
+#include&lt;iostream&gt;
+using namespace std;
+int _tmain()
+{
+	HANDLE hMutex = CreateMutex(NULL, FALSE, TEXT(&quot;JeffObj&quot;));//创建一个名称叫JeffObj的互斥量内核对象
+	if (GetLastError() == ERROR_ALREADY_EXISTS)
+	{
+		CloseHandle(hMutex);
+		return 0;
+	}
+	cout &lt;&lt; &quot;这是第一个实例&quot; &lt;&lt; endl;
+	_gettchar();
+	CloseHandle(hMutex);
+	return 0;
+}
+</code></pre>
+<h2 id="终端服务命名空间">终端服务命名空间</h2>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span>什么是终端服务？终端服务的工作原理是客户机和服务器通过TCP/IP协议和标准的局域网构架联系。通过客户端终端，客户机的鼠标、键盘的输入传递到终端服务器上，再把服务器上的显示传递回客户端。客户端不需要具有计算能力，至多只需提供一定的缓存能力。众多的客户端可以同时登录到服务器上，仿佛同时在服务器上工作一样，它们之间作为不同的会话连接是互相独立的。<br>
+<strong>在正在运行终端服务的计算机中，有多个用于内核对象的命名空间，其中一个就是全局命名空间，所有会话里的所有进程都能访问的内核对象都放在全局命名空间，说明所有会话都将共享全局命名空间里的内核对象。此外，每个会话都有一个自己的命名空间，这就是本地命名空间。</strong> Windows核心编程书中的一句原话是：“对于两个或多个会话正在运行同一个应用程序的情况，这样的安排可以避免会话之间彼此干扰----一个会话不会访问另一个会话的内核对象，即使对象名相同。”，大概意思就是说假如我在会话1的某应用程序创建了一个名为“A”的内核对象（不写前缀，默认是在本地命名空间，至于前缀后面会说怎么创建全局命名空间和本地命名空间），而在会话2的某应用程序也创建了一个名为“A”的内核对象（默认是在本地命名空间），**那么由于本地命名空间的范围在会话内，所以会话1和会话2分别创建的名为“A”的内核对象是没有关系的，都可以创建成功。**后面我会对全局命名空间和本地命名空间（默认命名空间）的用法举个例子你就懂了！</p>
+<p>要想获取我们的进程在哪个终端服务会话中运行，必须使用GetCurrentProcessId或者GetCurrentProcess、GetProcessId和ProcessIdToSessionId函数：</p>
+<pre><code class="language-c++">#include&lt;windows.h&gt;
+#include&lt;iostream&gt;
+#include&lt;tchar.h&gt;
+using namespace std;
+int _tmain()
+{
+	//DWORD processid = GetCurrentProcessId()
+	//GetCurrentProcess()获取当前进程的句柄，然后GetProcessId函数是返回指定进程的ID，参数是进程的句柄。
+	DWORD processid=GetProcessId(GetCurrentProcess());//也可以间接使用两个函数来实现获取进程ID
+	DWORD sessionid = 0;
+	if (ProcessIdToSessionId(processid, &amp;sessionid))
+	{
+		printf(&quot;%s,%d\n&quot;, &quot;this is the first instance! and session id is&quot;, sessionid);
+	}
+	system(&quot;pause&quot;);
+	return 0;
+}
+</code></pre>
+<p>2.如何创建全局命名空间和本地命名空间？<br>
+（1）一般名字的内核对象，默认内核对象放在对应会话的本地命名空间内。不过我们也可以强制把一个命名内核对象放入全局命名空间内，具体做法是<font color=red>在其名称前加上“Global\”前缀</font>，例如：</p>
+<pre><code class="language-c++">CreateEvent(NULL,FALSE,FALSE,L”Global\\ydm”);
+</code></pre>
+<p>（2）如果要在本会话下创建一个命名对象，也就是在会话的命名空间中，创建内核对象，那么必须<font color=red>在内核对象前加上”Local\”前缀！</font>注意这个关键字是大小写敏感的。<br>
+例如：</p>
+<pre><code class="language-c++">CreateMutex(NULL,FALSE,L”Local\\ydm”);
+</code></pre>
+<p>（3）注意：“Session\”前缀被系统保留，不要使用这个前缀来创建命名内核对象。</p>
+<p>3.对全局命名空间和本地命名空间（默认命名空间）的用法举例：<br>
+我在Win10环境写了几行代码，做了个简单的测试。<br>
+首先在administrator帐户(一个会话)中，我创建了一个控制台程序，.cpp文件的main函数中有以下代码：</p>
+<pre><code class="language-c++">#include&lt;windows.h&gt;  
+#include&lt;cstdio&gt;  
+#include&lt;iostream&gt;  
+int main(void)  
+{  
+    //在全局命名空间中创建内核对象，用不同帐户运行该程序，不能创建同名的内核对象。  
+    HANDLE hMutex = CreateMutex(NULL,FALSE,TEXT(&quot;Global\\Handle&quot;)) ;     
+    if(NULL == hMutex || GetLastError() == ERROR_ALREADY_EXISTS)     
+    {  
+        printf(&quot;已经存在互斥量对象\n&quot;) ;  
+        return 0 ;  
+    }  
+    printf(&quot;成功创建互斥量对象\n&quot;) ;  
+    Sleep(INFINITE) ;  
+    return 0 ;  
+}  
+</code></pre>
+<p>上面代码是创建一个放在全局命名空间中的互斥量对象，并调用Sleep(INFINITE)挂起程序，让个内核对象一直保持着。接着我在administrator帐户(一个会话)中，运行这个程序，这个程序自然会输出&quot;成功创建互斥量对象“，然后不关闭，接着按下Ctrl+Alt+Del键切换到FBY帐户(另一个会话)并运行这个程序，发现互斥量创建失败，CreateMutex返回NULL，ErrorCode为ERROR_ALREADY_EXISTS。<br>
+然后，我将上述代码改为：</p>
+<pre><code class="language-c++">HANDLE hMutex = CreateMutex(NULL,FALSE,TEXT(&quot;Local\\Handle&quot;)) ; 
+</code></pre>
+<p>随后执行同上的操作，发现在FBY帐户中，这个程序能够成功创建这个同名的内核对象。<br>
+接着，我又将上述代码改为：</p>
+<pre><code class="language-c++">HANDLE hMutex = CreateMutex(NULL,FALSE,TEXT(&quot;Handle&quot;)) ;  
+</code></pre>
+<p>随后执行同上的操作，发现在FBY帐户中，这个程序能够成功创建这个同名的内核对象。<br>
+总结： 在全局命名空间中创建内核对象，用不同帐户运行该程序，不能创建同名的内核对象。 在局部命名空间中创建内核对象，用不同帐户运行该程序，可以创建同名的内核对象，<strong>而不添加任何前缀，默认是本地命名空间。</strong></p>
+<h2 id="专有命名空间">专有命名空间</h2>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span>前面我们说到，假如用户试图运行来自不同公司的两个应用程序，两个程序都试图创建一个内核对象，我们只有确保内核对象的名字不同才不会出问题，而前面使用的是GUID标识符方法。现在我们自己创建一个属于自己的专有命名空间，如果想确保我们的应用程序创建的内核对象名称永远不会和其他应用程序的名称冲突，或者想确保它们免遭劫持，可以定义一个自定义的前缀，并把它作为自己的专有命名空间使用。具体步骤如下：<br>
+1.创建一个边界描述符BoundaryDescriptor；</p>
+<pre><code class="language-c++">HANDLE WINAPI CreateBoundaryDescriptor(
+  __in  LPCTSTR Name,
+  __in  ULONG Flags
+);
+</code></pre>
+<p>函数功能：创建一个边界描述符：<br>
+Name：边界描述符的名字，这个名字由你自己来取；<br>
+Flags：保留，=NULL。<br>
+返回值：如果函数成功，那么返回值就是一个边界描述符的句柄。如果函数失败，返回值NULL。<br>
+备注：一个新的边界描述符至少要有一个安全描述符SID。可以使用AddSIDToBoundaryDescriptor函数，为边界描述符增加SID。</p>
+<p>2.获取一个SID；</p>
+<pre><code class="language-c++">BOOL WINAPI CreateWellKnownSid(
+  __in       WELL_KNOWN_SID_TYPE WellKnownSidType,
+  __in_opt   PSID DomainSid,
+  __out_opt  PSID pSid,
+  __inout    DWORD *cbSid
+);
+</code></pre>
+<p>函数功能：创建一个有预定义别名的SID<br>
+WellKnownSidType：WELL_KNOWN_SID_TYPE列举的成员，用这个成员标识要获取的SID。<br>
+DomainSid：一个指向SID的指针，这个SID代表了创建SID所使用的域控制安全描述符，如果是本地计算机，那么使用NULL。<br>
+pSid：一个指向内存块的指针，CreateWellKnownSid函数会将创建好的新SID保存到这个内存块中。<br>
+cbSid：一个DWORD类型的指针。代表了生成的pSid的大小。<br>
+返回值：如果函数成功，返回非零，否则返回零。</p>
+<p>3.将这个SID放到边界标识符中，只有具有这个SID的程序，才能打开这个边界标识符；</p>
+<pre><code class="language-c++">BOOL WINAPI AddSIDToBoundaryDescriptor(
+  __inout  HANDLE *BoundaryDescriptor,
+  __in     PSID RequiredSid
+);
+</code></pre>
+<p>函数功能：将一个安全描述符SID添加到指定的边界描述符中<br>
+BoundaryDescriptor：一个指向边界描述符的句柄。CreateBoundaryDescriptor函数返回这个句柄。<br>
+RequiredSid：一个指向安全描述符Sid的指针。<br>
+返回值：如果函数成功，返回值是非零。如果函数失败，返回零。<br>
+备注：AddSIDToBoundaryDescriptor函数必须为每个SID调用一次，将其增加到边界描述符中。你可以将这个函数理解为，为边界描述符创建边界！！！<br>
+4.创建一个安全描述符（允许访问安全描述符）；</p>
+<pre><code class="language-c++">ConvertStringSecurityDescriptorToSecurityDescriptor(）//实际用法不过多解释
+</code></pre>
+<p>5.用这个边界描述符和安全描述符，来创建一个私有命名空间，同时给这个私有命名空间一个别名，例如:”ydm”;<br>
+（1）CreatePrivateNamespace</p>
+<pre><code class="language-c++">HANDLE WINAPI CreatePrivateNamespace(
+  __in_opt  LPSECURITY_ATTRIBUTES lpPrivateNamespaceAttributes,
+  __in      LPVOID lpBoundaryDescriptor,
+  __in      LPCTSTR lpAliasPrefix
+);
+</code></pre>
+<p>函数功能：创建一个私有命名空间<br>
+lpPrivateNamespaceAttributes：一个指向SECURITY_ATTRIBUTES结构的指针，这个结构定义了命名空间的安全属性。<br>
+lpBoundaryDescriptor：一个描述符，定义了命名空间如何被隔离。调用者必须在这个边界内。函数CreateBoundaryDescriptor函数创建一个边界描述符。<br>
+lpAliasPrefix：命名空间的前缀。为了在这个命名空间中创建命名对象，定义对象名称的前缀，形式为”pre fix\”对象名称。系统支持不同边界中，可以有相同的私有命名空间。<br>
+返回值：如果函数成功，返回一个指向新命名空间的句柄，否则返回NULL。<br>
+备注：其他的应用程序，可以使用OpenPrivateNamespac函数，来打开一个已经存在的命名空间。创建命名控件的程序，使用ClosePrivateNamespace函数来关闭指向命名控件的句柄。当创建这个命名空间的进程退出时，被创建的命名空间也会被关闭，那么此后在使用OpenPrivateNamespace函数，就会失败，但这并不影响对该命名控件中的对象的操作。<br>
+（2）OpenPrivateNamespace</p>
+<pre><code class="language-c++">HANDLE WINAPI OpenPrivateNamespace(
+  __in  LPVOID lpBoundaryDescriptor,
+  __in  LPCTSTR lpAliasPrefix
+);
+</code></pre>
+<p>函数功能：打开一个私有命名空间。<br>
+lpBoundaryDescriptor：定义私有命名空间如何被隔离的描述符。调用这个函数的程序必须在这个边界之内。函数CreateBoundaryDescriptor创建一个边界描述符。<br>
+lpAliasPrefix：命名空间前缀。为了在这个私有命名空间中创建一个命名对象，那么这个对象名称的前缀必须是lpAliasPrefix\。系统支持多个私有命名空间具有相同的别名，只要边界描述符不同就可以了。<br>
+返回值：函数返回一个已经存在的私有命名空间的句柄。</p>
+<p>6.要在这个私有命名空间中，创建一个内核对象，例如一个Mutex，那么如下就可以了：</p>
+<pre><code class="language-c++">CreatetMutex(NULL,FALSE,L”ydm\\object_name”);
+</code></pre>
+<p>结合专有命名空间实现防止运行一个应用程序的多个实例：</p>
+<pre><code class="language-c++">#include&lt;Windows.h&gt;
+#include&lt;tchar.h&gt;
+#include&quot;resource.h&quot;
+#include&lt;Sddl.h&gt;
+#include&lt;Strsafe.h&gt;
+HANDLE h_Bundary;//边界描述符句柄
+HANDLE h_Namespace;//私有命名空间句柄
+HANDLE hMutex;//内核对象句柄
+BOOL opened=FALSE;//使用ClosePrivateNamespace函数，销毁私有命名空间的时候，需要知道
+//私有命名空间是否是本程序创建的，如果是，那么这个ClosePrivateNamespace函数的第二个参数
+//为1，否则为0
+INT_PTR CALLBACK Dlg_pro(
+  __in  HWND hwndDlg,
+  __in  UINT uMsg,
+  __in  WPARAM wParam,
+  __in  LPARAM lParam
+);
+BOOL CheckInstance(HWND);
+int APIENTRY _tWinMain(HINSTANCE hInstance,HINSTANCE,LPTSTR lpCmdLine,int nCmdShow)
+{
+	DialogBox(hInstance,MAKEINTRESOURCE(IDD_DIALOG1),NULL,Dlg_pro);
+	if(hMutex)
+		CloseHandle(hMutex);//杀死内核对象
+	if(h_Namespace)//销毁私有命名空间。
+	{
+		if(opened)
+			ClosePrivateNamespace(h_Namespace,0);
+			//如果是打开私有命名空间，ClosePrivateNamespace的第二个参数是0
+		else
+			ClosePrivateNamespace(h_Namespace,1);
+			//如果是创建的私有命名空间，ClosePrivateNamespace的第二个参数是1
+	}
+	if(h_Bundary)
+		DeleteBoundaryDescriptor(h_Bundary);//销毁边界描述符！！
+	return 0;
+}
+INT_PTR CALLBACK Dlg_pro(
+  __in  HWND hwndDlg,
+  __in  UINT uMsg,
+  __in  WPARAM wParam,
+  __in  LPARAM lParam
+)
+{
+	if(uMsg==WM_INITDIALOG)//初始化对话框消息
+	{
+		SetDlgItemText(hwndDlg,IDC_STATIC1,L&quot;&quot;);//将静态文本框中的内容清空。
+		CheckInstance(hwndDlg);//真正的检查函数
+	}
+	if(uMsg==WM_COMMAND)//退出消息
+	{
+		if(HIWORD(wParam)==BN_CLICKED&amp;&amp;LOWORD(wParam)==IDCANCEL)
+			EndDialog(hwndDlg,0);
+	}
+	return  0;
+}
+BOOL CheckInstance(HWND hwnd)
+{
+	h_Bundary=CreateBoundaryDescriptor(L&quot;ydm&quot;,0);//创建一个边界描述符！
+	BYTE LocalAdmiSID[SECURITY_MAX_SID_SIZE];
+	DWORD cbSID=sizeof(LocalAdmiSID);
+	CreateWellKnownSid(WinBuiltinAdministratorsSid,NULL,&amp;LocalAdmiSID,&amp;cbSID);
+	//创建一个管理员SID
+	AddSIDToBoundaryDescriptor(&amp;h_Bundary,&amp;LocalAdmiSID);
+	//将管理员SID加入到边界描述符中，此后，只有管理员才能够打开这个边界描述符对应的私有命名空间！
+	SECURITY_ATTRIBUTES sa;
+	sa.nLength=sizeof(SECURITY_ATTRIBUTES);
+	sa.bInheritHandle=FALSE;
+	ConvertStringSecurityDescriptorToSecurityDescriptor(L&quot;D:(A;;GA;;;BA)&quot;,SDDL_REVISION_1,
+		&amp;sa.lpSecurityDescriptor,NULL);//创建了一个安全描述符：
+	/*
+	D:	这个代表这个安全描述符中有DACL-discretionary Access Control list访问控制列表
+	A	表示这个安全描述符是一个允许安全描述符，如果是D-deny，那么表示拒绝安全描述符allow
+	GA:	表示访问的权限是所有权限；
+	BA:	代表了管理员SID
+	这个&quot;D:(A;;GA;;;BA)&quot;字符串是按照：Security Descriptor Definition Language语言，来编写的。
+	*/
+	h_Namespace=CreatePrivateNamespace(&amp;sa,h_Bundary,L&quot;ygg&quot;);
+	//创建私有命名空间！！！注意，最后一个参数只是这个命名空间的别名！！！
+	if(GetLastError()==ERROR_ALREADY_EXISTS)//如果私有命名空间已经创建，那么我们打开这个私有命名空间！
+	{
+		h_Namespace=OpenPrivateNamespace(h_Bundary,L&quot;ygg&quot;);
+		//打开私有命名空间
+		opened=TRUE;//设置打开标志，用于ClosePrivateNamespace函数最后一个参数的设置！
+	}
+
+	LocalFree(sa.lpSecurityDescriptor);
+	//ConvertStringSecurityDescriptorToSecurityDescriptor函数，会自动给被创建的安全描述符分配内存
+	//当这个安全描述符不再使用时，使用LocalFree函数释放他。
+	TCHAR szMutex[64];
+	StringCchPrintf(szMutex,_countof(szMutex),L&quot;%s\\%s&quot;,L&quot;ygg&quot;,L&quot;mutex&quot;);
+	//形成一个L&quot;ygg\\mutex&quot;字符串！
+	hMutex=CreateMutex(NULL,FALSE,szMutex);//在ygg命名空间中，创建一个互斥内核对象！
+	if(GetLastError()==ERROR_ALREADY_EXISTS)
+	{
+		SetDlgItemText(hwnd,IDC_STATIC1,L&quot;已经存在一个程序&quot;);
+	}
+	else
+	{
+		SetDlgItemText(hwnd,IDC_STATIC1,L&quot;这是第一个程序实例&quot;);
+	}
+	return TRUE;
+}
+</code></pre>
+<br>
+<h2 id="跨进程边界共享内核对象-复制对象句柄">跨进程边界共享内核对象-复制对象句柄</h2>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span>现在讲第三种跨进程边界共享内核对象-复制对象句柄。这种方法可以用在各种情况，例如：父子进程（但通常使用继承方法更好）、毫无关联的两个进程、当前进程跟当前进程来复制对象句柄。我们先来讲讲前面所使用的函数GetCurrentProcess()，我们通过GetCurrentProcess函数，获得的句柄都是伪句柄！伪句柄的值为-1，其实是一个固定的值！如果你在使用句柄的地方，直接写上-1，那么就代表本进程句柄，但不建议这么做，也就是说，GetCurrentProcess函数，在目前，总是返回-1。<br>
+<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span>可以通过GetProcessId函数获取指定进程内核对象句柄值的进程ID。那怎么才能获取真实的进程句柄呢？有两种方法获得真实的进程句柄。一种是使用OpenProcess函数，另外一种是使用DuplicateHandle函数！下面贴上GetCurrentProcess、GetProcessId、OpenProcess、DuplicateHandle的函数签名：<br>
+（1）GetCurrentProcess函数</p>
+<pre><code class="language-c++">HANDLE WINAPI GetCurrentProcess(void);
+获得的句柄都是伪句柄
+</code></pre>
+<p>（2）GetProcessId函数</p>
+<pre><code class="language-c++">DWORD WINAPI GetProcessId(
+  __in  HANDLE Process
+);
+通过进程句柄，获得进程Id；
+Process：进程句柄。
+</code></pre>
+<p>（3）OpenProcess函数</p>
+<pre><code class="language-c++">HANDLE WINAPI OpenProcess(
+  __in  DWORD dwDesiredAccess,
+  __in  BOOL bInheritHandle,
+  __in  DWORD dwProcessId
+);
+获得进程内核句柄；
+dwDesiredAccess：希望获得的进程内核对象的句柄，具有什么样的权限。
+bInheritHandle：这个句柄是否可以被继承。
+dwProcessID：要获得进程内核对象句柄的进程ID。
+如果成功，返回句柄，否则返回NULL。
+</code></pre>
+<p>（4）DuplicateHandle函数</p>
+<pre><code class="language-c++">BOOL WINAPI DuplicateHandle(
+  __in   HANDLE hSourceProcessHandle,
+  __in   HANDLE hSourceHandle,
+  __in   HANDLE hTargetProcessHandle,
+  __out  LPHANDLE lpTargetHandle,
+  __in   DWORD dwDesiredAccess,
+  __in   BOOL bInheritHandle,
+  __in   DWORD dwOptions
+);
+hSourceProcessHandle：源进程的进程句柄；
+hSourceHandle：源内核对象句柄；
+hTargetProcessHandle：目标进程的进程句柄；
+lpTargetHandle：指向接收目标内核对象句柄内存的指针；
+dwDesiredAccess：访问权限；
+bInheritHandle：是否可被继承；
+dwOptions：
+Value	                                                   Meaning
+DUPLICATE_CLOSE_SOURCE    复制完毕后，将源句柄关闭，无论发生什么错误，源句柄都将被关闭。
+0x00000001	                                   
+DUPLICATE_SAME_ACCESS      忽视dwDesiredAccess参数。复制的句柄具有和源句柄同样的权限。
+0x00000002            
+</code></pre>
+<p>示例：</p>
+<pre><code class="language-c++">#include&lt;Windows.h&gt;
+#include&lt;tchar.h&gt;
+int _tmain()
+{
+	HANDLE hProcess=GetCurrentProcess();
+	//GetCurrentProcess函数，无论在什么情况下，他都返回-1！！！！
+	//我们把GetCurrentProcess函数返回的句柄，叫伪句柄，当前请情况下，这个伪句柄一定是-1、
+	_tprintf(L&quot;hProcess=%d\n&quot;,hProcess);
+	DWORD sessionid=0;
+	DWORD processid=0;
+	processid=GetProcessId((HANDLE)-1);//获取当前进程进程ID
+	//GetCurrentProcess()获得当前进程句柄！
+	HANDLE hProcess1=OpenProcess(PROCESS_ALL_ACCESS,FALSE,GetProcessId((HANDLE)-1));
+	//OpenProcess函数的参数1是所获得的进程内核对象的句柄的权限，参数2是可否继承，参数3是要获取指定的内核对象句柄的进程ID，		//参数3通过GetProcessId函数获取进程ID
+	HANDLE hProcess2,hProcess3;
+	DuplicateHandle((HANDLE)-1,(HANDLE)-1,(HANDLE)-1,&amp;hProcess2,NULL,FALSE,0);
+	DuplicateHandle((HANDLE)-1,(HANDLE)-1,(HANDLE)-1,&amp;hProcess3,NULL,FALSE,0);
+	_tprintf(L&quot;hprocess1=%0x\nhprocess2=%0x\nhProcess3=%0x\n&quot;,hProcess1,hProcess2,hProcess3);
+	//关闭所获取的进程内核对象句柄，包括hProcess1获取的真实的进程句柄。
+	CloseHandle(hProcess1);
+	CloseHandle(hProcess2);
+	CloseHandle(hProcess3);
+	_gettchar();
+	return 0;
+}
+</code></pre>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#windows%E4%BC%9A%E8%AF%9D%E5%92%8C%E5%AE%89%E5%85%A8%E6%9C%BA%E5%88%B6">Windows会话和安全机制</a></li>
+<li><a href="#%E4%BB%80%E4%B9%88%E6%98%AF%E5%86%85%E6%A0%B8%E5%AF%B9%E8%B1%A1">什么是内核对象？</a></li>
+<li><a href="#%E4%BD%BF%E7%94%A8%E8%AE%A1%E6%95%B0%E5%92%8C%E5%AE%89%E5%85%A8%E6%8F%8F%E8%BF%B0%E7%AC%A6">使用计数和安全描述符？</a></li>
+<li><a href="#%E5%86%85%E6%A0%B8%E5%AF%B9%E8%B1%A1%E5%8F%A5%E6%9F%84%E8%A1%A8">内核对象句柄表</a></li>
+<li><a href="#%E5%88%9B%E5%BB%BA%E5%86%85%E6%A0%B8%E5%AF%B9%E8%B1%A1">创建内核对象</a></li>
+<li><a href="#%E5%85%B3%E9%97%AD%E5%86%85%E6%A0%B8%E5%AF%B9%E8%B1%A1">关闭内核对象</a></li>
+<li><a href="#%E8%B7%A8%E8%BF%9B%E7%A8%8B%E8%BE%B9%E7%95%8C%E5%85%B1%E4%BA%AB%E5%86%85%E6%A0%B8%E5%AF%B9%E8%B1%A1-%E4%BD%BF%E7%94%A8%E5%AF%B9%E8%B1%A1%E5%8F%A5%E6%9F%84%E7%BB%A7%E6%89%BF">跨进程边界共享内核对象-使用对象句柄继承</a></li>
+<li><a href="#%E8%B7%A8%E8%BF%9B%E7%A8%8B%E8%BE%B9%E7%95%8C%E5%85%B1%E4%BA%AB%E5%86%85%E6%A0%B8%E5%AF%B9%E8%B1%A1-%E4%B8%BA%E5%AF%B9%E8%B1%A1%E5%91%BD%E5%90%8D">跨进程边界共享内核对象-为对象命名</a></li>
+<li><a href="#guid%E5%85%A8%E5%B1%80%E5%94%AF%E4%B8%80%E6%A0%87%E8%AF%86%E7%AC%A6">GUID（全局唯一标识符）</a></li>
+<li><a href="#%E9%98%B2%E6%AD%A2%E8%BF%90%E8%A1%8C%E4%B8%80%E4%B8%AA%E5%BA%94%E7%94%A8%E7%A8%8B%E5%BA%8F%E7%9A%84%E5%A4%9A%E4%B8%AA%E5%AE%9E%E4%BE%8B">防止运行一个应用程序的多个实例</a></li>
+<li><a href="#%E7%BB%88%E7%AB%AF%E6%9C%8D%E5%8A%A1%E5%91%BD%E5%90%8D%E7%A9%BA%E9%97%B4">终端服务命名空间</a></li>
+<li><a href="#%E4%B8%93%E6%9C%89%E5%91%BD%E5%90%8D%E7%A9%BA%E9%97%B4">专有命名空间</a></li>
+<li><a href="#%E8%B7%A8%E8%BF%9B%E7%A8%8B%E8%BE%B9%E7%95%8C%E5%85%B1%E4%BA%AB%E5%86%85%E6%A0%B8%E5%AF%B9%E8%B1%A1-%E5%A4%8D%E5%88%B6%E5%AF%B9%E8%B1%A1%E5%8F%A5%E6%9F%84">跨进程边界共享内核对象-复制对象句柄</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://hensonguo.github.io/post/chang-jian-xia-zai-yu-geng-xin-wen-ti-zong-jie/">
+              <h3 class="post-title">
+                常见下载与更新问题总结
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://hensonguo.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

@@ -1,0 +1,176 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>进程通信原理 | Icode</title>
+<link rel="shortcut icon" href="https://hensonguo.github.io/favicon.ico?v=1704354032694">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://hensonguo.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="进程通信原理 | Icode - Atom Feed" href="https://hensonguo.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="上，进程的同步与互斥本质上也是一种进程通信（这也就是待会我们会在进程通信机制中看见信号量和 PV 操作的原因了），只不过它传输的仅仅是信号量，通过修改信号量，使得进程之间建立联系，相互协调和协同工作，但是它缺乏传递数据的能力。
+虽然存在某些..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://hensonguo.github.io">
+  <img class="avatar" src="https://hensonguo.github.io/images/avatar.png?v=1704354032694" alt="">
+  </a>
+  <h1 class="site-title">
+    Icode
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              进程通信原理
+            </h2>
+            <div class="post-info">
+              <span>
+                2022-09-22
+              </span>
+              <span>
+                2 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <p>上，进程的同步与互斥本质上也是一种进程通信（这也就是待会我们会在进程通信机制中看见信号量和 PV 操作的原因了），只不过它传输的仅仅是信号量，通过修改信号量，使得进程之间建立联系，相互协调和协同工作，但是它缺乏传递数据的能力。</p>
+<p>虽然存在某些情况，进程之间交换的信息量很少，比如仅仅交换某个状态信息，这样进程的同步与互斥机制完全可以胜任这项工作。但是大多数情况下，进程之间需要交换大批数据，比如传送一批信息或整个文件，这就需要通过一种新的通信机制来完成，也就是所谓的进程通信。</p>
+<p>再来从操作系统层面直观的看一些进程通信：我们知道，为了保证安全，每个进程的用户地址空间都是独立的，一般而言一个进程不能直接访问另一个进程的地址空间，不过<strong>内核空间</strong>是每个进程都共享的，所以<strong>进程之间想要进行信息交换就必须通过内核</strong>。<br>
+<img src="https://hensonguo.github.io/post-images/1663840846569.jpg" alt="" loading="lazy"><br>
+常见的进程通信机制：</p>
+<p>管道（也称作共享文件）<br>
+消息队列（也称作消息传递）<br>
+共享内存（也称作共享存储）<br>
+信号量和 PV 操作<br>
+信号<br>
+套接字（Socket）</p>
+
+              </div>
+              <div class="toc-container">
+                
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://hensonguo.github.io/post/python-yuan-ma-bian-yi/">
+              <h3 class="post-title">
+                python源码编译及zip加载支持
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://hensonguo.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

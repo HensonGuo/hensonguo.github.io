@@ -1,0 +1,221 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>windows核心编程-线程的堆栈 | Icode</title>
+<link rel="shortcut icon" href="https://hensonguo.github.io/favicon.ico?v=1704354032694">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://hensonguo.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="windows核心编程-线程的堆栈 | Icode - Atom Feed" href="https://hensonguo.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="每当创建一个线程时，系统就会为线程的堆栈（每个线程有它自己的堆栈）保留一个堆栈空间区域，并将一些物理存储器提交给这个已保留的区域。按照默认设置，系统保留 1 MB的地址空间并提交两个页面的内存。但是，这些默认值是可以修改的，方法是在你链接应..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://hensonguo.github.io">
+  <img class="avatar" src="https://hensonguo.github.io/images/avatar.png?v=1704354032694" alt="">
+  </a>
+  <h1 class="site-title">
+    Icode
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              windows核心编程-线程的堆栈
+            </h2>
+            <div class="post-info">
+              <span>
+                2023-06-14
+              </span>
+              <span>
+                6 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <p><strong>每当创建一个线程时，系统就会为线程的堆栈（每个线程有它自己的堆栈）保留一个堆栈空间区域，并将一些物理存储器提交给这个<font color=red>已保留的区域</font>。按照默认设置，系统保留<fon t color=red> 1 MB</font>的地址空间并提交两个页面的内存</strong>。但是，这些默认值是可以修改的，方法是在你链接应用程序时设定Microsoft的链接程序的/STACK选项：</p>
+<pre><code>/STACK:reverse[.commit]
+</code></pre>
+<p>当创建一个线程的堆栈时，系统将会保留一个链接程序的/STACK开关指明的地址空间区域。但是，当调用CreateThread或_beginthreadex函数时，可以重载原先提交的内存数量。这两个函数都有一个参数，可以用来重载原先提交给堆栈的地址空间的内存数量。如果设定这个参数为0，那么系统将使用/ STACK开关指明的已提交的堆栈大小值。后面将假定我们使用默认的堆栈大小值，即1 MB的保留区域，每次提交一个页面的内存。</p>
+<p>图16-1显示了在页面大小为 4 KB的计算机上的一个堆栈区域的样子 (保留的起始地址是0x08000000 )。该堆栈区域和提交给它的所有物理存储器均拥有页面保护属性 PAGE_READWRITE。<br>
+<img src="https://hensonguo.github.io/post-images/1686753545439.jpg" alt="" loading="lazy"></p>
+<p>如果在出现堆栈溢出异常条件之后，线程继续使用该堆栈，那么在 0x08001000地址上的页面中的全部内存均将被使用，同时，该线程将试图访问从 0x08000000开始的页面中的内存。当该线程试图访问这个保留的（未提交的）内存时，系统就会引发一个访问违规异常条件。如果在线程试图访问该堆栈时引发了这个访问违规异常条件，线程就会陷入很大的麻烦之中。这时，系统就会接管控制权，并终止进程的运行—不仅终止线程的运行，而切终止整个进程的运行。系统甚至不向用户显示一个消息框，整个进程都消失了！</p>
+<p><strong>下面要说明为什么堆栈区域的最后一个页面始终被保留着。这样做的目的是为了防止不小心改写进程使用的其他数据</strong>。可以看到，在 0x07FF000这个地址上（0x08000000下面的一个页面），另一个地址空间区域已经提交了物理存储器。如果 0x08000000地址上的页面包含物理存储器，系统将无法抓住线程访问已保留堆栈区域的尝试。如果堆栈深入到已保留堆栈区域的下面，那么线程中的代码就会改写进程的地址空间中的其他数据，这是个非常难以抓住的错误。</p>
+<h2 id="cc运行期库的堆栈检查函数">C/C++运行期库的堆栈检查函数</h2>
+<p>C/C++运行期库包含一个堆栈检查函数。当编译源代码时，编译器将在必要时自动生成对该函数的调用。堆栈检查函数的作用是确保页面被适当地提交给线程的堆栈。</p>
+<p>下面让我们来看一个例子。这是一个小型函数，它需要相当多的内存用于它的局部变量：</p>
+<pre><code class="language-c++">void SomeFunction(){
+    int nValues[4000];
+
+    //do some processing with the array
+    nValues[0] = 0;
+}
+</code></pre>
+<p>该函数至少需要16 000个字节（4000 x sizeof(int),每个整数是4个字节）的堆栈空间，以便放置整数数组。通常情况下，编译器生成的用于分配该堆栈空间的代码只是将 CPU的堆栈指针递减16 000个字节。但是，在程序试图访问内存地址之前，系统并不将物理存储器分配给堆栈区域的这个较低区域。</p>
+<p>在使用4 KB或8 KB页面的系统上，这个局限性可能导致一个问题出现。如果初次访问堆栈是在低于保护页面的一个地址上进行的（如上面这个代码中的赋值行所示），那么线程将访问已经保留的内存并且引发访问违规。为了确保能够成功地编写上面所示的函数，编译器将插入对C运行期库的堆栈检查函数的调用。</p>
+<p>当编译程序时，编译器知道你针对的 C P U系统的页面大小。 x86编译器知道页面大小是 4KB，Alpha编译器知道页面大小是8KB。当编译器遇到程序中的每个函数时，它能确定该函数需要的堆栈空间的数量。如果该函数需要的堆栈空间大于目标系统的页面大小，编译器将自动插入对堆栈检查函数的调用。</p>
+<p>下面这个伪代码显示了堆栈检查函数执行什么操作。之所以称它是伪代码，是因为这个函数通常是由编译器供应商用汇编语言来实现的：</p>
+<pre><code class="language-c++">// The c run-time library knows the page size for the target system.
+#ifdef _M_ALPHA
+#define PAGESIZE        (8 * 1024)      //8-KB page
+#else
+#define PAGESIZE        (4 * 1024)      //4-KB page
+#endif
+
+void StackCheck(int nBytesNeededFromStack){
+    // Get the stack pointer position
+    // At this point, the stack pointer has NOT been decremented
+    // To account for the fucntion's local variables
+    PBYTE pbStackPtr = (CPU's stack pointer);
+    while(nBytesNeededFromStack &gt;=PAGESIZE){
+        // Move down a page on the stack--should be a guard page.
+        pbStackPtr -= PAGESIZE;
+
+        // Access a byte on the guard page--forces new page to be
+        // Committed and guard page to move down a page.
+        pbStackPtr[0] = 0;
+
+        // Reduce the number of bytes needed from the stack
+        nBytesNeededFromStack -= PAGESIZE;
+    }
+    // Before returning, the StackCheck function sets the CPU's
+    // Stack pointer to the address below the functions's local variables
+}
+</code></pre>
+<p>Microsoft 的Visual C++确实提供了一个编译器开关，使你能够控制一个页面大小的阈值，这个阈值可供编译器用来确定何时添加对StackCheck函数的自动调用。只有当确切地知道究竟在进行什么操作并且有着特殊需要时，才能使用这个编译器开关。对于绝大多数应用程序和DLL来说，都不应该使用这个开关。</p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#cc%E8%BF%90%E8%A1%8C%E6%9C%9F%E5%BA%93%E7%9A%84%E5%A0%86%E6%A0%88%E6%A3%80%E6%9F%A5%E5%87%BD%E6%95%B0">C/C++运行期库的堆栈检查函数</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://hensonguo.github.io/post/windows-he-xin-bian-cheng-zai-ying-yong-cheng-xu-zhong-shi-yong-xu-ni-nei-cun/">
+              <h3 class="post-title">
+                windows核心编程-在应用程序中使用虚拟内存
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://hensonguo.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

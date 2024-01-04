@@ -1,0 +1,373 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>windows核心编程-硬件输入模型和局部输入状态 | Icode</title>
+<link rel="shortcut icon" href="https://hensonguo.github.io/favicon.ico?v=1704354032694">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://hensonguo.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="windows核心编程-硬件输入模型和局部输入状态 | Icode - Atom Feed" href="https://hensonguo.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="1.原始输入线程
+下图概括描述了系统的硬件输入模型。当系统初始化时会创建一个原始输入线程和一个系统硬件输入队列：
+
+原始输入线程（raw input thread RIT），简称 RIT。
+系统硬件输入队列（System hardware ..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://hensonguo.github.io">
+  <img class="avatar" src="https://hensonguo.github.io/images/avatar.png?v=1704354032694" alt="">
+  </a>
+  <h1 class="site-title">
+    Icode
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              windows核心编程-硬件输入模型和局部输入状态
+            </h2>
+            <div class="post-info">
+              <span>
+                2023-09-22
+              </span>
+              <span>
+                11 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <h2 id="1原始输入线程">1.原始输入线程</h2>
+<p>下图概括描述了系统的硬件输入模型。当系统初始化时会创建一个原始输入线程和一个系统硬件输入队列：</p>
+<ul>
+<li>原始输入线程（raw input thread RIT），简称 RIT。</li>
+<li>系统硬件输入队列（System hardware input queue SHIQ），简称 SHIQ。<br>
+<img src="https://img-blog.csdnimg.cn/d914db19a4cc46408bc7f422fee32aae.png" alt="" loading="lazy"></li>
+</ul>
+<p>RIT 处理 Input 消息<br>
+Windows 输入消息大多数只有鼠标和键盘两种：</p>
+<ul>
+<li>对于键盘消息，RIT 会把消息放入跟 RIT 连接的线程的虚拟输入队列</li>
+<li>对于鼠标消息，RIT 可以确定哪个窗口在鼠标光标之下，通过这个窗口调用GetWindowThreadProcessId 来确定哪个线程建立了这个窗口，返回该线程的 ID，指出这个 ID 的线程得到鼠标消息。<br>
+与按键硬件事件的处理不同，在任何时刻下，只有一个线程与 RIT 连接，这个线程称为 “前景线程”（因为它建立与用户交互的窗口，且线程中的窗口相对与其他窗口来说，处于画面的前景）<br>
+如：<br>
+<img src="https://img-blog.csdnimg.cn/09b7c1145f374136b6bc5e7eb1438bc7.png" alt="" loading="lazy"><br>
+按键消息进入虚拟输入队列：<br>
+<img src="https://img-blog.csdnimg.cn/e5a66b29ea3844ca918559637c781027.png" alt="" loading="lazy"></li>
+</ul>
+<br>
+<h3 id="11不同的线程如何连接到-rit">1.1不同的线程如何连接到 RIT</h3>
+<ol>
+<li>连接前景线程：当创建一个进程时，进程的线程可以建立一个窗口，使创建窗口的线程同 RIT 连接（鼠标放在上面点一下）</li>
+<li>用键盘激活的窗口：RIT 要负责处理特殊的键组合：Alt + Tab、Alt + Esc、Ctrl + Alt + Del 等，处理这些键组合时，可以保证总能用键盘激活窗口。 因为应用程序不能废弃这些键组合功能，当用户按下某个特殊组合时， RIT 激活选定的窗口，并将窗口的（创建）线程连接到 RIT</li>
+<li>Windows 也提供激活窗口的功能，使窗口的线程连接到 RIT</li>
+</ol>
+<p>注意：</p>
+<ul>
+<li>若当前的激活窗口无反应，可以通过按下 Alt + Tab 切换到其他窗口，不会有任何问题，除非电脑由于某种原因死机</li>
+<li>切换到其他窗口后，即使线程、窗口都没有响应，用户也可以对窗口一直输入（输入，但无响应的状态！就是那样！）</li>
+</ul>
+<br>
+<h2 id="2局部输入状态">2.局部输入状态</h2>
+<p>每个线程都有自己的输入状态变量，每个线程都有不同的焦点窗口、鼠标捕获窗口等概念</p>
+<h3 id="21键盘输入与焦点">2.1键盘输入与焦点</h3>
+<ol>
+<li>RIT 使用户的键盘输入流向一个线程的虚拟输入队列，而不是流向一个窗口（不涉及具体窗口）</li>
+<li>当线程调用 GetMessage 时，键盘事件从队列中移出，并分派给当前有输入焦点的窗口（调用接口的线程建立的窗口 ）<br>
+<img src="https://img-blog.csdnimg.cn/d141103087af46b686f1c0f54c4bb365.png" alt="" loading="lazy"></li>
+</ol>
+<h3 id="22激活窗口函数">2.2激活窗口函数</h3>
+<h4 id="221setactivewindow-和-getactivewindow">2.2.1SetActiveWindow 和 GetActiveWindow</h4>
+<ul>
+<li>激活系统中一个最高层（top-level）的窗口，并对这个窗口设定焦点</li>
+<li>同 SetFocus 函数一样，若调用线程没有创建（作为函数参数的）窗口，则这个函数什么也不做</li>
+<li>与 SetActiveWindow 配合的函数 ： GetActiveWindow</li>
+<li>与 GetFocus 函数差不多，不同在于，此函数返回（由调用线程的局部输入状态变量 所指出的） 活动窗口的句柄</li>
+</ul>
+<h4 id="222bringwindowtotop-和-setwindowpos">2.2.2BringWindowToTop 和 SetWindowPos</h4>
+<ul>
+<li>两个都是可以改变窗口的 Z 序（Z-order）、活动状态、焦点状态的函数</li>
+<li>BringWindowToTop 函数在内部调用 SetWindowPos 实现，以 HWND_TOP 作为第二个参数</li>
+<li>若调用这两个函数的线程没有连接到 RIT，则函数什么也不做（无法操控状态变量值）</li>
+<li>若调用这两个函数的线程与 RIT 连接，即使指定的窗口不是调用线程的，系统也会激活该窗口，且创建窗口的线程被连接到 RIT （会引起调用线程、新连接到 RIT 的线程的局部输入状态变量的更新）</li>
+</ul>
+<pre><code class="language-c++">BOOL BringWindowToTop(HWWD hwnd);
+BOOL SetWindowPos(
+    HWND hwnd,
+    HWND hwndInsertAfter,
+    int x,
+    int y,
+    int cx,
+    int cy,
+    UINI fuFlags);
+</code></pre>
+<h4 id="223setforegroundwindow">2.2.3SetForegroundWindow</h4>
+<ul>
+<li>仅当调用一个函数的线程，已经连接到 RIT 或者当前与 RIT 连接的线程在一定时间内（时间由 SystemParametersInfo 函数和 SPI_SETFOREGROUND_LOCKTIMEOUT 值来控制）没有接收到任何输入时，此函数才有效，若有一个菜单（GUI 的基础部分）是活动的，此函数失效</li>
+<li>若不允许 SetForegroundWindow 将窗口移到前景，它会闪烁窗口标题栏和任务条的窗口按钮，提示用户应该手工激活，有报告信息输出，可以用 SystemParametersInfo 函数和SPI_SETFOREGROUNDFLASHCOUNT 值来控制闪烁<br>
+为了使这个函数内容更完整，系统提供了另外的一些函数：<pre><code class="language-c++">AllowSetForegroundWindow
+</code></pre>
+</li>
+<li>调用 AllowSetForegroundWindow 函数可使指定进程的一个线程成功调用SetForegroundWindow</li>
+<li>为了使任何进程都可以在线程的窗口上，弹出一个窗口，指定 ASFW_ANY（定义为-1）作为dwProcessId 参数<pre><code class="language-c++">    BOOL AllowSetForegroundWindow(DWORD dwProcessId);
+</code></pre>
+</li>
+</ul>
+<h4 id="224locksetforegroundwindow">2.2.4LockSetForegroundWindow</h4>
+<ul>
+<li>锁定 SetForegroundWindow 函数，使它总是失效的</li>
+<li>对于 uLockCode 参数可以指定 LSFW_LOCK 或 LSFW_UNLOCK<pre><code class="language-c++">    BOOL LockSetForegroundWindow(UINI uLockCode);
+</code></pre>
+</li>
+<li>当一个菜单被激活时，系统在内部调用这个函数，这样试图跳到前景的窗口，不能关闭这个的菜单</li>
+<li>Windows 在显示 Start 菜单时，需要明确地调用这些函数，因为 Start 菜单不是一个内置菜单</li>
+<li>当用户按下 Alt 或将一个窗口拉到前景时，系统自动解锁 SetForegroundWindow 函数，这样可以防止一个程序一直对 SetForegroundWindow 函数封锁</li>
+</ul>
+<h4 id="225-同步键状态">2.2.5 同步键状态</h4>
+<ul>
+<li>每个线程的局部输入状态变量，都包含一个同步键状态数组</li>
+<li>所有的线程共享一个同步键状态数组，这些数组反应了：在任何给定时刻键盘所有键的状态<br>
+用 GetAsyncKeyState 函数，确定用户当前是否按下了键盘的一个键：</li>
+</ul>
+<pre><code class="language-c++">SHORT GetAsyncKeyState(int nVirtKey);
+</code></pre>
+<ul>
+<li>nVirtKey 指出要检查键的虚键代码</li>
+<li>返回的结果高位指出该键当前是否被按下：是为1，否为0</li>
+<li>可以用来检查用户是否释放了某些按键</li>
+</ul>
+<h3 id="23-鼠标光标管理">2.3 鼠标光标管理</h3>
+<h4 id="231-clipcursor">2.3.1 ClipCursor</h4>
+<ul>
+<li>ClipCursor 函数将鼠标光标剪贴到一个矩形区域</li>
+<li>使鼠标被限制在一个由 prc 参数指定的矩形区域内<pre><code class="language-c++">BOOL ClipCursor(CONST RECT *prc);
+</code></pre>
+</li>
+<li>允许剪贴鼠标光标可能会对其他线程产生不利的影响，而不允许剪贴鼠标光标会影响调用线程，系统实现了一种折中的方案：
+<ul>
+<li>当一个线程调用这个函数时，程序将光标剪贴到指定的矩形区域</li>
+<li>但若同步激活事件（用户点击其他程序的窗口、调用了 SetForgroundWindow，或按下了 Ctrl + Esc 组合键）发生，系统会停止剪贴鼠标光标的移动，允许鼠标在整个屏幕上自由移动</li>
+</ul>
+</li>
+</ul>
+<h4 id="232-鼠标捕获">2.3.2  鼠标捕获</h4>
+<p>捕获调用 SetCapture，释放调用 ReleaseCapture</p>
+<ul>
+<li>当一个窗口捕获鼠标时，它要求所有的鼠标消息从 RIT 发到调用线程的虚拟输入队列，并且所有的鼠标消息从虚拟输入队<br>
+列发到设置捕获的窗口，在调用 ReleaseCapture 之前，要一直持续这种鼠标消息的捕捉<br>
+鼠标的捕获必须与系统的强壮性折衷：</li>
+<li>当一个程序调用 SetCapture 时，RIT 将所有鼠标信息放入线程的虚拟输入队列</li>
+<li>SetCapture 要为调用 SetCapture 的线程设置局部输入状态变量</li>
+</ul>
+<p>做和不做鼠标捕获时，消息传递情况：</p>
+<ul>
+<li>一个程序在用户按一个鼠标按钮时调用 SetCapture</li>
+<li>鼠标没有按下时，RIT 不再将鼠标信息发往线程的虚拟输入队列，而是发往与鼠标光标所在的窗口相联系的输入队列</li>
+<li>也可以说，当用户释放了所有鼠标按钮时，鼠标捕获不再 在全系统范围内执行，而是在一个线程的局部范围内执行<br>
+若用户想激活一个其他线程所建立的窗口，系统自动向设置捕获的线程发送：鼠标按钮按下、鼠标按钮放开的消息，然后更新线程的局部输入状态变量，指出该线程不再有鼠标捕获</li>
+</ul>
+<br>
+<h2 id="3-将虚拟输入队列同局部输入状态挂接在一起">3. 将虚拟输入队列同局部输入状态挂接在一起</h2>
+<p>由上述讨论得：输入模型是强壮的，每个线程都有自己的局部输入状态环境，在必要时，每个线程还可以连接到 RIT 或从 RIT 断开</p>
+<h3 id="31-attachthreadinput-函数">3.1 AttachThreadInput 函数</h3>
+<ul>
+<li>可以通过多次调试 AttachThreadInput 函数让多个线程共享一个虚拟输入队列和局部输入状态变量</li>
+<li>可以利用 AttachThreadInput 函数来强制两个或多个线程共享同一个虚拟输入队列和一组局部输入状态变量<pre><code class="language-c++">BOOL AttachThreadInput(
+ DWORD idAttach,		//线程的ID，该线程所包含的虚拟输入队列是你不想再使用的
+ DWORD idAttachTo,	//另一个线程的ID，线程包含的虚拟输入队列，是想让两个线程共享的B
+ OOL fAttach;		//共享设为TRUE, 分开设为 FALSE
+ )
+</code></pre>
+</li>
+</ul>
+<h3 id="32-案例">3.2 案例</h3>
+<p>线程 A 调用 AttachThreadInput，传递线程 A 的 ID 作为第一个参数，线程 B 的 ID 作为第二个参数， TRUE 作为最后一个参数：</p>
+<pre><code class="language-c++">AttachThreadInput(AThreadID, BThreadID, TRUE);
+</code></pre>
+<ul>
+<li>发往 A1、B1、B2 的硬件输入事件，都将添加到线程 B 的虚拟输入队列中</li>
+<li>线程 A 的虚拟输入队列不再接收输入事件，除非再调用一次 AttachThreadInput 最后一个参数设为 FALSE</li>
+</ul>
+<h3 id="33-总结">3.3 总结</h3>
+<p>两个线程的输入都挂接在一起时，使线程共享单一的虚拟输入队列、同一组局部输入状态变量，但线程仍然使用自己的 登记消息队列、发送消息队列、应答消息队列和唤醒标志。<br>
+使用 AttachThreadInput 函数存在的问题：</p>
+<ul>
+<li>若让所有的线程都共享一个输入队列，就会严重削弱系统的强壮性</li>
+<li>若某一个线程接收一个按键消息并且挂起，其他的线程就不能接收任何输入</li>
+</ul>
+<p>综上所述，应该尽量避免使用 AttachThreadInput 函数，但也不是绝对的，以下列举两种使用AttachThreadInput 的情况<br>
+安装日志记录挂钩（journal record hook）或日志播放挂钩（journal playback hook）时</p>
+<ul>
+<li>当挂钩被卸载时，系统自动恢复所有线程，这样线程就可以使用 （挂钩安装前它们所使用的相同）输入队列</li>
+<li>当某个线程安装日志记录挂钩时，这个线程通常将 “硬件事件的通知信息” 保存或记录在一个文件上，因输入必须按进入的次序来记录，所以系统中每个线程要共享一个虚拟输入队列，使所有的输入处理同步<br>
+设某程序建立了两个线程：</li>
+<li>第一个线程建立了一个对话框，在这个对话框建立之后，第二个线程调用 GreatWindow，使用 WS_CHILD 风格，并向这个子窗口的双亲传递对话框的句柄</li>
+<li>系统用子窗口的线程调用 AttachThreadInput，让子窗口的线程使用（对话框线程所使用的）输入队列，这样就使对话框的 所有子窗口之间，对输入强制同步</li>
+</ul>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#1%E5%8E%9F%E5%A7%8B%E8%BE%93%E5%85%A5%E7%BA%BF%E7%A8%8B">1.原始输入线程</a>
+<ul>
+<li><a href="#11%E4%B8%8D%E5%90%8C%E7%9A%84%E7%BA%BF%E7%A8%8B%E5%A6%82%E4%BD%95%E8%BF%9E%E6%8E%A5%E5%88%B0-rit">1.1不同的线程如何连接到 RIT</a></li>
+</ul>
+</li>
+<li><a href="#2%E5%B1%80%E9%83%A8%E8%BE%93%E5%85%A5%E7%8A%B6%E6%80%81">2.局部输入状态</a>
+<ul>
+<li><a href="#21%E9%94%AE%E7%9B%98%E8%BE%93%E5%85%A5%E4%B8%8E%E7%84%A6%E7%82%B9">2.1键盘输入与焦点</a></li>
+<li><a href="#22%E6%BF%80%E6%B4%BB%E7%AA%97%E5%8F%A3%E5%87%BD%E6%95%B0">2.2激活窗口函数</a>
+<ul>
+<li><a href="#221setactivewindow-%E5%92%8C-getactivewindow">2.2.1SetActiveWindow 和 GetActiveWindow</a></li>
+<li><a href="#222bringwindowtotop-%E5%92%8C-setwindowpos">2.2.2BringWindowToTop 和 SetWindowPos</a></li>
+<li><a href="#223setforegroundwindow">2.2.3SetForegroundWindow</a></li>
+<li><a href="#224locksetforegroundwindow">2.2.4LockSetForegroundWindow</a></li>
+<li><a href="#225-%E5%90%8C%E6%AD%A5%E9%94%AE%E7%8A%B6%E6%80%81">2.2.5 同步键状态</a></li>
+</ul>
+</li>
+<li><a href="#23-%E9%BC%A0%E6%A0%87%E5%85%89%E6%A0%87%E7%AE%A1%E7%90%86">2.3 鼠标光标管理</a>
+<ul>
+<li><a href="#231-clipcursor">2.3.1 ClipCursor</a></li>
+<li><a href="#232-%E9%BC%A0%E6%A0%87%E6%8D%95%E8%8E%B7">2.3.2  鼠标捕获</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#3-%E5%B0%86%E8%99%9A%E6%8B%9F%E8%BE%93%E5%85%A5%E9%98%9F%E5%88%97%E5%90%8C%E5%B1%80%E9%83%A8%E8%BE%93%E5%85%A5%E7%8A%B6%E6%80%81%E6%8C%82%E6%8E%A5%E5%9C%A8%E4%B8%80%E8%B5%B7">3. 将虚拟输入队列同局部输入状态挂接在一起</a>
+<ul>
+<li><a href="#31-attachthreadinput-%E5%87%BD%E6%95%B0">3.1 AttachThreadInput 函数</a></li>
+<li><a href="#32-%E6%A1%88%E4%BE%8B">3.2 案例</a></li>
+<li><a href="#33-%E6%80%BB%E7%BB%93">3.3 总结</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://hensonguo.github.io/post/windows-he-xin-bian-cheng-chuang-kou/">
+              <h3 class="post-title">
+                windows核心编程-窗口
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://hensonguo.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

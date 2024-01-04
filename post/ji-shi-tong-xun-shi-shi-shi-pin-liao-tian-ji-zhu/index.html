@@ -1,0 +1,324 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>即时通讯实时视频聊天技术 | Icode</title>
+<link rel="shortcut icon" href="https://hensonguo.github.io/favicon.ico?v=1704354032694">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://hensonguo.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="即时通讯实时视频聊天技术 | Icode - Atom Feed" href="https://hensonguo.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="1.概述
+1.1 压缩了什么东西？
+原始视频压缩的目的是去除冗余信息，可以去除的冗余包括：
+
+空间冗余：图像相邻像素之间有较强的相关性
+时间冗余：视频序列的相邻图像之间内容相似
+编码冗余：不同像素值出现的概率不同
+视觉冗余：人的视觉系统对某..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://hensonguo.github.io">
+  <img class="avatar" src="https://hensonguo.github.io/images/avatar.png?v=1704354032694" alt="">
+  </a>
+  <h1 class="site-title">
+    Icode
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              即时通讯实时视频聊天技术
+            </h2>
+            <div class="post-info">
+              <span>
+                2023-10-09
+              </span>
+              <span>
+                5 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <h2 id="1概述">1.概述</h2>
+<h3 id="11-压缩了什么东西">1.1 压缩了什么东西？</h3>
+<p>原始视频压缩的目的是去除冗余信息，可以去除的冗余包括：</p>
+<ul>
+<li>空间冗余：图像相邻像素之间有较强的相关性</li>
+<li>时间冗余：视频序列的相邻图像之间内容相似</li>
+<li>编码冗余：不同像素值出现的概率不同</li>
+<li>视觉冗余：人的视觉系统对某些细节不敏感</li>
+<li>知识冗余：规律性的结构可由先验知识和背景知识得到</li>
+</ul>
+<h3 id="12-数据压缩是怎么分类的">1.2 数据压缩是怎么分类的？</h3>
+<ul>
+<li>无损压缩（Lossless）：压缩前、解压缩后图像完全一致X=X'，压缩比低(2:1~3:1)。典型格式例如：Winzip，JPEG-LS。</li>
+<li>有损压缩（Lossy）：压缩前解压缩后图像不一致X≠X'，压缩比高(10:1~20:1)，利用人的视觉系统的特性。典型格式例如：MPEG-2，H.264/AVC，AVS。</li>
+</ul>
+<h3 id="13-编解码的技术流程和原理">1.3 编解码的技术流程和原理</h3>
+<p><img src="http://www.52im.net/data/attachment/forum/201604/16/131633dhhwn5aj72hw8hja.png" alt="" loading="lazy"><br>
+<img src="http://www.52im.net/data/attachment/forum/201604/16/131639c5cxopo2d6ciqjj2.png" alt="" loading="lazy"></p>
+<h3 id="14-视频编码的标准">1.4 视频编码的标准</h3>
+<h4 id="141-编码标准作用">1.4.1 编码标准作用：</h4>
+<ul>
+<li>兼容：不同厂家生产的编码器压缩的码流能够被不同厂家的解码器解码</li>
+<li>高效：标准编解码器可以进行批量生产，节约成本。</li>
+</ul>
+<h3 id="142-主流的视频编码标准">1.4.2 主流的视频编码标准：</h3>
+<ul>
+<li>MPEG-2</li>
+<li>MPEG-4 Simple Profile</li>
+<li>H.264/AVC</li>
+<li>AVS</li>
+<li>VC-1</li>
+</ul>
+<h3 id="15-视频传输面临的问题">1.5 视频传输面临的问题</h3>
+<p>传输系统不可靠：</p>
+<ul>
+<li>带宽限制</li>
+<li>信号衰减</li>
+<li>噪声干扰</li>
+<li>传输延迟</li>
+</ul>
+<p>视频传输出现的问题：</p>
+<ul>
+<li>不能解码出正确的视频</li>
+<li>视频播放延迟</li>
+</ul>
+<h3 id="16-视频传输差错控制">1.6 视频传输差错控制</h3>
+<p>差错控制（Error Control）解决视频传输过程中由于数据丢失或延迟导致的问题。<br>
+差错控制技术有：</p>
+<ul>
+<li>信道编码差错控制技术</li>
+<li>编码器差错恢复</li>
+<li>解码器差错隐藏</li>
+</ul>
+<br>
+<h2 id="2数字视频介绍">2.数字视频介绍</h2>
+<h3 id="21-什么是图像什么是视频">2.1 什么是图像？什么是视频？</h3>
+<p>图像：是人对视觉感知的物质再现。三维自然场景的对象包括：深度，纹理和亮度信息。二维图像：纹理和亮度信息。<br>
+视频：连续的图像。视频由多幅图像构成，包含对象的运动信息，又称为运动图像。</p>
+<h3 id="22-何为数字视频">2.2 何为数字视频？</h3>
+<p>数字视频可以理解为自然场景空间和时间的数字采样表示。<br>
+空间采样的主要技术指标为：解析度（Resolution）(尺寸)<br>
+<img src="http://www.52im.net/data/attachment/forum/201604/16/133531j11txt22lqrkl2ik.png" alt="" loading="lazy"><br>
+时间采样的主要技术指标为：帧率（帧/秒）<br>
+<img src="http://www.52im.net/data/attachment/forum/201604/16/133400shn3fzexfoyknsef.png" alt="" loading="lazy"></p>
+<h3 id="23-人类视觉系统hvs">2.3 人类视觉系统HVS</h3>
+<p>HVS的构成：<br>
+眼睛、神经、大脑</p>
+<p>HVS特点：</p>
+<ul>
+<li>对高频信息不敏感</li>
+<li>对高对比度更敏感</li>
+<li>对亮度信息比色度信息更敏感</li>
+<li>对运动的信息更敏感</li>
+</ul>
+<h3 id="24-针对hvs的特点数字视频系统的设计应该考虑哪些因素">2.4 针对HVS的特点，数字视频系统的设计应该考虑哪些因素？</h3>
+<ul>
+<li>丢弃高频信息，只编码低频信息</li>
+<li>提高边缘信息的主观质量</li>
+<li>降低色度的解析度</li>
+<li>对感兴趣区域（Region of Interesting，ROI）进行特殊处理<br>
+<img src="http://www.52im.net/data/attachment/forum/201604/16/134008hc66ie7suttjmt6a.png" alt="" loading="lazy"></li>
+</ul>
+<h3 id="25-什么是rgb色彩空间">2.5 什么是RGB色彩空间？</h3>
+<p>三原色分别是红（R），绿（G），蓝（B）。任何颜色都可以通过按一定比例混合三原色产生。<br>
+RGB色度空间：</p>
+<ul>
+<li>由RGB三原色组成</li>
+<li>广泛用于BMP，TIFF，PPM等</li>
+<li>每个色度成分通常用8bit表示[0,255]</li>
+</ul>
+<h3 id="26-什么是yuv色彩空间">2.6. 什么是YUV色彩空间？</h3>
+<p>YUV色彩空间是指，Y：亮度分量，UV：两个色度分量。YUV能更好的反映HVS特点。YUV将颜色的亮度和色度分离开来，这使得在视频编码和传输时更加高效。</p>
+<ul>
+<li>由于YUV将亮度和色度分离，因此在视频压缩时可以对色度进行更多的压缩，从而达到更好的压缩效果。</li>
+<li>YUV主要用于视频编码、传输和解码等领域。</li>
+<li>色彩范围是-128到127。</li>
+</ul>
+<h3 id="27-rgb如何转化到yuv空间">2.7 RGB如何转化到YUV空间？</h3>
+<p>亮度分量Y与三原色有如下关系：<br>
+Y = 0.299R + 0.587G + 0.114B，其中R、G、B分别表示红、绿、蓝三个颜色通道的强度值。这个加权比例是由国际电联（ITU）制定的标准，用于将彩色视频信号转换为黑白视频信号。<br>
+<img src="http://www.52im.net/data/attachment/forum/201604/16/134433gmjcmzeeeaem7xhc.png" alt="" loading="lazy"><br>
+主流的编解码标准的压缩对象都是YUV图像。</p>
+<h3 id="28-何为yuv图像分量采样">2.8 何为YUV图像分量采样？</h3>
+<p>YUV图像可以根据HVS的特点，对色度进行分量采样，可以降低视频数据量。<br>
+根据亮度和色度分量的采样比率，YUV图像通常有以下几种分量方式：<br>
+<img src="https://upload-images.jianshu.io/upload_images/305749-48f6b80a529984bc.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/576/format/webp" alt="" loading="lazy"></p>
+<h3 id="29-通用的yuv图像格式有哪些">2.9 通用的YUV图像格式有哪些？</h3>
+<p>根据YUV图像的亮度、分辨率定义了如下图像格式：<br>
+<img src="https://upload-images.jianshu.io/upload_images/305749-0a5d5514f490a078.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/576/format/webp" alt="" loading="lazy"></p>
+<h3 id="210-如何理解帧和场图像">2.10  如何理解帧和场图像？</h3>
+<p>一帧图像包括两场——顶场，底场：<br>
+<img src="https://upload-images.jianshu.io/upload_images/305749-cc4c4f460dde9e38.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/563/format/webp" alt="" loading="lazy"><br>
+<img src="https://upload-images.jianshu.io/upload_images/305749-df1387f47e94e980.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/576/format/webp" alt="" loading="lazy"></p>
+<h3 id="211-如何理解帧和场图像">2.11  如何理解帧和场图像？</h3>
+<p>逐行图像：一帧图像的两场在同一时间得到，ttop=tbot。<br>
+隔行图像：一帧图像的两场在不同时间得到，ttop≠tbot。<br>
+<img src="https://images.cnblogs.com/cnblogs_com/xkfz007/201207/201207290832396422.png" alt="" loading="lazy"></p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#1%E6%A6%82%E8%BF%B0">1.概述</a>
+<ul>
+<li><a href="#11-%E5%8E%8B%E7%BC%A9%E4%BA%86%E4%BB%80%E4%B9%88%E4%B8%9C%E8%A5%BF">1.1 压缩了什么东西？</a></li>
+<li><a href="#12-%E6%95%B0%E6%8D%AE%E5%8E%8B%E7%BC%A9%E6%98%AF%E6%80%8E%E4%B9%88%E5%88%86%E7%B1%BB%E7%9A%84">1.2 数据压缩是怎么分类的？</a></li>
+<li><a href="#13-%E7%BC%96%E8%A7%A3%E7%A0%81%E7%9A%84%E6%8A%80%E6%9C%AF%E6%B5%81%E7%A8%8B%E5%92%8C%E5%8E%9F%E7%90%86">1.3 编解码的技术流程和原理</a></li>
+<li><a href="#14-%E8%A7%86%E9%A2%91%E7%BC%96%E7%A0%81%E7%9A%84%E6%A0%87%E5%87%86">1.4 视频编码的标准</a>
+<ul>
+<li><a href="#141-%E7%BC%96%E7%A0%81%E6%A0%87%E5%87%86%E4%BD%9C%E7%94%A8">1.4.1 编码标准作用：</a></li>
+</ul>
+</li>
+<li><a href="#142-%E4%B8%BB%E6%B5%81%E7%9A%84%E8%A7%86%E9%A2%91%E7%BC%96%E7%A0%81%E6%A0%87%E5%87%86">1.4.2 主流的视频编码标准：</a></li>
+<li><a href="#15-%E8%A7%86%E9%A2%91%E4%BC%A0%E8%BE%93%E9%9D%A2%E4%B8%B4%E7%9A%84%E9%97%AE%E9%A2%98">1.5 视频传输面临的问题</a></li>
+<li><a href="#16-%E8%A7%86%E9%A2%91%E4%BC%A0%E8%BE%93%E5%B7%AE%E9%94%99%E6%8E%A7%E5%88%B6">1.6 视频传输差错控制</a></li>
+</ul>
+</li>
+<li><a href="#2%E6%95%B0%E5%AD%97%E8%A7%86%E9%A2%91%E4%BB%8B%E7%BB%8D">2.数字视频介绍</a>
+<ul>
+<li><a href="#21-%E4%BB%80%E4%B9%88%E6%98%AF%E5%9B%BE%E5%83%8F%E4%BB%80%E4%B9%88%E6%98%AF%E8%A7%86%E9%A2%91">2.1 什么是图像？什么是视频？</a></li>
+<li><a href="#22-%E4%BD%95%E4%B8%BA%E6%95%B0%E5%AD%97%E8%A7%86%E9%A2%91">2.2 何为数字视频？</a></li>
+<li><a href="#23-%E4%BA%BA%E7%B1%BB%E8%A7%86%E8%A7%89%E7%B3%BB%E7%BB%9Fhvs">2.3 人类视觉系统HVS</a></li>
+<li><a href="#24-%E9%92%88%E5%AF%B9hvs%E7%9A%84%E7%89%B9%E7%82%B9%E6%95%B0%E5%AD%97%E8%A7%86%E9%A2%91%E7%B3%BB%E7%BB%9F%E7%9A%84%E8%AE%BE%E8%AE%A1%E5%BA%94%E8%AF%A5%E8%80%83%E8%99%91%E5%93%AA%E4%BA%9B%E5%9B%A0%E7%B4%A0">2.4 针对HVS的特点，数字视频系统的设计应该考虑哪些因素？</a></li>
+<li><a href="#25-%E4%BB%80%E4%B9%88%E6%98%AFrgb%E8%89%B2%E5%BD%A9%E7%A9%BA%E9%97%B4">2.5 什么是RGB色彩空间？</a></li>
+<li><a href="#26-%E4%BB%80%E4%B9%88%E6%98%AFyuv%E8%89%B2%E5%BD%A9%E7%A9%BA%E9%97%B4">2.6. 什么是YUV色彩空间？</a></li>
+<li><a href="#27-rgb%E5%A6%82%E4%BD%95%E8%BD%AC%E5%8C%96%E5%88%B0yuv%E7%A9%BA%E9%97%B4">2.7 RGB如何转化到YUV空间？</a></li>
+<li><a href="#28-%E4%BD%95%E4%B8%BAyuv%E5%9B%BE%E5%83%8F%E5%88%86%E9%87%8F%E9%87%87%E6%A0%B7">2.8 何为YUV图像分量采样？</a></li>
+<li><a href="#29-%E9%80%9A%E7%94%A8%E7%9A%84yuv%E5%9B%BE%E5%83%8F%E6%A0%BC%E5%BC%8F%E6%9C%89%E5%93%AA%E4%BA%9B">2.9 通用的YUV图像格式有哪些？</a></li>
+<li><a href="#210-%E5%A6%82%E4%BD%95%E7%90%86%E8%A7%A3%E5%B8%A7%E5%92%8C%E5%9C%BA%E5%9B%BE%E5%83%8F">2.10  如何理解帧和场图像？</a></li>
+<li><a href="#211-%E5%A6%82%E4%BD%95%E7%90%86%E8%A7%A3%E5%B8%A7%E5%92%8C%E5%9C%BA%E5%9B%BE%E5%83%8F">2.11  如何理解帧和场图像？</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://hensonguo.github.io/post/h264/">
+              <h3 class="post-title">
+                H264
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://hensonguo.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

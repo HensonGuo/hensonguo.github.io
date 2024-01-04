@@ -1,0 +1,635 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>线程同步与死锁 | Icode</title>
+<link rel="shortcut icon" href="https://hensonguo.github.io/favicon.ico?v=1704354032694">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://hensonguo.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="线程同步与死锁 | Icode - Atom Feed" href="https://hensonguo.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="在多线程环境中运行的代码段，需要考虑是否存在竞态条件，如果存在竞态条件，我们就说该代码段不是线程安全的，不能直接运行在多线程环境当中，对于这样的代码段，我们经常称之为临界区资源，对于临界区资源，多线程环境下需要保证它以原子操作执行，要保证临..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://hensonguo.github.io">
+  <img class="avatar" src="https://hensonguo.github.io/images/avatar.png?v=1704354032694" alt="">
+  </a>
+  <h1 class="site-title">
+    Icode
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              线程同步与死锁
+            </h2>
+            <div class="post-info">
+              <span>
+                2022-09-07
+              </span>
+              <span>
+                24 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <p>在多线程环境中运行的代码段，需要考虑是否存在竞态条件，如果存在竞态条件，我们就说该代码段不是线程安全的，不能直接运行在多线程环境当中，对于这样的代码段，我们经常称之为临界区资源，对于临界区资源，多线程环境下需要保证它以原子操作执行，要保证临界区的原子操作，就需要用到线程间的互斥操作-锁机制。</p>
+<h3 id="互斥锁mutex">互斥锁mutex</h3>
+<pre><code class="language-c++">// 车票总数是100张
+volatile int tickets = 100; 
+// 全局的互斥锁
+std::mutex mtx;
+
+// 线程函数
+void sellTicketTask(std::string wndName)
+{
+	while (tickets &gt; 0)
+	{
+		// 获取互斥锁资源
+		mtx.lock();//或pthread_mutex_lock(&amp;mutex);
+		if (tickets &gt; 0)
+		{
+			std::cout &lt;&lt; wndName &lt;&lt; &quot; 售卖第&quot; &lt;&lt; tickets &lt;&lt; &quot;张票&quot; &lt;&lt; std::endl;
+			tickets--;
+		}
+		// 释放互斥锁资源
+		mtx.unlock();//或pthread_mutex_unlock(&amp;mutex);
+
+		// 每卖出一张票，睡眠100ms，让每个窗口都有机会卖票
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}
+}
+
+// 模拟车站窗口卖票，使用C++11 线程互斥锁mutex
+int main()
+{
+	// 创建三个模拟窗口卖票线程
+	std::thread t1(sellTicketTask, &quot;车票窗口一&quot;);
+	std::thread t2(sellTicketTask, &quot;车票窗口二&quot;);
+	std::thread t3(sellTicketTask, &quot;车票窗口三&quot;);
+
+	// 等待三个线程执行完成
+	t1.join();
+	t2.join();
+	t3.join();
+
+	return 0;
+}
+</code></pre>
+<h3 id="自旋锁spin">自旋锁spin</h3>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span>多处理器操作系统中某些资源是有限的，不同线程需要互斥访问，因此需要引入锁概念，只有获取锁的线程才能够对资源进行访问。多线程的核心是CPU的时间分片，同一时刻只能有一个线程获取到锁。对于没有获取到锁的线程通常有两种处理方式：自旋锁，没有获取到锁的线程会一直循环等待判断资源是否已经释放锁，不用将线程阻塞起来；互斥锁，把未获取到锁的线程阻塞起来，等待重新调度请求。</p>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span>自旋锁（spinlock）：<font color=red>是指当一个线程在获取锁的时候，如果锁已经被其它线程获取，那么该线程将循环等待，自旋（空转），然后不断的判断锁是否能够被成功获取，直到获取到锁才会退出循环。</font></p>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span>获取锁的线程一直处于活跃状态，但是并没有执行任何有效的任务，使用这种锁会造成busy-waiting。</p>
+<p>互斥锁和自旋锁的对比：<br>
+<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span><font color=green>当锁的内容很少的时候，继续等待的时间代价比 线程切换的时间代价更小的 时候，选择使用自旋锁（因为互斥锁会切换线程，等待重新调度请求，判断锁是否被占用，如果占用，继续阻塞，并切换到其他线程。如果切换线程的代价比 等待的代价大，可以使用自旋锁。否则使用互斥锁）。</font></p>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span><font color=green>锁的内容比较多的时候，使用互斥锁。（比如，线程安全的红黑树，可以使用mutex）</font></p>
+<h3 id="thread线程类库基于cas的原子类">thread线程类库基于CAS的原子类</h3>
+<p>实际上，上面代码中因为tickets车票数量是整数，因此它的- -操作需要在多线程环境下添加互斥操作，但是mutex互斥锁毕竟比较重，对于系统消耗有些大，C++11的thread类库提供了针对简单类型的原子操作类，如std::atomic_int，atomic_long，atomic_bool等，<strong>它们值的增减都是基于CAS操作的</strong>，既保证了线程安全，效率还非常高。</p>
+<pre><code class="language-c++">#include &lt;iostream&gt;
+#include &lt;atomic&gt; // C++11线程库提供的原子类
+#include &lt;thread&gt; // C++线程类库的头文件
+#include &lt;vector&gt;
+
+// 原子整形，CAS操作保证给count自增自减的原子操作
+std::atomic_int count = 0;
+
+// 线程函数
+void sumTask()
+{
+	// 每个线程给count加1000次
+	for (int i = 0; i &lt; 1000; ++i)
+	{
+		count++;
+	}
+}
+
+int main()
+{
+	// 创建10个线程放在容器当中
+	std::vector&lt;std::thread&gt; vec;
+	for (int i = 0; i &lt; 10; ++i)
+	{
+		vec.push_back(std::thread(sumTask));
+	}
+
+	// 等待线程执行完成
+	for (int i = 0; i &lt; vec.size(); ++i)
+	{
+		vec[i].join();
+	}
+
+	// 所有子线程运行结束，count的结果每次运行应该都是10000
+	std::cout &lt;&lt; &quot;count : &quot; &lt;&lt; count &lt;&lt; std::endl;
+
+	return 0;
+}
+</code></pre>
+<h3 id="线程同步通信">线程同步通信</h3>
+<p>多线程在运行过程中，各个线程都是随着OS的调度算法，占用CPU时间片来执行指令做事情，每个线程的运行完全没有顺序可言。但是在某些应用场景下，一个线程需要等待另外一个线程的运行结果，才能继续往下执行，这就需要涉及线程之间的同步通信机制。</p>
+<p>线程间同步通信最典型的例子就是生产者-消费者模型，生产者线程生产出产品以后，会通知消费者线程去消费产品；如果消费者线程去消费产品，发现还没有产品生产出来，它需要通知生产者线程赶快生产产品，等生产者线程生产出产品以后，消费者线程才能继续往下执行。</p>
+<p>C++11 线程库提供的条件变量condition_variable，就是Linux平台下的Condition Variable机制，用于解决线程间的同步通信问题，下面通过代码演示一个生产者-消费者线程模型，仔细分析代码：</p>
+<pre><code class="language-c++">#include &lt;iostream&gt;           // std::cout
+#include &lt;thread&gt;             // std::thread
+#include &lt;mutex&gt;              // std::mutex, std::unique_lock
+#include &lt;condition_variable&gt; // std::condition_variable
+#include &lt;vector&gt;
+
+// 定义互斥锁(条件变量需要和互斥锁一起使用)
+std::mutex mtx;
+// 定义条件变量(用来做线程间的同步通信)
+std::condition_variable cv;
+// 定义vector容器，作为生产者和消费者共享的容器
+std::vector&lt;int&gt; vec;
+
+// 生产者线程函数
+void producer()
+{
+	// 生产者每生产一个，就通知消费者消费一个
+	for (int i = 1; i &lt;= 10; ++i)
+	{
+		// 获取mtx互斥锁资源
+		std::unique_lock&lt;std::mutex&gt; lock(mtx);
+
+		// 如果容器不为空，代表还有产品未消费，等待消费者线程消费完，再生产
+		while (!vec.empty())
+		{
+			// 判断容器不为空，进入等待条件变量的状态，释放mtx锁，
+			// 让消费者线程抢到锁能够去消费产品
+			cv.wait(lock);
+		}
+		vec.push_back(i); // 表示生产者生产的产品序号i
+		std::cout &lt;&lt; &quot;producer生产产品:&quot; &lt;&lt; i &lt;&lt; std::endl;
+
+		/* 
+		生产者线程生产完产品，通知等待在cv条件变量上的消费者线程，
+		可以开始消费产品了，然后释放锁mtx
+		*/
+		cv.notify_all();
+
+		// 生产一个产品，睡眠100ms
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}
+}
+// 消费者线程函数
+void consumer()
+{
+	// 消费者每消费一个，就通知生产者生产一个
+	for (int i = 1; i &lt;= 10; ++i)
+	{
+		// 获取mtx互斥锁资源
+		std::unique_lock&lt;std::mutex&gt; lock(mtx);
+
+		// 如果容器为空，代表还有没有产品可消费，等待生产者生产，再消费
+		while (vec.empty())
+		{
+			// 判断容器为空，进入等待条件变量的状态，释放mtx锁，
+			// 让生产者线程抢到锁能够去生产产品
+			cv.wait(lock);
+		}
+		int data = vec.back(); // 表示消费者消费的产品序号i
+		vec.pop_back();
+		std::cout &lt;&lt; &quot;consumer消费产品:&quot; &lt;&lt; data &lt;&lt; std::endl;
+
+		/*
+		消费者消费完产品，通知等待在cv条件变量上的生产者线程，
+		可以开始生产产品了，然后释放锁mtx
+		*/
+		cv.notify_all();
+
+		// 消费一个产品，睡眠100ms
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}
+}
+int main()
+{
+	// 创建生产者和消费者线程
+	std::thread t1(producer);
+	std::thread t2(consumer);
+
+	// main主线程等待所有子线程执行完
+	t1.join();
+	t2.join();
+
+	return 0;
+}
+</code></pre>
+<h3 id="死锁问题案例分析解决">死锁问题案例分析解决</h3>
+<p>当一个程序的多个线程获取多个互斥锁资源的时候，就有可能发生死锁问题，比如线程A先获取了锁1，线程B获取了锁2，进而线程A还需要获取锁2才能继续执行，但是由于锁2被线程B持有还没有释放，线程A为了等待锁2资源就阻塞了；线程B这时候需要获取锁1才能往下执行，但是由于锁1被线程A持有，导致A也进入阻塞。</p>
+<p>线程A和线程B都在等待对方释放锁资源，但是它们又不肯释放原来的锁资源，导致线程A和B一直互相等待，进程死锁了。下面代码示例演示这个问题：</p>
+<pre><code class="language-c++">#include &lt;iostream&gt;           // std::cout
+#include &lt;thread&gt;             // std::thread
+#include &lt;mutex&gt;              // std::mutex, std::unique_lock
+#include &lt;condition_variable&gt; // std::condition_variable
+#include &lt;vector&gt;
+
+// 锁资源1
+std::mutex mtx1;
+// 锁资源2
+std::mutex mtx2;
+
+// 线程A的函数
+void taskA()
+{
+	// 保证线程A先获取锁1
+	std::lock_guard&lt;std::mutex&gt; lockA(mtx1);
+	std::cout &lt;&lt; &quot;线程A获取锁1&quot; &lt;&lt; std::endl;
+
+	// 线程A睡眠2s再获取锁2，保证锁2先被线程B获取，模拟死锁问题的发生
+	std::this_thread::sleep_for(std::chrono::seconds(2));
+
+	// 线程A先获取锁2
+	std::lock_guard&lt;std::mutex&gt; lockB(mtx2);
+	std::cout &lt;&lt; &quot;线程A获取锁2&quot; &lt;&lt; std::endl;
+
+	std::cout &lt;&lt; &quot;线程A释放所有锁资源，结束运行！&quot; &lt;&lt; std::endl;
+}
+
+// 线程B的函数
+void taskB()
+{
+	// 线程B先睡眠1s保证线程A先获取锁1
+	std::this_thread::sleep_for(std::chrono::seconds(1));
+	std::lock_guard&lt;std::mutex&gt; lockB(mtx2);
+	std::cout &lt;&lt; &quot;线程B获取锁2&quot; &lt;&lt; std::endl;
+
+	// 线程B尝试获取锁1
+	std::lock_guard&lt;std::mutex&gt; lockA(mtx1);
+	std::cout &lt;&lt; &quot;线程B获取锁1&quot; &lt;&lt; std::endl;
+
+	std::cout &lt;&lt; &quot;线程B释放所有锁资源，结束运行！&quot; &lt;&lt; std::endl;
+}
+int main()
+{
+	// 创建生产者和消费者线程
+	std::thread t1(taskA);
+	std::thread t2(taskB);
+
+	// main主线程等待所有子线程执行完
+	t1.join();
+	t2.join();
+
+	return 0;
+}
+</code></pre>
+<p>可以看到，线程A获取锁1、线程B获取锁2以后，进程就不往下继续执行了，一直等待在这里，如果这是我们碰到的一个问题场景，我们如何判断出这是由于线程间死锁引起的呢？</p>
+<p>先通过ps命令查看一下进程当前的运行状态和PID，如下：</p>
+<pre><code>root@tony-virtual-machine:/home/tony# ps -aux | grep a.out
+tony 1953 0.0 0.0 98108 1904 pts/0 Sl+ 10:41 0:00 ./a.out
+root 2064 0.0 0.0 21536 1076 pts/1 S+ 10:51 0:00 grep --color=auto a.out
+从上面的命令可以看出，a.out进程的PID是1953，当前状态是Sl+，相当于是多线程程序，全部进入阻塞状态。
+</code></pre>
+<p>通过top命令再查看一下进程内每个线程具体的运行情况，如下：</p>
+<pre><code>root@tony-virtual-machine:/home/tony# top -Hp 1953
+
+进程 USER PR NI VIRT RES SHR CPU %MEM TIME+ COMMAND
+1953 tony 20 0 98108 1904 1752 S 0.0 0.1 0:00.00 a.out
+1954 tony 20 0 98108 1904 1752 S 0.0 0.1 0:00.00 a.out
+1955 tony 20 0 98108 1904 1752 S 0.0 0.1 0:00.00 a.out
+</code></pre>
+<p>从top命令的打印信息可以看出，所有线程都进入阻塞状态，CPU占用率都为0.0，可以排除是死循环的问题，因为死循环会造成CPU使用率居高不下，而且线程的状态也不会是S。那么接下来有可能是由于I/O网络事件没有发生使线程阻塞，或者是线程发生死锁问题了。</p>
+<p>通过gdb远程调试正在运行的程序，打印进程每一个线程的调用堆栈信息，过程如下：</p>
+<p>通过gdb attach pid远程调试上面的a.out进程，命令如下：</p>
+<pre><code>root@tony-virtual-machine:/home/tony# gdb attach 1953
+</code></pre>
+<p>进入gdb调试命令行以后，打印所有线程的调用栈信息，信息如下：<br>
+(gdb) thread apply all bt</p>
+<pre><code>Thread 3 (Thread 0x7feb523ec700 (LWP 1955)):
+#0 _llllock_wait () at …/sysdeps/unix/sysv/linux/x86_64/lowlevellock.S:135
+#1 0x00007feb53928023 in __GI___pthread_mutex_lock (mutex=0x5646aabe7140 ) at …/nptl/pthread_mutex_lock.c:78
+#2 0x00005646aa9e40bf in __gthread_mutex_lock(pthread_mutex_t*) ()
+#3 0x00005646aa9e4630 in std::mutex::lock() ()
+#4 0x00005646aa9e46ac in std::lock_guardstd::mutex::lock_guard(std::mutex&amp;) ()
+#5 0x00005646aa9e42c0 in taskB() ()
+#6 0x00005646aa9e4bdb in void std::__invoke_impl&lt;void, void ()()&gt;(std::__invoke_other, void (&amp;&amp;)()) ()
+#7 0x00005646aa9e49e8 in std::__invoke_result&lt;void ()()&gt;::type std::__invoke&lt;void ()()&gt;(void (&amp;&amp;)()) ()
+#8 0x00005646aa9e50b6 in decltype (__invoke((_S_declval&lt;0ul&gt;)())) std::thread::_Invoker&lt;std::tuple&lt;void ()()&gt; &gt;::_M_invoke&lt;0ul&gt;(std::_Index_tuple&lt;0ul&gt;) ()
+#9 0x00005646aa9e5072 in std::thread::_Invoker&lt;std::tuple&lt;void ()()&gt; &gt;::operator()() ()
+#10 0x00005646aa9e5042 in std::thread::_State_impl&lt;std::thread::_Invoker&lt;std::tuple&lt;void ()()&gt; &gt; &gt;::_M_run() ()
+#11 0x00007feb5365257f in ?? () from /usr/lib/x86_64-linux-gnu/libstdc++.so.6
+#12 0x00007feb539256db in start_thread (arg=0x7feb523ec700) at pthread_create.c:463
+#13 0x00007feb530ad88f in clone () at …/sysdeps/unix/sysv/linux/x86_64/clone.S:95
+
+Thread 2 (Thread 0x7feb52bed700 (LWP 1954)):
+#0 _llllock_wait () at …/sysdeps/unix/sysv/linux/x86_64/lowlevellock.S:135
+#1 0x00007feb53928023 in __GI___pthread_mutex_lock (mutex=0x5646aabe7180 ) at …/nptl/pthread_mutex_lock.c:78
+#2 0x00005646aa9e40bf in __gthread_mutex_lock(pthread_mutex_t*) ()
+#3 0x00005646aa9e4630 in std::mutex::lock() ()
+#4 0x00005646aa9e46ac in std::lock_guardstd::mutex::lock_guard(std::mutex&amp;) ()
+#5 0x00005646aa9e4183 in taskA() ()
+#6 0x00005646aa9e4bdb in void std::__invoke_impl&lt;void, void ()()&gt;(std::__invoke_other, void (&amp;&amp;)()) ()
+#7 0x00005646aa9e49e8 in std::__invoke_result&lt;void ()()&gt;::type std::__invoke&lt;void ()()&gt;(void (&amp;&amp;)()) ()
+#8 0x00005646aa9e50b6 in decltype (__invoke((_S_declval&lt;0ul&gt;)())) std::thread::_Invoker&lt;std::tuple&lt;void ()()&gt; &gt;::_M_invoke&lt;0ul&gt;(std::_Index_tuple&lt;0ul&gt;) ()
+#9 0x00005646aa9e5072 in std::thread::_Invoker&lt;std::tuple&lt;void ()()&gt; &gt;::operator()() ()
+#10 0x00005646aa9e5042 in std::thread::_State_impl&lt;std::thread::_Invoker&lt;std::tuple&lt;void ()()&gt; &gt; &gt;::_M_run() ()
+#11 0x00007feb5365257f in ?? () from /usr/lib/x86_64-linux-gnu/libstdc++.so.6
+#12 0x00007feb539256db in start_thread (arg=0x7feb52bed700) at pthread_create.c:463
+#13 0x00007feb530ad88f in clone () at …/sysdeps/unix/sysv/linux/x86_64/clone.S:95
+
+Thread 1 (Thread 0x7feb53d4b740 (LWP 1953)):
+—Type to continue, or q to quit—
+#0 0x00007feb53926d2d in __GI___pthread_timedjoin_ex (threadid=140648682280704, thread_return=0x0, abstime=0x0,
+block=) at pthread_join_common.c:89
+#1 0x00007feb536527d3 in std::thread::join() () from /usr/lib/x86_64-linux-gnu/libstdc++.so.6
+#2 0x00005646aa9e43bb in main ()
+(gdb)
+从上面的线程调用栈信息可以看到，当前进程有三个线程，分别是Thread1是main线程，Thread2是taskA线程，Thread3是taskB线程。
+
+从调用栈信息可以看到，Thread3线程进入S阻塞状态的原因是因为它最后在#0 _llllock_wait () at，也就是它在等待获取一把锁(lock_wait)，而且堆栈信息打印的很清晰，#1 0x00007feb53928023 in __GI___pthread_mutex_lock (mutex=0x5646aabe7140 ) at …/nptl/pthread_mutex_lock.c:78，Thread3在获取而获取不到，因此进入阻塞状态了。这里结合代码分析，Thread3线程（也就是taskB）最后在这里阻塞了：
+
+void taskB()
+{
+// 线程B先睡眠1s保证线程A先获取锁1
+std::this_thread::sleep_for(std::chrono::seconds(1));
+std::lock_guardstd::mutex lockB(mtx2);
+std::cout &lt;&lt; “线程B获取锁2” &lt;&lt; std::endl;
+// 线程B尝试获取锁1
+std::lock_guardstd::mutex lockA(mtx1); ===》 这里阻塞了！如果不知道怎么定位到源代码行上，看下一小节！
+std::cout &lt;&lt; “线程B获取锁1” &lt;&lt; std::endl;
+std::cout &lt;&lt; “线程B释放所有锁资源，结束运行！” &lt;&lt; std::endl;
+}
+</code></pre>
+<p>依然是从调用栈信息可以看到，Thread2线程进入S阻塞状态的原因是因为它最后在#0 _llllock_wait () at，也就是它在等待获取一把锁(lock_wait)，而且堆栈信息打印的很清晰，#1 0x00007feb53928023 in __GI___pthread_mutex_lock (mutex=0x5646aabe7180 ) at …/nptl/pthread_mutex_lock.c:78，Thread2在获取而获取不到，因此进入阻塞状态了。这里结合代码分析，Thread2线程（也就是taskA）最后在这里阻塞了：</p>
+<p>void taskA()</p>
+<p>{</p>
+<p>// 保证线程A先获取锁1</p>
+<p>std::lock_guardstd::mutex lockA(mtx1);</p>
+<p>std::cout &lt;&lt; “线程A获取锁1” &lt;&lt; std::endl;</p>
+<p>// 线程A睡眠2s再获取锁2，保证锁2先被线程B获取，模拟死锁问题的发生</p>
+<p>std::this_thread::sleep_for(std::chrono::seconds(2));</p>
+<p>// 线程A先获取锁2</p>
+<p>std::lock_guardstd::mutex lockB(mtx2); ===》 这里阻塞了！如果不知道怎么定位到源代码行上，看下一小节！</p>
+<p>std::cout &lt;&lt; “线程A获取锁2” &lt;&lt; std::endl;</p>
+<p>std::cout &lt;&lt; “线程A释放所有锁资源，结束运行！” &lt;&lt; std::endl;</p>
+<p>}</p>
+<p>既然定位到taskA和taskB线程阻塞的原因，都是因为锁获取不到，然后再结合源码进行分析定位，最终发现taskA之所以获取不到mtx2，是因为mtx2早被taskB线程获取了；同样taskB之所以获取不到mtx1，是因为mtx1早被taskA线程获取了，导致所有线程进入阻塞状态，等待锁资源的获取，但是又因为没有线程释放锁，最终导致死锁问题。（从各线程调用栈信息能看出来，这里面和I/O网络事件没什么关系）</p>
+<h3 id="怎么在源码上定位到问题代码">怎么在源码上定位到问题代码</h3>
+<p>实际上，上面的代码运行一般是发布后的release版本，内部没有调试信息，我们如果想把死锁的原因定位到源码的某一行代码上，就需要一个debug版本（g++编译添加-g选项）类似生产pdb文件，操作如下：</p>
+<p>1.编译命令</p>
+<pre><code>tony@tony-virtual-machine:~/code$ g++ 20190316.cpp -g -lpthread
+</code></pre>
+<ol>
+<li>运行代码</li>
+</ol>
+<pre><code>tony@tony-virtual-machine:~/code$ ./a.out
+</code></pre>
+<p>线程A获取锁1</p>
+<p>线程B获取锁2</p>
+<p>…(程序到这里不往下运行了)</p>
+<p>3.gdb调试该进程</p>
+<pre><code>root@tony-virtual-machine:/home/tony/code# ps -ef | grep a.out
+tony 2617 1535 0 12:32 pts/0 00:00:00 ./a.out
+root@tony-virtual-machine:/home/tony/code# gdb attach 2617
+</code></pre>
+<p>4.查看当前所有的线程<br>
+(gdb) info threads</p>
+<pre><code> Id   Target Id         Frame 
+* 1    Thread 0x7f8c63002740 (LWP 2617) &quot;a.out&quot; 0x00007f8c62bddd2d in __GI___pthread_timedjoin_ex (
+    threadid=140240914892544, thread_return=0x0, abstime=0x0, block=&lt;optimized out&gt;) at pthread_join_common.c:89
+  2    Thread 0x7f8c61ea4700 (LWP 2618) &quot;a.out&quot; __lll_lock_wait () at ../sysdeps/unix/sysv/linux/x86_64/lowlevellock.S:135
+  3    Thread 0x7f8c616a3700 (LWP 2619) &quot;a.out&quot; __lll_lock_wait () at ../sysdeps/unix/sysv/linux/x86_64/lowlevellock.S:135
+</code></pre>
+<p>可以看到有三个线程。</p>
+<p>5.切换到线程2</p>
+<p>(gdb) thread 2</p>
+<p>6.查看线程2目前的调用栈信息，where或者bt命令都可以</p>
+<p>(gdb) where</p>
+<pre><code>(gdb) where
+#0  __lll_lock_wait () at ../sysdeps/unix/sysv/linux/x86_64/lowlevellock.S:135
+#1  0x00007f8c62bdf023 in __GI___pthread_mutex_lock (mutex=0x55678928e180 &lt;mtx2&gt;) at ../nptl/pthread_mutex_lock.c:78
+#2  0x000055678908b0bf in __gthread_mutex_lock (__mutex=0x55678928e180 &lt;mtx2&gt;)
+    at /usr/include/x86_64-linux-gnu/c++/7/bits/gthr-default.h:748
+#3  0x000055678908b630 in std::mutex::lock (this=0x55678928e180 &lt;mtx2&gt;) at /usr/include/c++/7/bits/std_mutex.h:103
+#4  0x000055678908b6ac in std::lock_guard&lt;std::mutex&gt;::lock_guard (this=0x7f8c61ea3dc0, __m=...)
+    at /usr/include/c++/7/bits/std_mutex.h:162
+#5  0x000055678908b183 in taskA () at 20190316.cpp:23
+#6  0x000055678908bbdb in std::__invoke_impl&lt;void, void (*)()&gt; (__f=@0x556789d78e78: 0x55678908b0f7 &lt;taskA()&gt;)
+    at /usr/include/c++/7/bits/invoke.h:60
+#7  0x000055678908b9e8 in std::__invoke&lt;void (*)()&gt; (__fn=@0x556789d78e78: 0x55678908b0f7 &lt;taskA()&gt;)
+    at /usr/include/c++/7/bits/invoke.h:95
+#8  0x000055678908c0b6 in std::thread::_Invoker&lt;std::tuple&lt;void (*)()&gt; &gt;::_M_invoke&lt;0ul&gt; (this=0x556789d78e78)
+    at /usr/include/c++/7/thread:234
+#9  0x000055678908c072 in std::thread::_Invoker&lt;std::tuple&lt;void (*)()&gt; &gt;::operator() (this=0x556789d78e78)
+    at /usr/include/c++/7/thread:243
+#10 0x000055678908c042 in std::thread::_State_impl&lt;std::thread::_Invoker&lt;std::tuple&lt;void (*)()&gt; &gt; &gt;::_M_run (
+    this=0x556789d78e70) at /usr/include/c++/7/thread:186
+#11 0x00007f8c6290957f in ?? () from /usr/lib/x86_64-linux-gnu/libstdc++.so.6
+#12 0x00007f8c62bdc6db in start_thread (arg=0x7f8c61ea4700) at pthread_create.c:463
+#13 0x00007f8c6236488f in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:95
+</code></pre>
+<p>7.查看上面线程2的第5帧信息#5 0x000055678908b183 in taskA () at 20190316.cpp:23</p>
+<p>(gdb) f 5</p>
+<p>#5 0x000055678908b183 in taskA () at 20190316.cpp:23</p>
+<p>23 std::lock_guard&lt; std::mutex &gt; lockB(mtx2);</p>
+<p>可以看到，这里就直接定位到代码一直阻塞在了20190316.cpp的第23行，对应的行代码是std::lock_guard&lt; std::mutex &gt; lockB(mtx2);</p>
+<p>可以同样的步骤定位查看线程3的问题代码行。</p>
+<h3 id="死锁问题代码修改">死锁问题代码修改</h3>
+<p>既然发现了问题，那么就知道这个问题场景发生死锁，是由于多个线程获取多个锁资源的时候，顺序不一致导致的死锁问题，那么保证它们获取锁的顺序是一致的，问题就可以解决，代码修改如下：</p>
+<pre><code>#include &lt;iostream&gt;           // std::cout
+#include &lt;thread&gt;             // std::thread
+#include &lt;mutex&gt;              // std::mutex, std::unique_lock
+#include &lt;condition_variable&gt; // std::condition_variable
+#include &lt;vector&gt;
+
+// 锁资源1
+std::mutex mtx1;
+// 锁资源2
+std::mutex mtx2;
+
+// 线程A的函数
+void taskA()
+{
+	// 保证线程A先获取锁1
+	std::lock_guard&lt;std::mutex&gt; lockA(mtx1);
+	std::cout &lt;&lt; &quot;线程A获取锁1&quot; &lt;&lt; std::endl;
+
+	// 线程A尝试获取锁2
+	std::lock_guard&lt;std::mutex&gt; lockB(mtx2);
+	std::cout &lt;&lt; &quot;线程A获取锁2&quot; &lt;&lt; std::endl;
+
+	std::cout &lt;&lt; &quot;线程A释放所有锁资源，结束运行！&quot; &lt;&lt; std::endl;
+}
+
+// 线程B的函数
+void taskB()
+{
+	// 线程B获取锁1
+	std::lock_guard&lt;std::mutex&gt; lockA(mtx1);
+	std::cout &lt;&lt; &quot;线程B获取锁1&quot; &lt;&lt; std::endl;
+
+	// 线程B尝试获取锁2
+	std::lock_guard&lt;std::mutex&gt; lockB(mtx2);
+	std::cout &lt;&lt; &quot;线程B获取锁2&quot; &lt;&lt; std::endl;
+
+	std::cout &lt;&lt; &quot;线程B释放所有锁资源，结束运行！&quot; &lt;&lt; std::endl;
+}
+int main()
+{
+	// 创建生产者和消费者线程
+	std::thread t1(taskA);
+	std::thread t2(taskB);
+
+	// main主线程等待所有子线程执行完
+	t1.join();
+	t2.join();
+
+	return 0;
+}
+</code></pre>
+<p>死锁产生的4个必要条件：<br>
+1.互斥条件：一个资源每次只能被一个进程（线程）使用</p>
+<p>2.请求与保持条件：一个进程（线程）因请求资源而阻塞时，对已获得的资源保持不放</p>
+<p>3.不剥夺条件：进程已获得的资源，在未使用完之前，不能强行剥夺</p>
+<p>4.循环等待条件：若干进程之间形成一种头尾相接的循环等待资源关系。</p>
+<h3 id="如何避免死锁">如何避免死锁</h3>
+<p><font color=red>避免嵌套锁：尽量避免在一个锁内部再次获取另一个锁，这样容易导致死锁。</p>
+<p>避免循环依赖：尽量避免多个线程之间出现循环依赖的情况，这样容易导致死锁。</p>
+<p>保证锁的顺序：对于多个锁，要保证它们的获取顺序是一致的，这样可以避免死锁的发生。</p>
+<p>使用超时机制：对于锁的获取操作，可以设置一个超时时间，如果在指定时间内没有获取到锁，就放弃获取，避免长时间等待导致死锁。</p>
+<p>使用互斥量：在多线程编程中，可以使用互斥量来保证同一时间只有一个线程访问共享资源，避免多个线程同时访问导致死锁。</font></p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li>
+<ul>
+<li><a href="#%E4%BA%92%E6%96%A5%E9%94%81mutex">互斥锁mutex</a></li>
+<li><a href="#%E8%87%AA%E6%97%8B%E9%94%81spin">自旋锁spin</a></li>
+<li><a href="#thread%E7%BA%BF%E7%A8%8B%E7%B1%BB%E5%BA%93%E5%9F%BA%E4%BA%8Ecas%E7%9A%84%E5%8E%9F%E5%AD%90%E7%B1%BB">thread线程类库基于CAS的原子类</a></li>
+<li><a href="#%E7%BA%BF%E7%A8%8B%E5%90%8C%E6%AD%A5%E9%80%9A%E4%BF%A1">线程同步通信</a></li>
+<li><a href="#%E6%AD%BB%E9%94%81%E9%97%AE%E9%A2%98%E6%A1%88%E4%BE%8B%E5%88%86%E6%9E%90%E8%A7%A3%E5%86%B3">死锁问题案例分析解决</a></li>
+<li><a href="#%E6%80%8E%E4%B9%88%E5%9C%A8%E6%BA%90%E7%A0%81%E4%B8%8A%E5%AE%9A%E4%BD%8D%E5%88%B0%E9%97%AE%E9%A2%98%E4%BB%A3%E7%A0%81">怎么在源码上定位到问题代码</a></li>
+<li><a href="#%E6%AD%BB%E9%94%81%E9%97%AE%E9%A2%98%E4%BB%A3%E7%A0%81%E4%BF%AE%E6%94%B9">死锁问题代码修改</a></li>
+<li><a href="#%E5%A6%82%E4%BD%95%E9%81%BF%E5%85%8D%E6%AD%BB%E9%94%81">如何避免死锁</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://hensonguo.github.io/post/hong-hei-shu/">
+              <h3 class="post-title">
+                红黑树
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://hensonguo.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

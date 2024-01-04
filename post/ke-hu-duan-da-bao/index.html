@@ -1,0 +1,249 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>客户端打包 | Icode</title>
+<link rel="shortcut icon" href="https://hensonguo.github.io/favicon.ico?v=1704354032694">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://hensonguo.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="客户端打包 | Icode - Atom Feed" href="https://hensonguo.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="注册环境变量
+批处理文件：vcvarsall.bat，用于配置环境变量、工作目录，运行后VC才能找到编译所需要的库
+使用参数可以指定主机和目标体系结构、Windows SDK以及平台选项。
+下面是批处理文件的内容：
+@echo off 
+i..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://hensonguo.github.io">
+  <img class="avatar" src="https://hensonguo.github.io/images/avatar.png?v=1704354032694" alt="">
+  </a>
+  <h1 class="site-title">
+    Icode
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              客户端打包
+            </h2>
+            <div class="post-info">
+              <span>
+                2023-09-07
+              </span>
+              <span>
+                4 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <h2 id="注册环境变量">注册环境变量</h2>
+<p><strong>批处理文件：vcvarsall.bat</strong>，用于配置环境变量、工作目录，运行后VC才能找到编译所需要的库<br>
+使用参数可以指定主机和目标体系结构、Windows SDK以及平台选项。<br>
+下面是批处理文件的内容：</p>
+<pre><code class="language-shell">@echo off 
+if &quot;%1&quot; == &quot;&quot; goto x86 
+if not &quot;%2&quot; == &quot;&quot; goto usage 
+
+if /i %1 == x86  goto x86 
+if /i %1 == amd64  goto amd64 
+if /i %1 == x64  goto amd64 
+if /i %1 == ia64  goto ia64 
+if /i %1 == x86_amd64 goto x86_amd64 
+if /i %1 == x86_ia64 goto x86_ia64 
+goto usage 
+
+:x86 
+if not exist &quot;%~dp0bin\vcvars32.bat&quot; goto missing 
+call &quot;%~dp0bin\vcvars32.bat&quot; 
+goto :eof 
+
+:amd64 
+if not exist &quot;%~dp0bin\amd64\vcvars64.bat&quot; goto missing 
+call &quot;%~dp0bin\amd64\vcvars64.bat&quot; 
+goto :eof 
+
+:ia64 
+if not exist &quot;%~dp0bin\ia64\vcvars64.bat&quot; goto missing 
+call &quot;%~dp0bin\ia64\vcvars64.bat&quot; 
+goto :eof 
+
+:x86_amd64 
+if not exist &quot;%~dp0bin\x86_amd64\vcvarsx86_amd64.bat&quot; goto missing 
+call &quot;%~dp0bin\x86_amd64\vcvarsx86_amd64.bat&quot; 
+goto :eof 
+
+:x86_ia64 
+if not exist &quot;%~dp0bin\x86_ia64\vcvarsx86_ia64.bat&quot; goto missing 
+call &quot;%~dp0bin\x86_ia64\vcvarsx86_ia64.bat&quot; 
+goto :eof 
+
+:usage 
+echo Error in script usage. The correct usage is: 
+echo  %0 [option] 
+echo where [option] is: x86 ^| ia64 ^| amd64 ^| x86_amd64 ^| x86_ia64 
+echo: 
+echo For example: 
+echo  %0 x86_ia64 
+goto :eof 
+
+:missing 
+echo The specified configuration type is missing. The tools for the 
+echo configuration might not be installed. 
+goto :eof 
+</code></pre>
+<p>可以看出根据目标平台会跳转不同的批处理文件，如vcvars32.bat或vcvars64.bat，这些批处理文件将用于配置环境变量、工作目录。如下生成用于编译32位代码的命令行编译环境：</p>
+<pre><code>C:\Program Files (x86)\Microsoft Visual Studio 14.0&gt;cd VC
+C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC&gt;vcvarsall x86
+</code></pre>
+<br>
+<h2 id="执行构建脚本">执行构建脚本</h2>
+<p><strong>MSBuild</strong>：MSBuild是 Microsoft Build Engine 的缩写。MSBuild是在.NET 2.0中引入的针对Visual Studio的构建系统。它可以执行构建脚本，完成各种Task——最主要的是把.NET项目编译成可执行文件或者DLL。从技术角度来说，制作EXE或者DLL的重要工作是由编译器（csc，vbc等等）完成的。MSBuild会从内部调用编译器，并完成其他必要的工作（例如拷贝引用——CopyLocal，执行构建前后的准备及清理工作等）。</p>
+<p>这些工作都是MSBuild执行脚本中的Task完成的。MSBuild脚本就是XML文件，根元素是Project，使用MSBuild自己的命名空间。MSBuild 项目文件的格式使开发人员能够充分描述哪些项需要生成，以及如何利用不同的平台和配置生成这些项。</p>
+<p>MSBuild 编译后生成的是.exe 可执行文件，但却不能生成.msi 安装包文件。如果想要使用MSBuild 生成安装包文件，还需要借助WiX编辑一个wxs类型的工程。</p>
+<p><a href="https://learn.microsoft.com/zh-cn/visualstudio/msbuild/msbuild?view=vs-2022">参阅</a></p>
+<br>
+<h2 id="签名">签名</h2>
+<p>微软代码签名证书工具：SignTool.exe，旧版是signcode.exe。签名工具是一个命令行工具，用于对文件进行数字签名，以及验证文件和时间戳文件中的签名。<br>
+<a href="https://learn.microsoft.com/zh-cn/dotnet/framework/tools/signtool-exe">参阅</a><br>
+<a href="https://www.wosign.com/Support/signcode_guide_new.htm?tdsourcetag=s_pcqq_aiomsg">微软代码签名证书使用指南(SignCode)</a><br>
+<a href="https://www.dongchuanmin.com/vscode/3481.html">signtool对exe进行签名</a></p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#%E6%B3%A8%E5%86%8C%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F">注册环境变量</a></li>
+<li><a href="#%E6%89%A7%E8%A1%8C%E6%9E%84%E5%BB%BA%E8%84%9A%E6%9C%AC">执行构建脚本</a></li>
+<li><a href="#%E7%AD%BE%E5%90%8D">签名</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://hensonguo.github.io/post/shell-ru-men/">
+              <h3 class="post-title">
+                shell入门
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://hensonguo.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

@@ -1,0 +1,358 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>c++11之右值引用、移动构造函数、move() | Icode</title>
+<link rel="shortcut icon" href="https://hensonguo.github.io/favicon.ico?v=1704354032694">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://hensonguo.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="c++11之右值引用、移动构造函数、move() | Icode - Atom Feed" href="https://hensonguo.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="1、右值引用
+作用：移动语义、完美转发
+判断某个表达式是左值还是右值，最常用的有以下 2 种方法：
+
+可位于赋值号（=）左侧的表达式就是左值；反之，只能位于赋值号右侧的表达式就是右值。举个例子：
+
+int a = 5;
+5 = a; //错..." />
+    <meta name="keywords" content="c++11,C++" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://hensonguo.github.io">
+  <img class="avatar" src="https://hensonguo.github.io/images/avatar.png?v=1704354032694" alt="">
+  </a>
+  <h1 class="site-title">
+    Icode
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              c++11之右值引用、移动构造函数、move()
+            </h2>
+            <div class="post-info">
+              <span>
+                2022-10-12
+              </span>
+              <span>
+                7 min read
+              </span>
+              
+                <a href="https://hensonguo.github.io/tag/5hSqCQEO5/" class="post-tag">
+                  # c++11
+                </a>
+              
+                <a href="https://hensonguo.github.io/tag/blFelWlDF/" class="post-tag">
+                  # C++
+                </a>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <h2 id="1-右值引用">1、右值引用</h2>
+<p>作用：移动语义、完美转发<br>
+判断某个表达式是左值还是右值，最常用的有以下 2 种方法：</p>
+<ol>
+<li>可位于赋值号（=）左侧的表达式就是左值；反之，只能位于赋值号右侧的表达式就是右值。举个例子：</li>
+</ol>
+<pre><code class="language-c++">int a = 5;
+5 = a; //错误，5 不能为左值
+int b = 10; // b 是一个左值
+a = b; // a、b 都是左值，只不过将 b 可以当做右值使用
+</code></pre>
+<ol start="2">
+<li><font color=red>有名称的、可以获取到存储地址的表达式即为左值；反之则是右值。</font><br>
+C++11 标准新引入了另一种引用方式，称为右值引用，<font color=red>用 &quot;&amp;&amp;&quot; 表示</font>。</li>
+</ol>
+<pre><code class="language-c++">int num = 10;
+int &amp;b = num; //正确
+int &amp;c = 10; //错误
+
+int num = 10;
+//int &amp;&amp; a = num;  //右值引用不能初始化为左值
+int &amp;&amp; a = 10;
+</code></pre>
+<br/>
+<h2 id="2-移动构造函数">2、移动构造函数</h2>
+<p>当类中拥有指针类型的成员变量时，拷贝构造函数中需要以深拷贝（而非浅拷贝）的方式复制该指针成员。</p>
+<pre><code class="language-c++">#include &lt;iostream&gt;
+using namespace std;
+
+class demo{
+public:
+
+   demo():num(new int(0)){
+      cout&lt;&lt;&quot;construct!&quot;&lt;&lt;endl;
+   }
+   
+   //拷贝构造函数
+   demo(const demo &amp;d):num(new int(*d.num)){
+      cout&lt;&lt;&quot;copy construct!&quot;&lt;&lt;endl;
+   }
+   
+   ~demo(){
+      cout&lt;&lt;&quot;class destruct!&quot;&lt;&lt;endl;
+   }
+   
+private:
+   int *num;
+};
+
+demo get_demo(){
+    return demo();
+}
+
+int main(){
+    demo a = get_demo();
+    return 0;
+}
+</code></pre>
+<p>如上所示，我们为 demo 类自定义了一个拷贝构造函数。该函数在拷贝 d.num 指针成员时，必须采用深拷贝的方式，即拷贝该指针成员本身的同时，还要拷贝指针指向的内存资源。<br>
+输出结果：</p>
+<pre><code>construct!                &lt;-- 执行 demo()
+copy construct!       &lt;-- 执行 return demo()
+class destruct!         &lt;-- 销毁 demo() 产生的匿名对象
+copy construct!       &lt;-- 执行 a = get_demo()
+class destruct!         &lt;-- 销毁 get_demo() 返回的临时对象
+class destruct!         &lt;-- 销毁 a
+</code></pre>
+<p>如上所示，利用拷贝构造函数实现对 a 对象的初始化，底层实际上进行了 2 次拷贝（而且是深拷贝）操作。当然，对于仅申请少量堆空间的临时对象来说，深拷贝的执行效率依旧可以接受，但如果<font color=red><strong>临时对象中的指针成员申请了大量的堆空间，那么 2 次深拷贝操作势必会影响 a 对象初始化的执行效率。</strong></font></p>
+<p><font color=red>所谓移动语义，指的就是以<strong>移动而非深拷贝</strong>的方式初始化含有指针成员的类对象。简单的理解，移动语义指的就是将其他对象（通常是临时对象）拥有的内存资源“<strong>移为已用</strong>”。</font></p>
+<p>在上面的demo中添加成员方法：</p>
+<pre><code class="language-c++">    //添加移动构造函数
+    demo(demo &amp;&amp;d):num(d.num){
+        d.num = NULL;
+        cout&lt;&lt;&quot;move construct!&quot;&lt;&lt;endl;
+    }
+</code></pre>
+<p>以前面程序中的 demo 类为例，该类的成员都包含一个整形的指针成员，其默认指向的是容纳一个整形变量的堆空间。当使用 get_demo() 函数返回的临时对象初始化 a 时，我们只需要将临时对象的 num 指针直接浅拷贝给 a.num，然后修改该临时对象中 num 指针的指向（通常另其指向 NULL），这样就完成了 a.num 的初始化。</p>
+<p>输出结果：</p>
+<pre><code class="language-c++">construct!
+move construct!
+class destruct!
+move construct!
+class destruct!
+class destruct!
+</code></pre>
+<p>通过执行结果我们不难得知，当为 demo 类添加移动构造函数之后，使用临时对象初始化 a 对象过程中产生的 2 次拷贝操作，都转由移动构造函数完成。</p>
+<br/>
+<h2 id="3-move">3、move()</h2>
+<p>作用：将某个左值强制转化为右值。C++11 标准中借助右值引用可以为指定类添加移动构造函数，这样当使用该类的右值对象（可以理解为临时对象）初始化同类对象时，编译器会优先选择移动构造函数。</p>
+<pre><code class="language-c++">#include &lt;iostream&gt;
+using namespace std;
+
+class movedemo{
+public:
+    movedemo():num(new int(0)){
+        cout&lt;&lt;&quot;construct!&quot;&lt;&lt;endl;
+    }
+    //拷贝构造函数
+    movedemo(const movedemo &amp;d):num(new int(*d.num)){
+        cout&lt;&lt;&quot;copy construct!&quot;&lt;&lt;endl;
+    }
+    //移动构造函数
+    movedemo(movedemo &amp;&amp;d):num(d.num){
+        d.num = NULL;
+        cout&lt;&lt;&quot;move construct!&quot;&lt;&lt;endl;
+    }
+public:     //这里应该是 private，使用 public 是为了更方便说明问题
+    int *num;
+};
+
+int main(){
+    movedemo demo;
+    cout &lt;&lt; &quot;demo2:\n&quot;;
+    movedemo demo2 = demo;
+    //cout &lt;&lt; *demo2.num &lt;&lt; endl;   //可以执行
+    cout &lt;&lt; &quot;demo3:\n&quot;;
+    movedemo demo3 = std::move(demo);
+    //此时 demo.num = NULL，因此下面代码会报运行时错误
+    //cout &lt;&lt; *demo.num &lt;&lt; endl;
+    return 0;
+}
+</code></pre>
+<p>程序执行结果为：</p>
+<pre><code>construct!
+demo2:
+copy construct!
+demo3:
+move construct!
+</code></pre>
+<p><strong>move相当于优先选中移动构造函数</strong></p>
+<br/>
+<h2 id="4-引用限定符的用法">4、引用限定符的用法</h2>
+<p>在 <strong>成员函数的后面添加了 &quot;&amp;&quot;，它可以限定调用该函数的对象必须是左值对象<br>
+函数后跟有 &quot;&amp;&amp;&quot; 限定符，它可以限定调用该函数的对象必须是一个右值对象</strong></p>
+<pre><code class="language-c++">#include &lt;iostream&gt;
+using namespace std;
+
+class demo {
+public:
+    demo(int num):num(num){}
+    int get_num_a()&amp;{
+        return this-&gt;num;
+    }
+
+    int get_num_b()&amp;&amp;{
+        return this-&gt;num;
+    }
+private:
+    int num;
+};
+int main() {
+    demo a(10);
+    cout &lt;&lt; a.get_num_a() &lt;&lt; endl;          // 正确
+    //cout &lt;&lt; move(a).get_num_a() &lt;&lt; endl;  // 错误
+    //cout &lt;&lt; a.get_num_b() &lt;&lt; endl;      // 错误
+    cout &lt;&lt; move(a).get_num_b() &lt;&lt; endl;  // 正确
+    return 0;
+}
+</code></pre>
+<p>const 和引用限定符修饰类的成员函数时，都位于函数的末尾。C++11 标准规定，当引用限定符和 const 修饰同一个类的成员函数时，const 必须位于引用限定符前面。譬如：</p>
+<pre><code class="language-c++">int get_num2() const &amp;&amp; {
+    return this-&gt;num2;
+}
+</code></pre>
+<p><font color=red>为什么移动构造就比拷贝构造性能好呢？</font><br>
+调用移动构造函数时，是假定这个参数在构造完成后就失效的，所以可以采用一些破坏性的方式去构造。于是原来需要深拷贝的对象，在移动构造函数里可以直接浅拷贝，因为参数对象在构造完成后就无了。</p>
+<p><font color=red>移动构造函数和右值引用的关系？</font><br>
+<strong>移动构造函数是一种特殊的构造函数，用于从一个临时对象中“移动”资源，例如内存、文件句柄等，而不是进行复制操作。</strong></p>
+<p><strong>移动构造函数和右值引用的关系在于，移动构造函数的参数通常是一个右值引用，用于接收一个临时对象。在移动构造函数内部，可以通过std::move函数将资源从临时对象中“移动”到当前对象中。</strong></p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#1-%E5%8F%B3%E5%80%BC%E5%BC%95%E7%94%A8">1、右值引用</a></li>
+<li><a href="#2-%E7%A7%BB%E5%8A%A8%E6%9E%84%E9%80%A0%E5%87%BD%E6%95%B0">2、移动构造函数</a></li>
+<li><a href="#3-move">3、move()</a></li>
+<li><a href="#4-%E5%BC%95%E7%94%A8%E9%99%90%E5%AE%9A%E7%AC%A6%E7%9A%84%E7%94%A8%E6%B3%95">4、引用限定符的用法</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://hensonguo.github.io/post/obs-yuan-ma-bian-yi/">
+              <h3 class="post-title">
+                OBS源码编译
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://hensonguo.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

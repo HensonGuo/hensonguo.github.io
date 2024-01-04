@@ -1,0 +1,481 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>windows核心编程-线程池的使用和纤程 | Icode</title>
+<link rel="shortcut icon" href="https://hensonguo.github.io/favicon.ico?v=1704354032694">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://hensonguo.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="windows核心编程-线程池的使用和纤程 | Icode - Atom Feed" href="https://hensonguo.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="线程池通常含义指 一个固定数量的线程队列。每当需要一个线程去执行某任务（某段代码），从队列中选出一个闲置的线程去执行，当线程执行完某任务后，不会立即销毁，会回到队列中，等待执行其他任务。
+为了简化程序员的工作，Windows提供了一个线程池..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://hensonguo.github.io">
+  <img class="avatar" src="https://hensonguo.github.io/images/avatar.png?v=1704354032694" alt="">
+  </a>
+  <h1 class="site-title">
+    Icode
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              windows核心编程-线程池的使用和纤程
+            </h2>
+            <div class="post-info">
+              <span>
+                2023-06-06
+              </span>
+              <span>
+                16 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <p><strong>线程池通常含义指 一个固定数量的线程队列。每当需要一个线程去执行某任务（某段代码），从队列中选出一个闲置的线程去执行，当线程执行完某任务后，不会立即销毁，会回到队列中，等待执行其他任务。</strong></p>
+<p>为了简化程序员的工作，Windows提供了一个线程池机制来简化线程的创建、销毁以及日常管理。这个新线程池可能不适用于所有的情况，但大多数情况下它都能够满足我们的需要。<br>
+这个线程池能够帮助我们做一下事情：</p>
+<p>•  <strong>异步调用函数。<br>
+• 按照规定的时间间隔调用函数。<br>
+• 当单个内核对象变为已通知状态时调用函数。<br>
+• 当异步I/O请求完成时调用函数。</strong></p>
+<h2 id="以异步的方式调用函数">以异步的方式调用函数</h2>
+<p>客户机/服务器应用程序，当服务器进程的主线程收到客户机的请求时，它可以调用下面这个函数：</p>
+<pre><code>BOOL QueueUserWorkItem(
+    PTHREAD_START_ROUTINE pfnCallback,
+    PVOID pvContext,
+    ULONG dwFlags
+)
+</code></pre>
+<p>该函数将一个“工作项目”排队放入线程池中的一个线程中并且立即返回。所谓工作项目是指一个（用pfnCallback参数标识的）函数，它被调用并传递单个参数pvContext。最后，线程池中的某个线程将处理该工作项目，导致函数被调用。所编的回调函数必须采用下面的原型：</p>
+<pre><code>DWORD WINAPI WorkItemFunc(
+    PVOID pvContext
+)
+</code></pre>
+<p>注意，你自己从来不调用CreateThread。系统会自动为你的进程创建一个线程池，线程池中的一个线程将调用你的函数。另外，当该线程处理完客户机的请求之后，该线程并不立即被撤消。它要返回线程池，这样它就可以准备处理已经排队的任何其他工作项目。你的应用程序的运行效率可能会变得更高，因为不必为每个客户机请求创建和撤消线程。另外，由于线程与完成端口相关联，因此可以同时运行的线程数量限制为C P U数量的两倍。这就减少了线程的上下文转移的开销。</p>
+<p>线程池希望经常处理异步I / O请求，即每当线程将一个I / O请求排队放入设备驱动程序时，便要处理异步I / O请求。当设备驱动程序执行该I / O时，请求排队的线程并没有中断运行，而是继续执行其他指令。异步I / O是创建高性能可伸缩的应用程序的秘诀，因为它允许单个线程处理来自不同客户机的请求。该线程不必顺序处理这些请求，也不必在等待I / O请求运行结束时中断运行。</p>
+<p>但是，Windows对异步I / O请求规定了一个限制，即如果线程将一个异步I / O请求发送给设备驱动程序，然后终止运行，那么该I / O请求就会丢失，并且在I / O请求运行结束时，没有线程得到这个通知。在设计良好的线程池中，线程的数量可以根据客户机的需要而增减。因此，如果线程发出一个异步I / O请求，然后因为线程池缩小而终止运行，那么该I / O请求也会被撤消。因为这种情况实际上并不是你想要的，所以你需要一个解决方案。</p>
+<p>如果你想要给发出异步I / O请求的工作项目排队，不能将该工作项目插入线程池的非I / O组件中。必须将该工作项目放入线程池的I / O组件中进行排队。该I / O组件由一组线程组成，如果这组线程还有尚未处理的I / O请求，那么它们决不能终止运行。因此你只能将它们用来运行发出异步I / O请求的代码。</p>
+<h2 id="按规定的时间间隔调用函数">按规定的时间间隔调用函数</h2>
+<p>有时候应用程序需要在某些时间执行某些任务。Windows提供了可等待计时器对象，它使我们我们可以非常方便的得到一个时间通知。我们可以为每个需要执行基于时间的任务创建一个可等待的计时器对象，但这是不必要的。线程池函数为我们解决了这些事情。<br>
+1）创建一个定时器队列：</p>
+<pre><code> HANDLE CreateTimeQueue();
+</code></pre>
+<p>2）一旦拥有一个定时器队列，就可以在该队列中创建下面的定时器：</p>
+<pre><code> BOOL CreateTimeQueueTimer(
+     PHANDLE phNewTimer,
+     HANDLE hTimerQueue,
+     WAITORTIMERCALLBACK pfnCallback,
+     PVOID pvContext,
+     DWORD dwDueTime,
+     DWORD dwPeriod,
+     ULONG dwFlags
+ );
+</code></pre>
+<p>对于第二个参数，可以传递想要在其中创建定时器的定时器队列的句柄。如果只是创建少数几个定时器，只需要为hTimerQueue参数传递NULL，并且完全避免调用CreateTimeQueue函数。传递NULL，会告诉该函数使用默认的定时器队列，并且简化了你的代码。pfnCallback和pvContext参数用于指明应该调用什么函数以及到了规定的时间应该将什么传递给该函数。dwDueTime参数用于指明应该经过多少毫秒才能第一次调用该函数（如果这个值是0，那么只要可能，就调用该函数，使得CreateTimeQueueTimer函数类似QueueUserWorkItem）。dwPeriod参数用于指明应该经过多少毫秒才能在将来调用该函数。如果为dwPeriod传递0，那么就使它成为一个单步定时器，使工作项目只能进行一次排队。新定时器的句柄通过函数的phNewTimer参数返回。<br>
+工作回调函数必须采用下面的原型：</p>
+<pre><code> VOID WINAPI WaitOrTimeCallback(
+     PVOID pvContext,
+     BOOL fTimerOrWaitFired
+ );
+</code></pre>
+<p>当该函数被调用时，fTimerOrWaitFired参数总是TRUE，表示该定时器已经触发。</p>
+<p>3）当不再想要触发定时器时，必须通过调用下面的函数将它删除：</p>
+<pre><code> BOOL DeleteTimerQueueTimer(
+     HANDLE phNewTimer,
+     HANDLE hTimer,
+     HANDLE hCompletionEvent
+ );
+</code></pre>
+<p>最后一个参数hCompletionEvent告诉你，由于该定时器，什么时候将不再存在没有处理的已排队的工作项目。如果为该参数传递INVALID_HANDLE_VALUE，那么在该定时器的所有已排队工作项目完成运行之前， DeleteTimerQueueTimer函数不会返回。请想一想这将意味着什么。如果在定时器处理自己的工作项目期间对定时器进行一次中断删除，就会造成一个死锁条件。虽然你正在等待工作项目完成处理操作，但是你在等待它完成操作时却中断了它的处理。只有当线程不是处理定时器的工作项目的线程时，该线程才能进行对定时器的中断删除。</p>
+<p>另外，如果你正在使用定时器组件的线程，不应该试图对任何定时器进行中断删除，否则就会产生死锁。如果试图删除一个定时器，就会将一个APC通知放入该定时器组件的线程队列中。如果该线程正在等待一个定时器被删除，而它不能删除该定时器，那么就会发生死锁。</p>
+<p>如果不为hCompletionEvent参数传递INVALID_HANDLE_VALUE，可以传递NULL。这将告诉该函数，你想尽快删除定时器。在这种情况下， DeleteTimerQueueTimer将立即返回，但是你不知道该定时器的所有工作项目何时完成处理。最后，你可以传递一个事件内核对象的句柄作为hCompletionEvent的参数。当这样操作时， DeleteTimeQueueTimer将立即返回，同时，当定时器的所有已经排队的工作项目完成运行之后，定时器组件的线程将设置该事件。在调用DeleteTimerQueueTimer之前，千万不要给该事件发送通知，否则你的代码将认为排队的工作项目已经完成运行，但是实际上它们并没有完成。</p>
+<p>4） 改变它的到期时间和到期周期：</p>
+<pre><code> BOOL ChangeTimerQueueTimer(
+     HANDLE hTimerQueue,
+     HANDLE hTimer,
+     DWORD dwDueTime,
+     DWORD dwPeriod,
+ );
+</code></pre>
+<p>5）删除定时器队列</p>
+<pre><code> BOOL DeleteTimerQueueEx(
+     HANDLE hTimerQueue,
+     HANDLE hCompletionEvent
+ );
+</code></pre>
+<p>该函数取出一个现有的定时器队列的句柄，并删除它里面的所有定时器，这样就不必为删除每个定时器而显式调用DeleteTimerQueueTimer。hCompletionEvent参数在这里的语义与它在<br>
+ChangeTimerQueueTimer函数中的语义是相同的。这意味着它存在同样的死锁可能性，因此必须小心。</p>
+<h2 id="当单个内核对象变为已通知状态时调用函数">当单个内核对象变为已通知状态时调用函数</h2>
+<p>在实际使用中我们会发现我们会经常的等待一个内核对象被触发，触发后等待线程又会进入下一轮循环继续等待。Windows线程池提供了一些机制可以简化我们的工作。</p>
+<p>1）如果想在内核对象得到通知时注册一个要执行的工作项目，可以使用另一个新的线程池函数：</p>
+<pre><code> BOOL RegisterWaitForSingleObject(
+     PHANDLE phNewWaitObject,
+     HANDLE hObject,
+     WAITORTIMERCALLBACK pfnCallback,
+     PVOID pvContext,
+     DWORD dwMilliseconds,
+     ULONG dwFlags
+ );
+</code></pre>
+<p>该函数负责将参数传送给线程池的等待组件。你告诉该组件，当内核对象（用hObject进行标识）得到通知时，你想要对工作项目进行排队。也可以传递一个超时值，这样，即使内核对象没有变为已通知状态，也可以在规定的某个时间内对工作项目进行排队。超时值0和第11章线程池的使用INFINITE是合法的。一般来说，该函数的运行情况与WaitForSingleObject函数（第9章已经介绍）相似。当注册了一个等待组件后，该函数返回一个句柄（通过phNewWaitObject参数）以标识该等待组件。</p>
+<p>2）取消等待组件的注册状态：</p>
+<pre><code> BOOL UnRegisterWaitEx(
+     HANDLE hWaitHandle,
+     HANDLE hCompletionEvent
+ );
+</code></pre>
+<h2 id="当异步io请求完成运行时调用函数">当异步I/O请求完成运行时调用函数</h2>
+<p>1）将一个设备与该组件关联</p>
+<pre><code> BOOL BindIoCompletionCallback(
+     HANDLE hDevice,
+     POVERLAPPED_COMPLETION_ROUTINE pfnCllaback,
+     ULONG dwFlags
+ );
+</code></pre>
+<p>该函数在内部调用CreateIoCompletionPort，传递hDevice和内部完成端口的句柄。调用BindIoCompletionCallback也可以保证至少有一个线程始终在非I/O组件中。与该设备相关联的完成关键字是重叠完成例程的地址。这样，当该设备的I / O运行完成时，非I / O组件就知道要调用哪个函数，以便它能够处理已完成的I / O请求。该完成例程必须采用下面的原型：</p>
+<p>2） 定义回调函数</p>
+<pre><code>VOID CALLBACK OverlappedCompletionRoutine(  
+       PTP_CALLBACK_INSTANCE pInstance,  
+       PVOID pvContext,  
+       PVOID pOverlapped,  
+       ULONG IoResult;  
+       ULONG_PTR NumberOfBytesTransferred,  
+       PTP_IO  pIo);
+</code></pre>
+<p>当一个IO操作完成时此回调函数会被调用并得到一个指向OVERLAPPED结构的指针。这个指针是我们在调用ReadFile或WriteFile来发出I/O请求时（通过pOverlapped参数）传入的。</p>
+<p>IoResult:表示IO异步操作的执行结果。如果IO请求成功，将传给回调函数NO_ERROR。<br>
+NumberOfBytesTransferred :参数传入已传输的字节数。<br>
+pIo :传入指向线程池IO项的指针。马上介绍。<br>
+pInstance :后面会有介绍。</p>
+<p>3）IO项中的设备与IO完成端口关联</p>
+<pre><code>VOID StartThreadpoolIo(PTP_IO pio);  
+</code></pre>
+<p>关联之后我们就可以调用ReadFile或WriteFile了。此后当异步IO请求完成后，回调函数将会被调用。<br>
+注意，在每次调用ReadFile或WriteFile之前，我们必须调用StartThreadpoolIo，否则回调函数不会被调用。</p>
+<p>4）停止线程池调用回调函数</p>
+<pre><code>VOID CancelThreadpoolIo(PTP_IO pio);  
+</code></pre>
+<p>5）取消设备与线程池的关联</p>
+<pre><code>VOID CloseHandlepoolIo(PTP_IO pio);
+</code></pre>
+<p>6）让另一个线程等待一个待处理的IO请求完成<br>
+WaitForThreadpoolIoCallbacks函数让另一个线程等待一个待处理的IO请求完成。</p>
+<pre><code>VOID WaitForThreadpoolIoCallback(  
+      PTP_IO pio,  
+      BOOL bCancelPendingCallbacks);  
+</code></pre>
+<p>如果传给bCancelPendingCallbacks的值为true，那么当请求完成时，回调函数不会被调用。</p>
+<h2 id="回调函数的终止操作">回调函数的终止操作</h2>
+<p>线程池提供了一种便利的方法，来描述我们的回调函数返回后，应该执行的一些操作。回调函数用传给它的不透明的pInstance来调用以下这些函数：</p>
+<pre><code class="language-c++">VOID LeaveCriticalSectionWhenCallbackReturns(
+PTP_CALLBACK_INSTANCE pci,
+PCRITICAL_SECTION pcs
+);
+
+VOID ReleaseMutexWhenCallbackReturns(
+PTP_CALLBACK_INSTANCE pci,
+HANDLE mut
+);
+
+VOID ReleaseSemaphoreWhenCallbackReturns(
+PTP_CALLBACK_INSTANCE pci,
+HANDLE sem,
+DWORD crel
+);
+
+VOID SetEventWhenCallbackReturns(
+PTP_CALLBACK_INSTANCE pci,
+HANDLE evt
+);
+
+VOID FreeLibraryWhenCallbackReturns(
+PTP_CALLBACK_INSTANCE pci,
+HMODULE mod
+);
+</code></pre>
+<p>创建新的线程池:</p>
+<pre><code class="language-c++">PTP_POOL CreateThreadpool(
+// 保留，传NULL。
+PVOID reserved
+);
+
+// 设置线程池中线程最大，最小数量
+BOOL SetThreadpoolThreadMinimum(
+PTP_POOL pThreadPool,
+DWORD cthrdMin
+);
+
+BOOL SetThreadpoolThreadMaximum(
+PTP_POOL pThreadPool,
+DWORD cthrdMost
+);
+
+// 关闭线程池。
+// 线程池中线程结束本次处理后结束。
+// 线程池队列中尚未开始处理的项将被取消。
+VOID CloseThreadpool(PTP_POOL pThreadPool);
+</code></pre>
+<p>创建一个清理组</p>
+<pre><code class="language-c++">PTP_CLEANUP_GROUP CreateThreadpoolCleanuGroup();  
+//将清理组和线程池相关联
+VOID SetThreadpoolCallbackCleanupGroup(PTP_CALLBACK_ENVIRON pcbe,PTP_CLEANUP_GROUP ptpcg,PTP_CLEANUP_GROUP_CANCEL_CALLBACK pfng);
+//SetThreadpoolCallbackCleanupGroup的回调
+VOID CALLBACK CleanupGroupCancelback(PVOID pvObjectContext,PVOID pvCleanupContext);
+</code></pre>
+<p>清理线程池</p>
+<pre><code class="language-c++">//清理线程池
+VOID CloseThreadpoolCleanupGroupMemebers(PTP_CLEANUPGROUP ptpcg,BOOL bCancelPendingCallbacks,PVOID pvCleanupContext); //释放清理组所占的资源
+VOID WINAPI CloseThreadpoolCleanupGroup(PTP_CLEANUP_GROUP ptpcg);  //销毁回调环境
+VOID DestroyThreadEnvironment(PTP_CALLBACK_ENVRION pcbe);  
+//销毁 所有线程都被终止所有项将被取消
+VOID CloseThreadpool(PTP_POOL pThreadpool); 
+</code></pre>
+<h1 id="纤程">纤程</h1>
+<p><strong>为了更容易将已有的UNIX服务器应用迁移到Windows，增加了纤程。</strong><br>
+UNIX应用程序的开发人员创建了线程包，来实现类似线程功能。<br>
+纤程我们只需要概念上理解就好了，一般也用不到。就是一个可执行的对象（函数对象？）自己包含了执行的状态（栈和寄存器）。被我们自己设计的逻辑所调度（switchto函数）。</p>
+<p>1）使用纤程</p>
+<ul>
+<li>线程在windows内核中实现的。</li>
+<li>纤程是在用户模式下实现的。</li>
+<li>内核仅能调度线程，而纤程由我们调度</li>
+<li>一个线程可包含多个纤程。</li>
+</ul>
+<p>2）将一个已有的线程转换为一个纤程</p>
+<pre><code>PVOID ConvertThreadToFiber(PVOID pvParam);
+</code></pre>
+<p>如果函数成功,返回值是纤维的地址;如果函数失败,返回值是零。<br>
+这个函数为纤程的执行上下文CONTEXT分配内存。<br>
+执行上下文一般包含：</p>
+<ul>
+<li>一个用户自定义的值（pvParam）</li>
+<li>结构化异常处理链的头</li>
+<li>纤程栈的顶部和底部的内存地址</li>
+<li>某些CPU寄存器，包括栈指针，指令指针以及其他寄存器</li>
+</ul>
+<p>为了覆盖系统的默认行为需要使用新的ConvertThreadToFiberEx函数<br>
+允许传入FIBER_FLAG_FLOAT_SWITCH标志：</p>
+<pre><code>WINBASEAPI
+_Ret_maybenull_
+LPVOID
+WINAPI
+ConvertThreadToFiberEx(
+    _In_opt_ LPVOID lpParameter,
+    _In_     DWORD dwFlags
+    );
+</code></pre>
+<p>3）在当前线程中创建另一个纤程</p>
+<pre><code>WINBASEAPI
+_Ret_maybenull_
+LPVOID
+WINAPI
+CreateFiber(
+    _In_     SIZE_T dwStackSize,
+    _In_     LPFIBER_START_ROUTINE lpStartAddress,
+    _In_opt_ LPVOID lpParameter
+    );
+</code></pre>
+<p>如果要使用大量的纤程，希望纤程消耗更少的内存使用下列函数来创建纤程。</p>
+<pre><code>WINBASEAPI
+_Ret_maybenull_
+LPVOID
+WINAPI
+CreateFiberEx(
+    _In_     SIZE_T dwStackCommitSize,
+    _In_     SIZE_T dwStackReserveSize,
+    _In_     DWORD dwFlags,
+    _In_     LPFIBER_START_ROUTINE lpStartAddress,
+    _In_opt_ LPVOID lpParameter
+    );
+</code></pre>
+<p>dwStackCommitSize：设置一开始要调拨的物理存储页。<br>
+dwStackReservesize： 运行我们预定指定的虚拟内存。<br>
+dwFlags：可以接受FIBER_FLAG_FLOAT_SWITCH将浮点运算状态保留。<br>
+lpfnStartAddress:用来指定纤程函数的地址。例如以下就是定义一个纤程函数。</p>
+<pre><code>VOID WINAPI FiberFunc(PVOID pvParam);
+</code></pre>
+<p>其他参数和CreateFiber相同。<br>
+CreateFiber返回的是为纤程创建的CONTEXT的地址（和ConvertThreadToFiber类似）<br>
+但是CreateFiber创建的新纤程默认不会执行。（因为一个线程中只能执行一个纤程）</p>
+<p>3）需要调用SwitchToFiber来切换纤程</p>
+<pre><code>WINBASEAPI
+VOID
+WINAPI
+SwitchToFiber(
+    _In_ LPVOID lpFiber
+    );
+</code></pre>
+<p>lpFiber是用CreateFiber或ConvertThreadToFiber返回的值，告诉函数要调用哪个纤程。SwitchToFiber会执行以下步骤：</p>
+<ul>
+<li>将一些cpu寄存器目前的值，其中包括指令指针（IP）寄存器和栈指针寄存器（SP） 保存在当前运行的纤程的CONTEXT中</li>
+<li>从即将运行的纤程的执行CONTEXT中载入先前保存的寄存器值并载入cpu<br>
+这些寄存器中包含栈指针寄存器，这样单线程继续执行就会使用新纤程的栈。</li>
+<li>将新纤程的执行CONTEXT和线程关联，让线程运行指定的纤程。</li>
+<li>将线程的指令指针设为先前保存的指令指针（IP），这样线程（纤程）就会从上次执行的地方开始继续往下执行。<br>
+SwitchToFiber是让纤程得到cpu时间切片的唯一方法。所以纤程的调度完全由我们自己掌控。</li>
+</ul>
+<p>4）调用DeleteFiber来销毁纤程</p>
+<pre><code>WINBASEAPI
+VOID
+WINAPI
+DeleteFiber(
+    _In_ LPVOID lpFiber
+    );
+</code></pre>
+<p>lpFiber是纤程的CONTEXT地址。该函数会删除参数所表示的纤程。如果线程和纤程绑定了，其内部会调用ExitThread同时销毁当前的线程。<br>
+（TerminateThread不会销毁线程栈）</p>
+<p>将转成了纤程的线程转回来。</p>
+<pre><code>ConvertTiberToThread（Ex）
+</code></pre>
+<p>如果为纤程保存一些信息可以使用纤程局部存储区（Fiber Local Storage， FLS）函数<br>
+其他纤程相关的函数</p>
+<p>5）获得纤程执行的上下文</p>
+<pre><code>PVOID GetCurrentFiber();
+</code></pre>
+<p>6）返回纤程的用户自定义值（CreateFiber所传递的pvParam）</p>
+<pre><code>PVOID GetFiberData();
+</code></pre>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#%E4%BB%A5%E5%BC%82%E6%AD%A5%E7%9A%84%E6%96%B9%E5%BC%8F%E8%B0%83%E7%94%A8%E5%87%BD%E6%95%B0">以异步的方式调用函数</a></li>
+<li><a href="#%E6%8C%89%E8%A7%84%E5%AE%9A%E7%9A%84%E6%97%B6%E9%97%B4%E9%97%B4%E9%9A%94%E8%B0%83%E7%94%A8%E5%87%BD%E6%95%B0">按规定的时间间隔调用函数</a></li>
+<li><a href="#%E5%BD%93%E5%8D%95%E4%B8%AA%E5%86%85%E6%A0%B8%E5%AF%B9%E8%B1%A1%E5%8F%98%E4%B8%BA%E5%B7%B2%E9%80%9A%E7%9F%A5%E7%8A%B6%E6%80%81%E6%97%B6%E8%B0%83%E7%94%A8%E5%87%BD%E6%95%B0">当单个内核对象变为已通知状态时调用函数</a></li>
+<li><a href="#%E5%BD%93%E5%BC%82%E6%AD%A5io%E8%AF%B7%E6%B1%82%E5%AE%8C%E6%88%90%E8%BF%90%E8%A1%8C%E6%97%B6%E8%B0%83%E7%94%A8%E5%87%BD%E6%95%B0">当异步I/O请求完成运行时调用函数</a></li>
+<li><a href="#%E5%9B%9E%E8%B0%83%E5%87%BD%E6%95%B0%E7%9A%84%E7%BB%88%E6%AD%A2%E6%93%8D%E4%BD%9C">回调函数的终止操作</a></li>
+</ul>
+</li>
+<li><a href="#%E7%BA%A4%E7%A8%8B">纤程</a></li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://hensonguo.github.io/post/window-he-xin-bian-cheng-zuo-ye/">
+              <h3 class="post-title">
+                windows核心编程-作业
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://hensonguo.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

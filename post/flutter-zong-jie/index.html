@@ -1,0 +1,504 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>flutter总结 | Icode</title>
+<link rel="shortcut icon" href="https://hensonguo.github.io/favicon.ico?v=1704354032694">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://hensonguo.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="flutter总结 | Icode - Atom Feed" href="https://hensonguo.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="Flutter 是 Google 的界面工具包，用于通过单一代码库针对移动设备、Web 和桌面设备构建应用。
+1.新建工程
+新建工程：
+启动 Visual Studio Code 并打开命令面板（使用 F1、Ctrl+Shift+P 或 S..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://hensonguo.github.io">
+  <img class="avatar" src="https://hensonguo.github.io/images/avatar.png?v=1704354032694" alt="">
+  </a>
+  <h1 class="site-title">
+    Icode
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              flutter总结
+            </h2>
+            <div class="post-info">
+              <span>
+                2023-07-14
+              </span>
+              <span>
+                12 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <p>Flutter 是 Google 的界面工具包，用于通过单一代码库针对移动设备、Web 和桌面设备构建应用。</p>
+<h2 id="1新建工程">1.新建工程</h2>
+<p>新建工程：<br>
+启动 Visual Studio Code 并打开命令面板（使用 F1、Ctrl+Shift+P 或 Shift+Cmd+P）。开始输入“flutter new”。选择 Flutter: New Project 命令。</p>
+<p>工程文件：</p>
+<ul>
+<li>pubspec.yaml 文件指定与您的应用相关的基本信息，例如其当前版本、依赖项以及其随附的资源。</li>
+<li>analysis_options.yaml 此文件决定了 Flutter 在分析代码时的严格程度。由于这是您第一次使用 Flutter，您可以让分析器不用太严格。此后，您可以随时进行调整。事实上，在邻近发布实际正式版应用的阶段，您几乎肯定会希望分析器更加严格。</li>
+</ul>
+<pre><code>include: package:flutter_lints/flutter.yaml
+
+linter:
+  rules:
+    prefer_const_constructors: false
+    prefer_final_fields: false
+    use_key_in_widget_constructors: false
+    prefer_const_literals_to_create_immutables: false
+    prefer_const_constructors_in_immutables: false
+    avoid_print: false
+</code></pre>
+<ul>
+<li>main.dart 入口启动文件</li>
+</ul>
+<p><strong>热重载</strong>：<br>
+当您将更改保存到源文件时，系统会触发热重载，页面将立即刷新。（如没有立马生效，刷新下页面）</p>
+<p><strong>插件安装</strong></p>
+<ol>
+<li>添加依赖：打开应用文件夹下的 pubspec.yaml 文件，然后在 pubspec.yaml 下添加对应的插件以及版本：</li>
+</ol>
+<pre><code>dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^0.1.0
+  english_words: ^3.1.5
+</code></pre>
+<p>开源包查找：<a href="pub.dartlang.org">pub.dartlang.org</a></p>
+<ol start="2">
+<li>安装：使用命令行，进入到demo目录下，执行安装包命令(直接通过vs code添加dependencies，会自动安装)</li>
+</ol>
+<pre><code>flutter packages get
+</code></pre>
+<p>&lt;br.&gt;</p>
+<h2 id="添加组件">添加组件</h2>
+<p>调出 Refactor 菜单。在 VS Code 中，您可以通过以下两种方式之一执行此操作：</p>
+<ul>
+<li>右键点击要重构的代码段（在本例中为 Text），然后从下拉菜单中选择 Refactor...，<br>
+或者</li>
+<li>将光标移到要重构的代码段上（在本例中为 Text），然后按下 Ctrl+. (Win/Linux) 或 Cmd+. (Mac)。</li>
+</ul>
+<p>在 Refactor 菜单中，选择 Extract Widget。指定一个名称，例如 BigCard，然后点击 Enter 键。会新建一个自定义的StatelessWidget类。</p>
+<p>extract: 相当于重新封装自定义一个组件，在当前文件的末尾自动创建一个自定义的新类。<br>
+wrap：相当于替换当前组件。如果选中的是布局，就是将选中的组件继续添加到布局中，选中的是widget则替换。另外可以通过更改命名，譬如改为wrap with builder(改名为builder)，可以再次重命名又可以改为LayoutBuilder等</p>
+<br>
+<h2 id="更改外观">更改外观</h2>
+<p>主题和样式：</p>
+<pre><code class="language-dart">// ...
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);       // ← Add this.
+
+    return Card(
+      color: theme.colorScheme.primary,    // ← And also this.
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Text(pair.asLowerCase),
+      ),
+    );
+  }
+
+// ...
+</code></pre>
+<p>theme可以访问各控件主题。<br>
+style用户标注组件样式。<br>
+借助 copyWith()，您可以更改更多文本样式方面的属性，而不仅仅是颜色。</p>
+<pre><code class="language-dart">@override
+Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    final style = theme.textTheme.displayMedium!.copyWith(
+        color: theme.colorScheme.onPrimary,
+    );
+
+    return Card(
+        color: theme.colorScheme.primary,
+        child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Text(appState.current.asLowerCase, style: style),
+        ),
+    );
+}
+</code></pre>
+<br>
+<h2 id="状态更新">状态更新</h2>
+<p>在 Flutter 中，可以采用许多有效的方法来管理应用状态。其中最容易理解的一种方法就是 ChangeNotifier，也是此应用所采用的方法。</p>
+<ul>
+<li>MyAppState 定义应用运行所需的数据。现在，其中仅包含一个变量，即通过随机函数生成当前的随机单词对。您稍后将在其中添加代码。</li>
+<li>状态类扩展 ChangeNotifier，这意味着它可以向其他人通知自己的更改。例如，如果当前单词对发生变化，应用中的一些 widget 需要知晓此变化。</li>
+<li>使用 ChangeNotifierProvider 创建状态并将其提供给整个应用（参见上面 MyApp 中的代码）。这样一来，应用中的任何 widget 都可以获取状态。</li>
+</ul>
+<pre><code class="language-dart">class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (context) =&gt; MyAppState(), //1.创建上限文context
+      child: MaterialApp(
+        title: 'Namer App',
+        theme: ThemeData(
+          useMaterial3: true,
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange),
+        ),
+        home: MyHomePage(),
+      ),
+    );
+  }
+}
+
+class MyAppState extends ChangeNotifier {
+  var current = WordPair.random();
+  void getNext() {
+    current = WordPair.random();
+    notifyListeners(); //5.通知更改
+  }
+}
+
+class MyHomePage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {           // 2.context对应的就是MyAppState
+    var appState = context.watch&lt;MyAppState&gt;();  //3.将context转换为MyAppState
+
+    return Scaffold(                             
+      body: Column(                              
+        children: [
+          Text('A random AWESOME idea:'),        
+          Text(appState.current.asLowerCase),    
+          ElevatedButton(
+            onPressed: () {
+               appState.getNext(); //4.调用更改状态
+            },
+            child: Text('Next'),
+          ),
+        ],                                       
+      ),
+    );
+  }
+}
+</code></pre>
+<br>
+<h2 id="无状态-widget-与有状态-widget">无状态 widget 与有状态 widget</h2>
+<p>StatelessWidget：无状态界面，每次全部都会重新刷新<br>
+StatefulWidget：状态界面，只调用build方法，外部可存自身变量（刷新时每次都会自动断点）<br>
+StatefulWidget可重载didUpdateWidget方法获得更新状态</p>
+<pre><code class="language-dart">  @override
+  void didUpdateWidget(CustomWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    var example = widget.atrribxx; //widget是State&lt;T extends StatefulWidget&gt;的属性
+  }
+</code></pre>
+<p>刷新更新可以用方法：setState</p>
+<br>
+<h2 id="响应-widget-的生命周期事件">响应 widget 的生命周期事件</h2>
+<p>在 StatefulWidget 上调用 createState() 之后，框架将新的状态对象插入到树中，然后在状态对象上调用 initState()。 State 的子类可以重写 initState 来完成只需要发生一次的工作。例如，重写 initState 来配置动画或订阅平台服务。实现 initState 需要调用父类的 super.initState 方法来开始。</p>
+<p>当不再需要状态对象时，框架会调用状态对象上的 dispose() 方法。可以重写dispose 方法来清理状态。例如，重写 dispose 以取消计时器或取消订阅平台服务。实现 dispose 时通常通过调用 super.dispose 来结束。</p>
+<br>
+<h2 id="materialapp和非materialapp">MaterialApp和非MaterialApp</h2>
+<p>一个 Flutter app 本身就是一个 widget，大多数 widgets 都有一个 build() 方法，在 app 的 build() 方法中实例化和返回一个 widget 会让它显示出来。</p>
+<ul>
+<li>对于 Material app，你可以使用 Scaffold widget，它提供默认的 banner 背景颜色，还有用于添加抽屉、提示条和底部列表弹窗的 API。你可以将 Center widget 直接添加到主页 body 的属性中。</li>
+<li>对于非 Material app，你可以将 Center widget 添加到 app 的 build() 方法里，默认情况下，非 Material app 不包含 AppBar、标题和背景颜色。如果你希望在非 Material app 中使用这些功能，则必须自己构建它们。如下：</li>
+</ul>
+<pre><code class="language-dart">class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(color: Colors.white),
+      child: const Center(
+        child: Text(
+          'Hello World',
+          textDirection: TextDirection.ltr,
+          style: TextStyle(
+            fontSize: 32,
+            color: Colors.black87,
+          ),
+        ),
+      ),
+    );
+  }
+}
+</code></pre>
+<br>
+<h2 id="对齐">对齐</h2>
+<p>mainAxisAlignment：主轴对齐<br>
+crossAxisAlignment：交叉轴对齐<br>
+对于一行来说，主轴水平延伸，交叉轴垂直延伸。对于一列来说，主轴垂直延伸，交叉轴水平延伸：<br>
+<img src="https://hensonguo.github.io/post-images/1689821952496.jpg" alt="" loading="lazy"></p>
+<h2 id="调整-widgets-大小">调整 widgets 大小</h2>
+<p>顶层widget会被强制变得和父widget（最顶层即屏幕）一样大。如下：</p>
+<pre><code class="language-dart">Scaffold(
+  body: Container(
+    color: blue,
+    child: const Column(
+      children: [
+        Text('Hello!'),
+        Text('Goodbye!'),
+      ],
+    ),
+  ),
+)
+</code></pre>
+<p>屏幕强制 Scaffold 变得和屏幕一样大，所以 Scaffold 充满屏幕。然后 Scaffold 告诉 Container 可以变为任意大小，但不能超出屏幕。</p>
+<p>当某个布局太大而超出屏幕时，受影响的边缘会出现黄色和黑色条纹图案。通过使用 Expanded widget，可以调整 widgets 的大小以适合行或列。</p>
+<pre><code class="language-dart">Row(
+  crossAxisAlignment: CrossAxisAlignment.center,
+  children: [
+    Expanded(
+      child: Image.asset('images/pic1.jpg'),
+    ),
+    Expanded(
+      child: Image.asset('images/pic2.jpg'),
+    ),
+    Expanded(
+      child: Image.asset('images/pic3.jpg'),
+    ),
+  ],
+);
+</code></pre>
+<br>
+<h2 id="布局以及嵌套">布局以及嵌套</h2>
+<p>最外层是Container，里面在是widget或者layout。<br>
+<strong>标准widgets:</strong></p>
+<ul>
+<li>Container：向 widget 增加 padding、margins、borders、background color 或者其他的“装饰”。</li>
+<li>GridView：将 widget 展示为一个可滚动的网格。</li>
+<li>ListView：将 widget 展示为一个可滚动的列表。</li>
+<li>Stack：将 widget 覆盖在另一个的上面。</li>
+</ul>
+<p><strong>Material widgets:</strong></p>
+<ul>
+<li>Card：将相关信息整理到一个有圆角和阴影的盒子中。 Card 只有一个子项，这个子项可以是列、行、列表、网格或者其他支持多个子项的 widget。默认情况下，Card 的大小是 0x0 像素。你可以使用 SizedBox 控制 card 的大小。</li>
+<li>ListTile：将最多三行的文本、可选的导语以及后面的图标组织在一行中。</li>
+</ul>
+<pre><code class="language-dart">Widget _buildImageColumn() {
+  return Container(
+    decoration: const BoxDecoration(
+      color: Colors.black26,
+    ),
+    child: Column(
+      children: [
+        _buildImageRow(1),
+        _buildImageRow(3),
+      ],
+    ),
+  );
+}
+</code></pre>
+<br>
+<h2 id="添加资源图片">添加资源图片</h2>
+<p>在pubspec.yaml中添加：</p>
+<pre><code>flutter:            
+    uses-material-design: true            
+    assets:            
+        - images/lake.jpg
+</code></pre>
+<br>
+<h2 id="自适应和响应式">自适应和响应式</h2>
+<p><strong>使用 LayoutBuilder 类</strong><br>
+通过它的 builder 属性，你可以得到一个 BoxConstraints 对象。你可以检查约束里的属性，来决定如何进行显示。例如，如果约束里的 maxWidth 超过了你的宽度分界点，你可以返回一个 Scaffold，它包含一列内容，左侧是一个列表。如果约束更小，则返回一个列表在抽屉里的 Scaffold。你也可以根据你的设备高度、屏幕的比例或者其他的属性，来调整你的显示。当约束改变时（例如用户旋转了手机，或是在 Android N 上将应用放置到 tile UI 中）构建方法会运行。</p>
+<p><strong>在构建方法中使用 MediaQuery.of() 方法</strong><br>
+这个方法可以获取到当前应用（基于上下文）的尺寸、旋转方向等信息。如果你需要基于完整的上下文信息进行布局决策，而不是基于特定的 widget，这个方法将非常有用。同样的，如果应用的尺寸发生了改变，构建方法也会自动执行。</p>
+<p>以下是其他有助于构建响应式界面的 widget：</p>
+<ul>
+<li>AspectRatio</li>
+<li>CustomSingleChildLayout</li>
+<li>CustomMultiChildLayout</li>
+<li>FittedBox</li>
+<li>FractionallySizedBox</li>
+<li>LayoutBuilder</li>
+<li>MediaQuery</li>
+<li>MediaQueryData</li>
+<li>OrientationBuilder</li>
+</ul>
+<br>
+<h2 id="布局约束">布局约束</h2>
+<p>我们会经常听到一些开发者在学习 Flutter 时的疑惑：为什么我设置了 width:100，但是看上去却不是 100 像素宽呢。（注意，本文中的“像素”均指的是逻辑像素）通常你会回答，将这个 Widget 放进 Center 中，对吧？</p>
+<p>如果你这样做了，他们会不断找你询问这样的问题：为什么 FittedBox 又不起作用了？为什么 Column 又溢出边界，亦或是 IntrinsicWidth 应该做什么。</p>
+<p>Flutter 的布局方式与 HTML 的布局差异相当大，然后要让他们熟记这条规则：<br>
+<strong>首先，上层 widget 向下层 widget 传递约束条件；<br>
+然后，下层 widget 向上层 widget 传递大小信息。<br>
+最后，上层 widget 决定下层 widget 的位置。</strong></p>
+<ul>
+<li>Widget 会通过它的 父级 获得自身的约束。约束实际上就是 4 个浮点类型的集合：最大/最小宽度，以及最大/最小高度。</li>
+<li>然后，这个 widget 将会逐个遍历它的 children 列表。向子级传递 约束（子级之间的约束可能会有所不同），然后询问它的每一个子级需要用于布局的大小。</li>
+<li>然后，这个 widget 就会对它子级的 children 逐个进行布局。（水平方向是 x 轴，竖直是 y 轴）</li>
+<li>最后，widget 将会把它的大小信息向上传递至父 widget（包括其原始约束条件）。</li>
+</ul>
+<br>
+<h2 id="限制">限制</h2>
+<p>正如上述所介绍的布局规则中所说的那样， Flutter 的布局引擎有一些重要限制：</p>
+<ul>
+<li>
+<p>一个 widget 仅在其父级给其约束的情况下才能决定自身的大小。这意味着 widget 通常情况下 不能任意获得其想要的大小。</p>
+</li>
+<li>
+<p>一个 widget 无法知道，也不需要决定其在屏幕中的位置。因为它的位置是由其父级决定的。</p>
+</li>
+<li>
+<p>当轮到父级决定其大小和位置的时候，同样的也取决于它自身的父级。所以，在不考虑整棵树的情况下，几乎不可能精确定义任何 widget 的大小和位置。</p>
+</li>
+<li>
+<p>如果子级想要拥有和父级不同的大小，然而父级没有足够的空间对其进行布局的话，子级的设置的大小可能会不生效。 这时请明确指定它的对齐方式</p>
+</li>
+</ul>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#1%E6%96%B0%E5%BB%BA%E5%B7%A5%E7%A8%8B">1.新建工程</a></li>
+<li><a href="#%E6%B7%BB%E5%8A%A0%E7%BB%84%E4%BB%B6">添加组件</a></li>
+<li><a href="#%E6%9B%B4%E6%94%B9%E5%A4%96%E8%A7%82">更改外观</a></li>
+<li><a href="#%E7%8A%B6%E6%80%81%E6%9B%B4%E6%96%B0">状态更新</a></li>
+<li><a href="#%E6%97%A0%E7%8A%B6%E6%80%81-widget-%E4%B8%8E%E6%9C%89%E7%8A%B6%E6%80%81-widget">无状态 widget 与有状态 widget</a></li>
+<li><a href="#%E5%93%8D%E5%BA%94-widget-%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E4%BA%8B%E4%BB%B6">响应 widget 的生命周期事件</a></li>
+<li><a href="#materialapp%E5%92%8C%E9%9D%9Ematerialapp">MaterialApp和非MaterialApp</a></li>
+<li><a href="#%E5%AF%B9%E9%BD%90">对齐</a></li>
+<li><a href="#%E8%B0%83%E6%95%B4-widgets-%E5%A4%A7%E5%B0%8F">调整 widgets 大小</a></li>
+<li><a href="#%E5%B8%83%E5%B1%80%E4%BB%A5%E5%8F%8A%E5%B5%8C%E5%A5%97">布局以及嵌套</a></li>
+<li><a href="#%E6%B7%BB%E5%8A%A0%E8%B5%84%E6%BA%90%E5%9B%BE%E7%89%87">添加资源图片</a></li>
+<li><a href="#%E8%87%AA%E9%80%82%E5%BA%94%E5%92%8C%E5%93%8D%E5%BA%94%E5%BC%8F">自适应和响应式</a></li>
+<li><a href="#%E5%B8%83%E5%B1%80%E7%BA%A6%E6%9D%9F">布局约束</a></li>
+<li><a href="#%E9%99%90%E5%88%B6">限制</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://hensonguo.github.io/post/windows-he-xin-bian-cheng-jie-gou-hua-yi-chang-chu-li/">
+              <h3 class="post-title">
+                Windows核心编程-结构化异常处理
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://hensonguo.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

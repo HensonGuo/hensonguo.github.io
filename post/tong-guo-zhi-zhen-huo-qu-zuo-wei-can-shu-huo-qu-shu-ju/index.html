@@ -1,0 +1,217 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>双星号指针 | Icode</title>
+<link rel="shortcut icon" href="https://hensonguo.github.io/favicon.ico?v=1704354032694">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://hensonguo.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="双星号指针 | Icode - Atom Feed" href="https://hensonguo.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="
+指针本身就是一个对象，对象存储的是另一个变量的地址
+&amp;ptr，获取的是指针对象的地址，而非存储变量的地址
+
+int a = 1;
+int* b;
+b = &amp;a;
+int c = *b;
+int d = **(&amp;b)..." />
+    <meta name="keywords" content="C++" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://hensonguo.github.io">
+  <img class="avatar" src="https://hensonguo.github.io/images/avatar.png?v=1704354032694" alt="">
+  </a>
+  <h1 class="site-title">
+    Icode
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              双星号指针
+            </h2>
+            <div class="post-info">
+              <span>
+                2022-10-27
+              </span>
+              <span>
+                1 min read
+              </span>
+              
+                <a href="https://hensonguo.github.io/tag/blFelWlDF/" class="post-tag">
+                  # C++
+                </a>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <ol>
+<li>指针本身就是一个对象，对象存储的是另一个变量的地址</li>
+<li>&amp;ptr，获取的是指针对象的地址，而非存储变量的地址</li>
+</ol>
+<pre><code class="language-c++">int a = 1;
+int* b;
+b = &amp;a;
+int c = *b;
+int d = **(&amp;b);
+</code></pre>
+<p>以上bcd的值都为1<br>
+&amp;b 指针地址；*(&amp;b) 指针；**(&amp;b) 指针变量</p>
+<h2 id="指针引用作为函数参数传递">指针引用作为函数参数传递</h2>
+<pre><code class="language-c++">void getData(int**a, int&amp; b)
+{
+	int x = 1;
+	int y = 2;
+	int* test = &amp;x;
+	*a = test;
+	b = y;
+}
+
+int main()
+{
+	int* m = nullptr;
+	int n = 0;
+	getData(&amp;m, n);
+	printf(&quot;%d, %d&quot;, *m, n);
+	return 0;
+}
+</code></pre>
+<p>1、指针本身是一个对象，将指针地址传入&amp;m<br>
+2、指针的指针加双星号**a<br>
+3、更改指针地址则是 *a = ptr</p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#%E6%8C%87%E9%92%88%E5%BC%95%E7%94%A8%E4%BD%9C%E4%B8%BA%E5%87%BD%E6%95%B0%E5%8F%82%E6%95%B0%E4%BC%A0%E9%80%92">指针引用作为函数参数传递</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://hensonguo.github.io/post/windows10-xia-kai-qi-d3d11-de-debug-layer/">
+              <h3 class="post-title">
+                Windows10下开启D3D11的Debug Layer
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://hensonguo.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

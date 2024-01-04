@@ -1,0 +1,620 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ASCII码中\X在表示什么意思 | Icode</title>
+<link rel="shortcut icon" href="https://hensonguo.github.io/favicon.ico?v=1704354032694">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://hensonguo.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="ASCII码中\X在表示什么意思 | Icode - Atom Feed" href="https://hensonguo.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="\x是转义字符，告诉编译器需要用特殊的方式进行处理。\x表示后面的字符是十六进制数，\0表示后面的字符是八进制数。例如十进制的17用十六进制表示就是‘\x11’,用八进制表示就是‘\021’。
+所有的ASCII码都可以用“\”加数字(一般是..." />
+    <meta name="keywords" content="ASCII" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://hensonguo.github.io">
+  <img class="avatar" src="https://hensonguo.github.io/images/avatar.png?v=1704354032694" alt="">
+  </a>
+  <h1 class="site-title">
+    Icode
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              ASCII码中\X在表示什么意思
+            </h2>
+            <div class="post-info">
+              <span>
+                2022-08-25
+              </span>
+              <span>
+                4 min read
+              </span>
+              
+                <a href="https://hensonguo.github.io/tag/tA4RomSd1/" class="post-tag">
+                  # ASCII
+                </a>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <p>\x是转义字符，告诉编译器需要用特殊的方式进行处理。\x表示后面的字符是十六进制数，\0表示后面的字符是八进制数。例如十进制的17用十六进制表示就是‘\x11’,用八进制表示就是‘\021’。</p>
+<p>所有的ASCII码都可以用“\”加数字(一般是8进制数字)来表示。而C中定义了一些字母前加&quot;&quot;来表示常见的那些不能显示的ASCII字符，如\0,\t,\n等，就称为转义字符，因为后面的字符，都不是本来的ASCII字符意思了。<br>
+<img src="https://hensonguo.github.io/post-images/1661412266627.jfif" alt="" loading="lazy"></p>
+<ol>
+<li><font color=red>ASCII 打印字符</font>：数字 32–126 分配给了能在键盘上找到的字符，当您查看或打印文档时就会出现。注：十进制32代表空格 ，十进制数字 127 代表 DELETE 命令。下面是ASCII码和相应数字的对照表</li>
+</ol>
+<table class="gen" border="1" cellpadding="0" cellspacing="0">
+    <tbody>
+        <tr style="TEXT-ALIGN: center">
+            <td class="field" colspan="2">ASCII 码</td>
+            <td class="field" rowspan="2">字符</td>
+            <td class="bk"> </td>
+            <td class="field" colspan="2">ASCII 码</td>
+            <td class="field" rowspan="2">字符</td>
+            <td class="bk"> </td>
+            <td class="field" colspan="2">ASCII 码</td>
+            <td class="field" rowspan="2">字符</td>
+            <td class="bk"> </td>
+            <td class="field" colspan="2">ASCII 码</td>
+            <td class="field" rowspan="2">字符</td>
+        </tr>
+        <tr style="TEXT-ALIGN: center">
+            <td class="field">十进位</td>
+            <td class="field">十六进位</td>
+            <td class="bk"> </td>
+            <td class="field">十进位</td>
+            <td class="field">十六进位</td>
+            <td class="bk"> </td>
+            <td class="field">十进位</td>
+            <td class="field">十六进位</td>
+            <td class="bk"> </td>
+            <td class="field">十进位</td>
+            <td class="field">十六进位</td>
+        </tr>
+        <tr style="TEXT-ALIGN: center">
+            <td class="cellgen">032</td>
+            <td class="cellgen">20</td>
+            <td class="cellgen"> </td>
+            <td class="bk"> </td>
+            <td class="cellgen">056</td>
+            <td class="cellgen">38</td>
+            <td class="cellgen">8</td>
+            <td class="bk"> </td>
+            <td class="cellgen">080</td>
+            <td class="cellgen">50</td>
+            <td class="cellgen">P</td>
+            <td class="bk"> </td>
+            <td class="cellgen">104</td>
+            <td class="cellgen">68</td>
+            <td class="cellgen">h</td>
+        </tr>
+        <tr style="TEXT-ALIGN: center">
+            <td class="cellgen">033</td>
+            <td class="cellgen">21</td>
+            <td class="cellgen">!</td>
+            <td class="bk"> </td>
+            <td class="cellgen">057</td>
+            <td class="cellgen">39</td>
+            <td class="cellgen">9</td>
+            <td class="bk"> </td>
+            <td class="cellgen">081</td>
+            <td class="cellgen">51</td>
+            <td class="cellgen">Q</td>
+            <td class="bk"> </td>
+            <td class="cellgen">105</td>
+            <td class="cellgen">69</td>
+            <td class="cellgen">i</td>
+        </tr>
+        <tr style="TEXT-ALIGN: center">
+            <td class="cellgen">034</td>
+            <td class="cellgen">22</td>
+            <td class="cellgen">"</td>
+            <td class="bk"> </td>
+            <td class="cellgen">058</td>
+            <td class="cellgen">3A</td>
+            <td class="cellgen">:</td>
+            <td class="bk"> </td>
+            <td class="cellgen">082</td>
+            <td class="cellgen">52</td>
+            <td class="cellgen">R</td>
+            <td class="bk"> </td>
+            <td class="cellgen">106</td>
+            <td class="cellgen">6A</td>
+            <td class="cellgen">j</td>
+        </tr>
+        <tr style="TEXT-ALIGN: center">
+            <td class="cellgen">035</td>
+            <td class="cellgen">23</td>
+            <td class="cellgen">#</td>
+            <td class="bk"> </td>
+            <td class="cellgen">059</td>
+            <td class="cellgen">3B</td>
+            <td class="cellgen">;</td>
+            <td class="bk"> </td>
+            <td class="cellgen">083</td>
+            <td class="cellgen">53</td>
+            <td class="cellgen">S</td>
+            <td class="bk"> </td>
+            <td class="cellgen">107</td>
+            <td class="cellgen">6B</td>
+            <td class="cellgen">k</td>
+        </tr>
+        <tr style="TEXT-ALIGN: center">
+            <td class="cellgen">036</td>
+            <td class="cellgen">24</td>
+            <td class="cellgen">$</td>
+            <td class="bk"> </td>
+            <td class="cellgen">060</td>
+            <td class="cellgen">3C</td>
+            <td class="cellgen"><</td>
+            <td class="bk"> </td>
+            <td class="cellgen">084</td>
+            <td class="cellgen">54</td>
+            <td class="cellgen">T</td>
+            <td class="bk"> </td>
+            <td class="cellgen">108</td>
+            <td class="cellgen">6C</td>
+            <td class="cellgen">l</td>
+        </tr>
+        <tr style="TEXT-ALIGN: center">
+            <td class="cellgen">037</td>
+            <td class="cellgen">25</td>
+            <td class="cellgen">%</td>
+            <td class="bk"> </td>
+            <td class="cellgen">061</td>
+            <td class="cellgen">3D</td>
+            <td class="cellgen">=</td>
+            <td class="bk"> </td>
+            <td class="cellgen">085</td>
+            <td class="cellgen">55</td>
+            <td class="cellgen">U</td>
+            <td class="bk"> </td>
+            <td class="cellgen">109</td>
+            <td class="cellgen">6D</td>
+            <td class="cellgen">m</td>
+        </tr>
+        <tr style="TEXT-ALIGN: center">
+            <td class="cellgen">038</td>
+            <td class="cellgen">26</td>
+            <td class="cellgen">&</td>
+            <td class="bk"> </td>
+            <td class="cellgen">062</td>
+            <td class="cellgen">3E</td>
+            <td class="cellgen">></td>
+            <td class="bk"> </td>
+            <td class="cellgen">086</td>
+            <td class="cellgen">56</td>
+            <td class="cellgen">V</td>
+            <td class="bk"> </td>
+            <td class="cellgen">110</td>
+            <td class="cellgen">6E</td>
+            <td class="cellgen">n</td>
+        </tr>
+        <tr style="TEXT-ALIGN: center">
+            <td class="cellgen">039</td>
+            <td class="cellgen">27</td>
+            <td class="cellgen">'</td>
+            <td class="bk"> </td>
+            <td class="cellgen">063</td>
+            <td class="cellgen">3F</td>
+            <td class="cellgen">?</td>
+            <td class="bk"> </td>
+            <td class="cellgen">087</td>
+            <td class="cellgen">57</td>
+            <td class="cellgen">W</td>
+            <td class="bk"> </td>
+            <td class="cellgen">111</td>
+            <td class="cellgen">6F</td>
+            <td class="cellgen">o</td>
+        </tr>
+        <tr style="TEXT-ALIGN: center">
+            <td class="cellgen">040</td>
+            <td class="cellgen">28</td>
+            <td class="cellgen">(</td>
+            <td class="bk"> </td>
+            <td class="cellgen">064</td>
+            <td class="cellgen">40</td>
+            <td class="cellgen">@</td>
+            <td class="bk"> </td>
+            <td class="cellgen">088</td>
+            <td class="cellgen">58</td>
+            <td class="cellgen">X</td>
+            <td class="bk"> </td>
+            <td class="cellgen">112</td>
+            <td class="cellgen">70</td>
+            <td class="cellgen">p</td>
+        </tr>
+        <tr style="TEXT-ALIGN: center">
+            <td class="cellgen">041</td>
+            <td class="cellgen">29</td>
+            <td class="cellgen">)</td>
+            <td class="bk"> </td>
+            <td class="cellgen">065</td>
+            <td class="cellgen">41</td>
+            <td class="cellgen">A</td>
+            <td class="bk"> </td>
+            <td class="cellgen">089</td>
+            <td class="cellgen">59</td>
+            <td class="cellgen">Y</td>
+            <td class="bk"> </td>
+            <td class="cellgen">113</td>
+            <td class="cellgen">71</td>
+            <td class="cellgen">q</td>
+        </tr>
+        <tr style="TEXT-ALIGN: center">
+            <td class="cellgen">042</td>
+            <td class="cellgen">2A</td>
+            <td class="cellgen">*</td>
+            <td class="bk"> </td>
+            <td class="cellgen">066</td>
+            <td class="cellgen">42</td>
+            <td class="cellgen">B</td>
+            <td class="bk"> </td>
+            <td class="cellgen">090</td>
+            <td class="cellgen">5A</td>
+            <td class="cellgen">Z</td>
+            <td class="bk"> </td>
+            <td class="cellgen">114</td>
+            <td class="cellgen">72</td>
+            <td class="cellgen">r</td>
+        </tr>
+        <tr style="TEXT-ALIGN: center">
+            <td class="cellgen">043</td>
+            <td class="cellgen">2B</td>
+            <td class="cellgen">+</td>
+            <td class="bk"> </td>
+            <td class="cellgen">067</td>
+            <td class="cellgen">43</td>
+            <td class="cellgen">C</td>
+            <td class="bk"> </td>
+            <td class="cellgen">091</td>
+            <td class="cellgen">5B</td>
+            <td class="cellgen">[</td>
+            <td class="bk"> </td>
+            <td class="cellgen">115</td>
+            <td class="cellgen">73</td>
+            <td class="cellgen">s</td>
+        </tr>
+        <tr style="TEXT-ALIGN: center">
+            <td class="cellgen">044</td>
+            <td class="cellgen">2C</td>
+            <td class="cellgen">,</td>
+            <td class="bk"> </td>
+            <td class="cellgen">068</td>
+            <td class="cellgen">44</td>
+            <td class="cellgen">D</td>
+            <td class="bk"> </td>
+            <td class="cellgen">092</td>
+            <td class="cellgen">5C</td>
+            <td class="cellgen">\</td>
+            <td class="bk"> </td>
+            <td class="cellgen">116</td>
+            <td class="cellgen">74</td>
+            <td class="cellgen">t</td>
+        </tr>
+        <tr style="TEXT-ALIGN: center">
+            <td class="cellgen">045</td>
+            <td class="cellgen">2D</td>
+            <td class="cellgen">-</td>
+            <td class="bk"> </td>
+            <td class="cellgen">069</td>
+            <td class="cellgen">45</td>
+            <td class="cellgen">E</td>
+            <td class="bk"> </td>
+            <td class="cellgen">093</td>
+            <td class="cellgen">5D</td>
+            <td class="cellgen">]</td>
+            <td class="bk"> </td>
+            <td class="cellgen">117</td>
+            <td class="cellgen">75</td>
+            <td class="cellgen">u</td>
+        </tr>
+        <tr style="TEXT-ALIGN: center">
+            <td class="cellgen">046</td>
+            <td class="cellgen">2E</td>
+            <td class="cellgen">.</td>
+            <td class="bk"> </td>
+            <td class="cellgen">070</td>
+            <td class="cellgen">46</td>
+            <td class="cellgen">F</td>
+            <td class="bk"> </td>
+            <td class="cellgen">094</td>
+            <td class="cellgen">5E</td>
+            <td class="cellgen">^</td>
+            <td class="bk"> </td>
+            <td class="cellgen">118</td>
+            <td class="cellgen">76</td>
+            <td class="cellgen">v</td>
+        </tr>
+        <tr style="TEXT-ALIGN: center">
+            <td class="cellgen">047</td>
+            <td class="cellgen">2F</td>
+            <td class="cellgen">/</td>
+            <td class="bk"> </td>
+            <td class="cellgen">071</td>
+            <td class="cellgen">47</td>
+            <td class="cellgen">G</td>
+            <td class="bk"> </td>
+            <td class="cellgen">095</td>
+            <td class="cellgen">5F</td>
+            <td class="cellgen">_</td>
+            <td class="bk"> </td>
+            <td class="cellgen">119</td>
+            <td class="cellgen">77</td>
+            <td class="cellgen">w</td>
+        </tr>
+        <tr style="TEXT-ALIGN: center">
+            <td class="cellgen">048</td>
+            <td class="cellgen">30</td>
+            <td class="cellgen">0</td>
+            <td class="bk"> </td>
+            <td class="cellgen">072</td>
+            <td class="cellgen">48</td>
+            <td class="cellgen">H</td>
+            <td class="bk"> </td>
+            <td class="cellgen">096</td>
+            <td class="cellgen">60</td>
+            <td class="cellgen">`</td>
+            <td class="bk"> </td>
+            <td class="cellgen">120</td>
+            <td class="cellgen">78</td>
+            <td class="cellgen">x</td>
+        </tr>
+        <tr style="TEXT-ALIGN: center">
+            <td class="cellgen">049</td>
+            <td class="cellgen">31</td>
+            <td class="cellgen">1</td>
+            <td class="bk"> </td>
+            <td class="cellgen">073</td>
+            <td class="cellgen">49</td>
+            <td class="cellgen">I</td>
+            <td class="bk"> </td>
+            <td class="cellgen">097</td>
+            <td class="cellgen">61</td>
+            <td class="cellgen">a</td>
+            <td class="bk"> </td>
+            <td class="cellgen">121</td>
+            <td class="cellgen">79</td>
+            <td class="cellgen">y</td>
+        </tr>
+        <tr style="TEXT-ALIGN: center">
+            <td class="cellgen">050</td>
+            <td class="cellgen">32</td>
+            <td class="cellgen">2</td>
+            <td class="bk"> </td>
+            <td class="cellgen">074</td>
+            <td class="cellgen">4A</td>
+            <td class="cellgen">J</td>
+            <td class="bk"> </td>
+            <td class="cellgen">098</td>
+            <td class="cellgen">62</td>
+            <td class="cellgen">b</td>
+            <td class="bk"> </td>
+            <td class="cellgen">122</td>
+            <td class="cellgen">7A</td>
+            <td class="cellgen">z</td>
+        </tr>
+        <tr style="TEXT-ALIGN: center">
+            <td class="cellgen">051</td>
+            <td class="cellgen">33</td>
+            <td class="cellgen">3</td>
+            <td class="bk"> </td>
+            <td class="cellgen">075</td>
+            <td class="cellgen">4B</td>
+            <td class="cellgen">K</td>
+            <td class="bk"> </td>
+            <td class="cellgen">099</td>
+            <td class="cellgen">63</td>
+            <td class="cellgen">c</td>
+            <td class="bk"> </td>
+            <td class="cellgen">123</td>
+            <td class="cellgen">7B</td>
+            <td class="cellgen">{</td>
+        </tr>
+        <tr style="TEXT-ALIGN: center">
+            <td class="cellgen">052</td>
+            <td class="cellgen">34</td>
+            <td class="cellgen">4</td>
+            <td class="bk"> </td>
+            <td class="cellgen">076</td>
+            <td class="cellgen">4C</td>
+            <td class="cellgen">L</td>
+            <td class="bk"> </td>
+            <td class="cellgen">100</td>
+            <td class="cellgen">64</td>
+            <td class="cellgen">d</td>
+            <td class="bk"> </td>
+            <td class="cellgen">124</td>
+            <td class="cellgen">7C</td>
+            <td class="cellgen">|</td>
+        </tr>
+        <tr style="TEXT-ALIGN: center">
+            <td class="cellgen">053</td>
+            <td class="cellgen">35</td>
+            <td class="cellgen">5</td>
+            <td class="bk"> </td>
+            <td class="cellgen">077</td>
+            <td class="cellgen">4D</td>
+            <td class="cellgen">M</td>
+            <td class="bk"> </td>
+            <td class="cellgen">101</td>
+            <td class="cellgen">65</td>
+            <td class="cellgen">e</td>
+            <td class="bk"> </td>
+            <td class="cellgen">125</td>
+            <td class="cellgen">7D</td>
+            <td class="cellgen">}</td>
+        </tr>
+        <tr style="TEXT-ALIGN: center">
+            <td class="cellgen">054</td>
+            <td class="cellgen">36</td>
+            <td class="cellgen">6</td>
+            <td class="bk"> </td>
+            <td class="cellgen">078</td>
+            <td class="cellgen">4E</td>
+            <td class="cellgen">N</td>
+            <td class="bk"> </td>
+            <td class="cellgen">102</td>
+            <td class="cellgen">66</td>
+            <td class="cellgen">f</td>
+            <td class="bk"> </td>
+            <td class="cellgen">126</td>
+            <td class="cellgen">7E</td>
+            <td class="cellgen">~</td>
+        </tr>
+        <tr style="TEXT-ALIGN: center">
+            <td class="cellgen">055</td>
+            <td class="cellgen">37</td>
+            <td class="cellgen">7</td>
+            <td class="bk"> </td>
+            <td class="cellgen">079</td>
+            <td class="cellgen">4F</td>
+            <td class="cellgen">O</td>
+            <td class="bk"> </td>
+            <td class="cellgen">103</td>
+            <td class="cellgen">67</td>
+            <td class="cellgen">g</td>
+            <td class="bk"> </td>
+            <td class="cellgen">127</td>
+            <td class="cellgen">7F</td>
+            <td class="cellgen">DEL</td>
+        </tr>
+    </tbody>
+</table>
+<ol start="2">
+<li><font color=red>ASCII 非打印控制字符</font>：ASCII 表上的数字 0–31 分配给了控制字符，用于控制像打印机等一些外围设备。例如，12 代表换页/新页功能。此命令指示打印机跳到下一页的开头。<br>
+<img src="https://hensonguo.github.io/post-images/1661413428618.jpg" alt="" loading="lazy"><br>
+<img src="https://hensonguo.github.io/post-images/1661413519682.jpg" alt="" loading="lazy"></li>
+<li><font color=red>扩展 ASCII 打印字符</font>：扩展的 ASCII 字符满足了对更多字符的需求。扩展的 ASCII 包含 ASCII 中已有的 128 个字符（数字 0–32 显示在下图中），又增加了 128 个字符，总共是 256 个。即使有了这些更多的字符，许多语言还是包含无法压缩到 256 个字符中的符号。因此，出现了一些 ASCII 的变体来囊括地区性字符和符号.<br>
+<img src="https://hensonguo.github.io/post-images/1661413468876.jpg" alt="" loading="lazy"></li>
+</ol>
+
+              </div>
+              <div class="toc-container">
+                
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://hensonguo.github.io/post/git-zi-cang-ku-she-zhi-yu-huo-qu/">
+              <h3 class="post-title">
+                git子仓库设置与获取
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://hensonguo.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

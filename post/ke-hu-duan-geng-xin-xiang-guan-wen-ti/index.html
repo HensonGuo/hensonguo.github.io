@@ -1,0 +1,224 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>客户端更新相关问题 | Icode</title>
+<link rel="shortcut icon" href="https://hensonguo.github.io/favicon.ico?v=1704354032694">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://hensonguo.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="客户端更新相关问题 | Icode - Atom Feed" href="https://hensonguo.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="1.权限问题
+如果用户是非管理员，是无法将文件下载到Program Files文件夹以及子文件下的，因为这是一个受保护的目录，只有管理员或具有管理员权限的用户才能在其中写入文件。
+如果您的程序需要在 Program Files 中写入文件，..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://hensonguo.github.io">
+  <img class="avatar" src="https://hensonguo.github.io/images/avatar.png?v=1704354032694" alt="">
+  </a>
+  <h1 class="site-title">
+    Icode
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              客户端更新相关问题
+            </h2>
+            <div class="post-info">
+              <span>
+                2023-11-28
+              </span>
+              <span>
+                3 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <h3 id="1权限问题">1.权限问题</h3>
+<p>如果用户是非管理员，是无法将文件下载到Program Files文件夹以及子文件下的，因为这是一个受保护的目录，只有管理员或具有管理员权限的用户才能在其中写入文件。</p>
+<p>如果您的程序需要在 Program Files 中写入文件，您可以使用以下方法：</p>
+<ol>
+<li>将文件下载到用户的临时文件夹中，例如 C:\Users\username\AppData\Local\Temp。以管理员身份运行您的应用程序，并将文件复制到 Program Files 目录中。</li>
+<li>将您的应用程序注册为管理员权限，使其能够在 Program Files 目录中写入文件。</li>
+</ol>
+<p>请注意，第两种方法需要您的应用程序能够处理 UAC（用户账户控制）提示。</p>
+<br>
+<h3 id="2复制移动到program-files时的权限">2.复制移动到Program Files时的权限</h3>
+<p>1）以管理员权限启动一个进程进行复制<br>
+已知将文件移动到Program Files需要管理员权限，那么可以新启动一个进程，并将进程设置为管理员权限，如：</p>
+<pre><code class="language-python">SW_HIDE = 0
+ctypes.windll.shell32.ShellExecuteW(
+    None,
+    'runas', #管理员
+    exePath,
+    updateCmd,
+    None,
+    SW_HIDE)
+</code></pre>
+<p>但是如果用户账户控制会对更改程序进行拦截弹窗提示</p>
+<p>2）将目标进程UAC执行级别设置为管理员<br>
+当程序更新文件下载完成后，需要写入Program Files中，我们通常会将写入安装的过程作为一个工程处理，将对应的exe程序的UAC执行级别设置为管理员。</p>
+<p>在属性/链接器/UAC执行级别的选项中进行设置。</p>
+<p>如果非管理员启动这个可执行程序，会提示需要管理员权限</p>
+<br>
+<h3 id="3更新完成启动程序">3.更新完成启动程序</h3>
+<p>如果并未将启动exe拷贝到安装目录下，而且启动exe依赖安装目录下的动态文件，如何处理<br>
+1）通过manifests指定dll的搜索目录<br>
+<a href="https://learn.microsoft.com/en-us/windows/win32/sbscs/application-manifests#file-location">参考1</a><br>
+<a href="https://stackoverflow.com/questions/3832290/altering-dll-search-path-for-static-linked-dll">参考2</a><br>
+2) 通过修改进程的环境变量确定dll的搜索目录</p>
+<pre><code class="language-python">os.environ['PATH'] = os.pathsep.join([appPath, os.environ['PATH']])
+originEnv = dict(os.environ)
+subprocess.Popen(self._params, env=originEnv)
+</code></pre>
+<p>如果有qt依赖，还需要在对应的exe目录创建一个qt.conf文件</p>
+<pre><code class="language-python">qtConfigPath = self.getAppPath(&quot;qt.conf&quot;)
+file = QtCore.QFile(qtConfigPath)
+file.open(QtCore.QIODevice.OpenModeFlag.WriteOnly)
+pluginPath = ccpath.replace(&quot;\\&quot;, &quot;/&quot;)
+file.write(f&quot;[Paths]\nPrefix={pluginPath}/Qt5&quot;.encode('utf-8'))
+file.close()
+</code></pre>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li>
+<ul>
+<li><a href="#1%E6%9D%83%E9%99%90%E9%97%AE%E9%A2%98">1.权限问题</a></li>
+<li><a href="#2%E5%A4%8D%E5%88%B6%E7%A7%BB%E5%8A%A8%E5%88%B0program-files%E6%97%B6%E7%9A%84%E6%9D%83%E9%99%90">2.复制移动到Program Files时的权限</a></li>
+<li><a href="#3%E6%9B%B4%E6%96%B0%E5%AE%8C%E6%88%90%E5%90%AF%E5%8A%A8%E7%A8%8B%E5%BA%8F">3.更新完成启动程序</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://hensonguo.github.io/post/ji-shi-tong-xun-shi-shi-shi-pin-liao-tian-ji-zhu/">
+              <h3 class="post-title">
+                即时通讯实时视频聊天技术
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://hensonguo.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

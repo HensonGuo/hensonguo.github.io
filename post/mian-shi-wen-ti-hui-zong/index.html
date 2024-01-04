@@ -1,0 +1,479 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>面试问题汇总1 | Icode</title>
+<link rel="shortcut icon" href="https://hensonguo.github.io/favicon.ico?v=1704354032694">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://hensonguo.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="面试问题汇总1 | Icode - Atom Feed" href="https://hensonguo.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="1. 是否了解RAII (Resource Acquisition is Initialization) ？请阐述
+把资源和对象的生命周期绑定，对象创建获取资源，对象销毁释放资源
+2. 设计模式
+
+工厂模式：封装和管理类的创建，终极目的是为..." />
+    <meta name="keywords" content="C++,面试" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://hensonguo.github.io">
+  <img class="avatar" src="https://hensonguo.github.io/images/avatar.png?v=1704354032694" alt="">
+  </a>
+  <h1 class="site-title">
+    Icode
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              面试问题汇总1
+            </h2>
+            <div class="post-info">
+              <span>
+                2022-08-30
+              </span>
+              <span>
+                24 min read
+              </span>
+              
+                <a href="https://hensonguo.github.io/tag/blFelWlDF/" class="post-tag">
+                  # C++
+                </a>
+              
+                <a href="https://hensonguo.github.io/tag/W9XKKbEX8d/" class="post-tag">
+                  # 面试
+                </a>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <h3 id="1-是否了解raii-resource-acquisition-is-initialization-请阐述">1. 是否了解RAII (Resource Acquisition is Initialization) ？请阐述</h3>
+<p>把资源和对象的生命周期绑定，对象创建获取资源，对象销毁释放资源</p>
+<h3 id="2-设计模式">2. 设计模式</h3>
+<ul>
+<li>工厂模式：封装和管理类的创建，终极目的是为了解耦，实现创建者和调用者的分离。将对象的构造过程封装，是创建的接口统一简洁，易于扩展。工厂模式的本质就是对获取对象过程的抽象。</li>
+<li>观察者模式：给一个对象添加观察者，对象改变时通知一个或者多个观察者对象，常用与消息更新，广播机制或链式触发等，比如QT信号槽机制</li>
+<li>职责链模式：<font color=red>将一个请求的发送者和接收者解耦，让多个对象都有机会处理请求</font>。将接收请求的对象连接成一条链，并且沿着这条链传递请求，直到有一个对象能够处理它为止。采用职责链模式不仅可以方便扩展（当增加一个接受者时，只需要在链上的适当位置插入对应的处理方法即可），而且可以替换掉代码中可能存在的switch-case或者if-else。在工具的设计、具有层级关系或权限关系的任务处理场景中可以应用。常用在消息处理。</li>
+<li>策略模式：常常与工厂模式搭配，封装不同的算法（策略），再结合C++多态机制，策略模式在实际开发过程中应用十分广泛</li>
+<li>代理模式：C++智能指针、引用计数等</li>
+</ul>
+<h3 id="3-http-get-和post请求区别">3. http get 和post请求区别</h3>
+<p>本质上都是tcp连接，由于http规定和服务器/浏览器的限制，导致他们在应用过程中有些不同</p>
+<ul>
+<li>过程不同：<font color=red>get请求会把http header和data一并发送出去，服务器响应200（返回数据）；post则是先发送header，服务器想用100 continue，服务器响应200</font></li>
+<li>参数数据类型不同：get只接受ascii字符，而post没有限制</li>
+<li>安全性不用：get参数直接暴露在url上，所以不能传递敏感信息。post是放在request body中</li>
+<li>编码方式不同：get只能对url进行编码，post支持多种编码方式</li>
+<li>长度限制不同：get对url传参是有长度限制的，post无</li>
+</ul>
+<h3 id="4-tcp-udp">4. tcp udp</h3>
+   <table><thead><tr><th>TCP</th><th>UDP</th></tr></thead><tbody>
+   <tr><td>面向连接</td><td>面向非连接</td></tr>
+   <tr><td>传输可靠</td><td>传输不可靠</td></tr>
+   <tr><td>传输少量数据</td><td>传输大量数据</td></tr>
+   <tr><td>速度慢</td><td>速度快</td></tr>
+   <tr><td>保证数据正确性</td><td>可能丢包</td></tr>
+   <tr><td>保证数据顺序</td><td>不保证</td></tr></tbody></table>
+<p><strong>tcp挥手握手</strong><br>
+三次握手：<br>
+1、客户端发送syn给服务端，等待服务端确认<br>
+2、服务端接收到syn，会给客户端发送一个ack确认，并且服务端也需要客户端确认，所以会发送syn<br>
+3、、客户端手动服务端的syn，会给服务端发送ack进行确认。<br>
+到此，客户端和服务端就成功连接。<br>
+<img src="https://hensonguo.github.io/post-images/1661947952532.webp" alt="" loading="lazy"><br>
+建立一个连接需要三次握手，而终止一个连接要经过四次握手，这是由TCP的半关闭（half-close）造成的。四次挥手：<br>
+1、客户端发送fin给服务端，用来关闭客户端到服务端的数据发送<br>
+2、服务端收到fin之后，会给客户端发送ack进行确认<br>
+3、服务端发送fin给客户端，用来关闭服务端到客户端的数据发送<br>
+4、客户端收到fin之后，会给服务端发送ack进行确认<br>
+<img src="https://hensonguo.github.io/post-images/1661947969631.webp" alt="" loading="lazy"></p>
+<p><font color=red>为什么需要三次握手</font><br>
+为什么A还要发送一次确认呢?这主要是为了<strong>防止已失效的连接请求报文段突然又传送到了服务端，因而产生错误</strong>。</p>
+<p>所谓已失效的连接请求报文段是这样产生的。<font color=green>C发送连接请求，但因连接请求报文丢失而未收到确认，于是C重发一次连接请求，成功后建立了连接。数据传输完毕后就释放了连接。现在假定C发出的第一个请求报文段并未丢失，而是在某个网络节点长时间滞留了，以致延误到连接释放以后的某个时间才到达S。本来这是一个早已失效的报文段。但S收到此失效的连接请求报文段后，就误以为C又发了一次新的连接请求，于是向C发出确认报文段，同意建立连接</font>。假如不采用三次握手，那么只要S发出确认，新的连接就建立了。</p>
+<p>由于C并未发出建立连接的请求，因此不会理睬S的确认，也不会向S发送数据。但S却以为新的运输连接已经建立了，并一直等待C发来数据，因此白白浪费了许多资源。</p>
+<p>采用TCP三次握手的方法可以防止上述现象发生。例如在刚才的情况下，由于C不会向S的确认发出确认，连接就不会建立。</p>
+<p><font color=red>四次挥手后为什么还要等待2MSL</font><br>
+每个报文段的生命周期是1个MSL</p>
+<p>（1）被动方判断是否需要重传：  主动方发送的第一个ACK报文段，在网络中存活 1 MSL，因此被动方只要在1MSL时间单位内没接收到主动方的ACK报文段，就会重传<br>
+（2）被动方重传：被动方重传的 FIN 报文段，<font color=red>在网络中最长存活时间也是 1MSL</font></p>
+<p>只有主动方等待2个单位的MSL，才能确保可以收到被动方的重传FIN报文</p>
+<p>防止会造成如下问题：<br>
+<strong>1、最后一次确认丢失，服务端无法正常关闭<br>
+2、<font color=red>数据发生混淆：如果client直接closed，然后又向server发起了一个新连接，我们不能保证这个新连接和刚关闭的连接的端口号是不同的。假设新连接和已经关闭的老端口号是一样的，如果前一次滞留的某些数据仍然在网络中，这些延迟数据会在新连接建立后到达Server，所以socket就认为那个延迟的数据是属于新连接的，数据包就会发生混淆。所以client要在TIME_WAIT状态等待2倍的MSL，这样保证本次连接的所有数据都从网络中消失。</font></strong></p>
+<h3 id="5new与malloc的区别">5.new与malloc的区别?</h3>
+<p><strong>malloc与free是C++/C语言的标准库函数，new/delete是C++的运算符</strong>。它们都可用于申请动态内存和释放内存。<br>
+<strong>new可以认为是malloc加构造函数的执行。new出来的指针是直接带类型信息的</strong>。而malloc返回的都是void指针。</p>
+<p><font color=red>malloc内存分配失败的原因</font><br>
+1、内存不足，使用free命令查看当前还有多少内存，看是否合理，之前是否有内存泄漏等。<br>
+2、按照流程查看malloc失败前的几次malloc、memcpy或字符串拷贝等，查看是否有内存越界。</p>
+<h3 id="6c结构体和类的区别和联系">6.c++结构体和类的区别和联系</h3>
+<p>1、访问权限：结构体是public不能改变，类可以改变<br>
+2、其他的struct和class一样可以包含成员函数，可以继承，可以实现多态。<br>
+3、表现出来的话，结构体更多表现出一种面向过程的<font color=red>数据结构的特点</font>，而类更多表现出<font color=red>面向对象的特点</font>，即更侧重对成员的访问权限的控制。</p>
+<h3 id="7cpu架构">7.cpu架构</h3>
+<p>目前市场上的CPU分类主要分有两大阵营，一个是intel、AMD为首的复杂指令集CPU，另一个是以IBM、ARM为首的精简指令集CPU。<br>
+X86：Intel、AMD<br>
+PowerPC：IBM<br>
+ARM：ARM<br>
+此外还有MPIS架构、SPARC架构、Alpha架构</p>
+<h3 id="8c编译命令gdb调试">8.c++编译命令，gdb调试</h3>
+<p>1、对于 .c和.cpp文件，gcc分别当做c和cpp文件编译（c和cpp的语法强度是不一样的）<br>
+2、对于 .c和.cpp文件，g++则统一当做cpp文件编译<br>
+3、使用g++编译文件时，g++会自动链接标准库STL，而gcc不会自动链接STL<br>
+4、gcc在编译C文件时，可使用的预定义宏是比较少的<br>
+<img src="https://hensonguo.github.io/post-images/1661948735511.png" alt="" loading="lazy"></p>
+<h3 id="9-声明-定义-关键字">9. 声明、定义、关键字</h3>
+<p><font color=red>为变量分配地址和存储空间的称为定义，不分配地址的称为声明。一个变量可以在多个地方声明</font></p>
+<p><font color=green>extern</font>:<br>
+声明提示编译器遇到此变量和函数时在其他模块中寻找其定义，只需要包含其头文件即可。<br>
+当它与“C”一起连用的时候，如：extern “C” void fun(int a,int b);<strong>则告诉编译器在编译fun这个函数时候按着C的规矩去翻译，而不是C++的（这与C++的重载有关，C++语言支持函数重载，C语言不支持函数重载，函数被C++编译器编译后在库中的名字与C语言的不同）</strong></p>
+<p><font color=green>volatile</font>:<br>
+变量修饰符，表示变量随时可能被外部修改。因此这些变量的存取不能缓存到寄存器，需要每次重新读取。<br>
+譬如两个线程t1、t2同时修改变量a，其中一线程的修改对另外一个线程是不可见的，即另外一个线程读取其数据时，读取的还是原始值。因为为了提升性能，虚拟机把a变量置入了寄存器（即C语言中的寄存器变量），因此读取的是寄存器而非内存中的值。声明了volatile或synchronized 后，就可以保证可见性，确保始终从内存中读取变量。</p>
+<p><font color=green>一个指针可以是 volatile 吗?</font><br>
+可以，因为指针和普通变量一样，有时也有变化程序的不可控性。</p>
+<h3 id="10指针和引用的区别">10.指针和引用的区别</h3>
+<p>a、指针是一个实体，需要分配内存空间。引用只是变量的别名，不需要分配内存空间。<br>
+b、引用在定义的时候必须进行初始化，并且不能够改变。指针在定义的时候不一定要初始化，并且指向的空间可变。（注：不能有引用的值不能为NULL）<br>
+c、有多级指针，但是没有多级引用，只能有一级引用。<br>
+d、指针和引用的自增运算结果不一样。（指针是指向下一个空间，引用时引用的变量值加1）<br>
+e、sizeof 引用得到的是所指向的变量（对象）的大小，而sizeof 指针得到的是指针本身的大小。<br>
+f、引用访问一个变量是直接访问，而指针访问一个变量是间接访问。</p>
+<pre><code class="language-c++">int a = 10;
+int *ptr;
+ptr = &amp;a;
+cout&lt;&lt;a;
+cout&lt;&lt;ptr;  //输出的是指针地址
+cout&lt;&lt;*ptr  //输出的是变量指针指向的变量值，*ptr(var1) = a(var2)  ptr(addr1)= &amp;a(addr2)
+</code></pre>
+<h3 id="11-深拷贝-浅拷贝-智能指针">11. 深拷贝、浅拷贝、智能指针</h3>
+<p>a、系统默认调用浅拷贝，能够完成成员复制。当数据成员中没有指针时，浅拷贝是可行的；但当数据成员中有指针时，如果采用简单的浅拷贝，则两类中的两个指针将指向同一个地址，当对象快结束时，会调用两次析构函数，而导致指针悬挂现象，所以，此时，必须采用深拷贝。<br>
+b、深拷贝与浅拷贝的区别就在于深拷贝会在堆内存中另外申请空间来储存数据，从而也就解决了指针悬挂的问题。简而言之，当数据成员中有指针时，必须要用深拷贝。<br>
+c、<font color=red>智能指针的一种通用实现技术是使用引用计数。智能指针类将一个计数器与类指向的对象相关联，初始化计数为1，随着拷贝而增加，随着析构而减少，为0则删除指针对象</font><br>
+<img src="https://hensonguo.github.io/post-images/1662003795784.jpg" alt="" loading="lazy"></p>
+<h3 id="12-char数组及char指针">12. char数组及char指针</h3>
+<p>1、char a = &quot;a&quot; ，编译错误，其中&quot;a&quot;为 const char *，无法转换为char；所以正确的写法是 char *a = &quot;a&quot;<br>
+2、字符数组是以null结尾的，char a[2] = &quot;12&quot;，提示越界，正确写法为char a[3] = &quot;12&quot;</p>
+<h3 id="13-虚函数">13. 虚函数</h3>
+<p>虚函数，是指被virtual关键字修饰的成员函数。<br>
+虚函数（Virtual Function）是通过一张虚函数表（Virtual Table）来实现的。<br>
+虚函数的作用，用专业术语来解释就是实现多态性（Polymorphism），多态性是将接口与实现进行分离；用形象的语言来解释就是<font color=green>实现共同的方法，但因个体差异，而采用不同的策略。</font><br>
+类的示例对象不包含虚函数表，只有虚指针；<br>
+派生类会生成一个兼容基类的虚函数表。</p>
+<p><font color=red>虚函数表是针对类的还是针对对象的？同一个类的两个对象的虚函数表是怎么维护的？</font><br>
+<font color=green>编译器为每一个类维护一个虚函数表（本质是一个函数指针数组，数组里面存放了一系列函数地址 ），每个对象的首地址保存着该虚函数表的指针，同一个类的不同对象实际上指向同一张虚函数表。调用形式：*(this指针+调整量)虚函数在vftable内的偏移</font></p>
+<p><font color=green>在单继承形式下，子类的完全获得父类的虚函数表和数据。子类如果重写了父类的虚函数（如fun），就会把虚函数表原本fun对应的记录（内容MyClass::fun）覆盖为新的函数地址（内容MyClassA::fun），否则继续保持原本的函数地址记录。</font></p>
+<p><font color=red>构造函数能否为虚函数</font><br>
+（1）<strong>构造函数不能是虚函数。构造函数不行 虚函数的调用需要虚函数表指针，而该指针存放在对象的内容空间中；若构造函数声明为虚函数，那么由于对象还未创建，还没有内存空间，更没有虚函数表地址用来调用虚函数——构造函数了。</strong><br>
+（2）<strong>析构函数可以是虚函数，而且，在一个复杂类结构中，这往往是必须的。因为析构函数的调用是在子类中隐含的，将基类的析构函数声明为虚函数之后，派生类的析构函数也自动成为虚析构函数，在主函数中基类指针指向的是派生类对象。</strong></p>
+<p><font color=red>访问基类的私有虚函数</font></p>
+<pre><code class="language-c++">#include &lt;iostream.h&gt; 
+class A 
+{ 
+ 	virtual void g() 
+ 	{ 
+ 	 	cout &lt;&lt; &quot;A::g&quot; &lt;&lt; endl; 
+ 	} 
+private: 
+ 	virtual void f() 
+ 	{ 
+ 	 	cout &lt;&lt; &quot;A::f&quot; &lt;&lt; endl; 
+ 	} 
+}; 
+class B : public A 
+{ 
+ 	void g() 
+ 	{ 
+ 	 	cout &lt;&lt; &quot;B::g&quot; &lt;&lt; endl; 
+ 	} 
+ 	virtual void h() 
+ 	{ 
+ 	 	cout &lt;&lt; &quot;B::h&quot; &lt;&lt; endl; 
+ 	} 
+}; 
+typedef void( *Fun )( void );
+void main() 
+{ 
+ 	B b; 
+ 	Fun pFun; 
+ 	for(int i = 0 ; i &lt; 3; i++) 
+ 	{ 
+ 	 	pFun = ( Fun )*( ( int* ) * ( int* )( &amp;b ) + i ); 
+ 	 	pFun(); 
+ 	} 	 
+} 
+
+</code></pre>
+<p>输出结果：<br>
+B::g<br>
+A::f<br>
+B::h</p>
+<h3 id="14-内存泄漏-缓冲区溢出-内存溢出">14. 内存泄漏、缓冲区溢出、内存溢出</h3>
+<p><font color=red><strong>内存泄漏:</strong></font><br>
+析构函数不允许重载，并且析构函数无参<br>
+a.类的构造函数和析构函数中new和delete没有配套<br>
+b.在释放对象数组时没有使用delete[]，使用了delete</p>
+<pre><code class="language-c++">#include&lt;stdio.h&gt;
+
+class A{
+    public: 
+        A(){printf(&quot;A::A()\naddress=%p\n&quot;,this);}
+        ~A(){printf(&quot;~A::A() i=%d\naddress=%p\n&quot;,i,this);}
+        void setA(int ii){i=ii;}
+    private:
+                int i;
+};
+
+int main(){
+    A* p=new A[4];
+    for(int ii=0;ii&lt;4;ii++){
+        p[ii].setA(ii);
+    }
+    delete[] p;
+    return 0;
+}
+</code></pre>
+<p>c.没有将基类的析构函数定义为虚函数，当基类指针指向子类对象时，如果基类的析构函数不是virtual，那么子类的析构函数将不会被调用，子类的资源没有正确释放，因此造成内存泄露</p>
+<p>d.没有正确的清楚嵌套的对象指针</p>
+<p><font color=red>如何避免“野指针”</font><br>
+（1） <strong>指针变量声明时没有被初始化</strong>。解决办法：指针声明时初始化，可以是具体的地址值，也可让它指向 NULL。<br>
+（2） <strong>指针 p 被 free 或者 delete 之后，没有置为 NULL</strong>。解决办法：指针指向的内存空间被释放后指针应该指向 NULL。<br>
+（3） 指针操作超越了变量的作用范围。解决办法：在变量的作用域结束前释放掉变量的地址空间并且让指针指向 NULL。</p>
+<p><font color=red><strong>缓冲区溢出:</strong></font><br>
+缓冲区溢出的含义是为缓冲区提供了多于其存储容量的数据。<br>
+由于栈是低地址方向增长的，因此局部数组buffer的指针在缓冲区的下方。当把data的数据拷贝到buffer内时，超过缓冲区区域的高地址部分数据会“淹没”原本的其他栈帧数据。</p>
+<p>如果在data本身的数据内就保存了一系列的指令的二进制代码，一旦栈溢出修改了函数的返回地址，并将该地址指向这段二进制代码的其实位置，那么就完成了基本的溢出攻击行为。</p>
+<p>根据淹没数据的内容不同，可能会有产生以下情况：</p>
+<p>（1）淹没了其他的局部变量。如果被淹没的局部变量是条件变量，那么可能会改变函数原本的执行流程。这种方式可以用于破解简单的软件验证。<br>
+（2）淹没了ebp的值。修改了函数执行结束后要恢复的栈指针，将会导致栈帧失去平衡。<br>
+（3）淹没了返回地址。这是栈溢出原理的核心所在，通过淹没的方式修改函数的返回地址，使程序代码执行“意外”的流程！<br>
+（4）淹没参数变量。修改函数的参数变量也可能改变当前函数的执行结果和流程。<br>
+（5）淹没上级函数的栈帧，情况与上述4点类似，只不过影响的是上级函数的执行。当然这里的前提是保证函数能正常返回，即函数地址不能被随意修改（这可能很麻烦！）。</p>
+<p><font color=red><strong>内存溢出</strong></font><br>
+程序向系统申请的内存空间超出了系统能给的。比如内存只能分配一个int类型，我却要塞给他一个long类型，系统就出现oom。</p>
+<h3 id="15-c四种强制类型转换">15. C++四种强制类型转换</h3>
+<p>const_cast：从字面意思上就可以理解，去除变量的const属性。<br>
+static_cast：静态类型转换，一般用于基本类型间的转换，如char-&gt;int<br>
+dynamic_cast：动态转换，同于多态之间的类型转换<br>
+reinterpret_cast：用于不同类型的指针类型的转换。</p>
+<h3 id="16-c空类有哪些成员函数">16. C++空类有哪些成员函数</h3>
+<ul>
+<li>缺省构造函数</li>
+<li>缺省拷贝构造函数</li>
+<li>缺省析构函数</li>
+<li>缺省赋值运算符</li>
+<li>缺省取址运算符</li>
+<li>缺省取址运算符 const</li>
+</ul>
+<h3 id="17-谈谈你对拷贝构造函数和赋值运算符的认识">17. 谈谈你对拷贝构造函数和赋值运算符的认识</h3>
+<p>（1） 拷贝构造函数生成新的类对象，而赋值运算符不能。<br>
+（2） 由于拷贝构造函数是直接构造一个新的类对象，所以在初始化这个对象之前不用检验源对象是否和新建对象相同。而赋值运算符则需要这个操作，另外赋值运算中如果原来的对象中有内存分配，要先把内存释放掉</p>
+<h3 id="19简述指针常量与常量指针区别">19：简述指针常量与常量指针区别</h3>
+<p>指针常量是指定义了一个指针，这个指针的值只能在定义时初始化，其他地方不能改变。常量指针是指定义了一个指针，这个指针指向一个只读的对象，不能通过常量指针来改变这个对象的值。<br>
+指针常量强调的是指针的不可改变性，而常量指针强调的是指针对其所指对象的不可改变性。</p>
+<h3 id="20使用strcpy注意的问题">20：使用strcpy注意的问题</h3>
+<p>因为strcpy不会检查strDestination是否有足够空间 ，它会直接复制strSource，很可能会造成缓冲区溢出。 因此，建议你使用 strcpy_s<br>
+为了避免缓冲区溢出问题，我们也可以使用memcpy来完成的字符串的拷贝工作，memcpy是用来在内存中复制数据的，它会把指定长度的内存块复制到另一块内存中而不管内存的中存放的是什么数据</p>
+<h3 id="21谈谈你对面向对象的认识">21：谈谈你对面向对象的认识</h3>
+<p><strong>将需要处理的问题抽象成一个个对象，进行封装设计，最后得到程序</strong>。这样做能够使得程序更加的简洁清晰。面向对象的三大特性：<br>
+（1）封装：封装的意义，在于明确标识出允许外部使用的所有成员行数和数据项。也就是说内部细节对外部调用透明，外部调用无需修改或者关心内部实现<br>
+（2）继承：继承基类的方法，子类做改变和扩展。子类共性的方法或者属性直接使用父类的，而不需要自己再定义，只需要扩展自己个性化的。<br>
+（3）多态：同父类的不同子类的同一个方法的调用，实际执行的逻辑策略不同。多态要满足三个条件，那就是继承、方法重写、父类引用指向子类对象要同时满足。</p>
+<h3 id="22重载-重写覆盖和隐藏的定义与区别">22:重载、重写(覆盖)和隐藏的定义与区别</h3>
+<p>定义<br>
+<font color=green>重载: 在同一作用域中</font>，同名函数的形式参数（参数个数、类型或者顺序）不同时，构成函数重载<br>
+<font color=green>重写/覆盖(override): 派生类中与基类同返回值类型、同名和同参数的虚函数重定义</font>，构成虚函数覆盖，也叫虚函数重写。<br>
+隐藏： 指不同作用域中定义的同名函数构成隐藏（不要求函数返回值和函数参数类型相同）。</p>
+<p><font color=green>override与final</font><br>
+使用override关键字来说明派生类中的虚函数。<br>
+把某个函数指点为 final ，意味着任何尝试覆盖该函数的操作都将引发错误。</p>
+<p><font color=green>重载和重写的区别：</font></p>
+<p>（1）范围区别：重写和被重写的函数在不同的类中，重载和被重载的函数在同一类中。</p>
+<p>（2）参数区别：重写与被重写的函数参数列表一定相同，重载和被重载的函数参数列表一定不同。</p>
+<p>（3）virtual的区别：重写的基类必须要有virtual修饰，重载函数和被重载函数可以被virtual修饰，也可以没有。</p>
+<p><font color=green>隐藏和重写，重载的区别：</font></p>
+<p>（1）与重载范围不同：隐藏函数和被隐藏函数在不同类中。</p>
+<p>（2）参数的区别：隐藏函数和被隐藏函数参数列表可以相同，也可以不同，但函数名一定同；当参数不同时，无论基类中的函数是否被virtual修饰，基类函数都是被隐藏，而不是被重写。<br>
+<img src="https://hensonguo.github.io/post-images/1662469797401.jpg" alt="" loading="lazy"></p>
+<h3 id="24可以用memcmp比较两个struct吗会有什么问题">24.可以用memcmp比较两个struct吗？会有什么问题？</h3>
+<p>memcmp()函数是逐个字节进行比较的，而struct存在字节对齐，字节对齐时补的字节内容是随机的，会产生垃圾值。<br>
+解决：<br>
+（1）memset进行了清零初始化操作<br>
+（2）重载操作符</p>
+<h3 id="25进程间常用的通信方式有哪些">25.进程间常用的通信方式有哪些？</h3>
+<p>进程间通信（IPC，InterProcess Communication）是指在不同进程之间传播或交换信息。</p>
+<p>IPC的方式通常有管道（包括无名管道和命名管道）、消息队列、信号量、共享存储、Socket、Streams等。其中 Socket和Streams支持不同主机上的两个进程IPC。</p>
+<ul>
+<li>管道：通常指无名管道，是 UNIX 系统IPC最古老的形式，使用pipe文件。</li>
+<li>FIFO：也称为命名管道，它是一种文件类型。</li>
+<li>消息队列：是消息的链接表，存放在内核中。一个消息队列由一个标识符（即队列ID）来标识。</li>
+<li>信号量（semaphore）:与已经介绍过的 IPC 结构不同，它是一个计数器。信号量用于实现进程间的互斥与同步，而不是用于存储进程间通信数据。</li>
+<li>共享内存（Shared Memory）:指两个或多个进程共享一个给定的存储区。</li>
+<li>套接字：包含基于文件型和基于网络型。其优势在于，它不仅适用于同一台计算机内部的进程通信，也适用与网络环境中不同计算机间的进程通信。</li>
+<li>wm_copydata：一块数据要通过COPUDATA 从A进程发送到B进程，先把A进程的一块数据拷贝至内核，再把数据从内核拷贝至B进程的用户区，所以修改B的数据不会对A有影响。如果携带的数据量大，还需多次拷贝，使用copydata效率会很低，所有WMCOPY DATA适用于携带量小，发送不频繁情况。</li>
+</ul>
+<h3 id="26系统调用与函数调用">26.系统调用与函数调用？</h3>
+<p>系统调用：操作系统为用户提供了一系列接口，这些接口提供了对硬件设备的操作。举个例子我们用printf想终端打印hello world，程序中调用printf，而printf实际上调用的是write，从而打印信息到终端。</p>
+<p>库函数：库函数是对系统调用的封装。系统调用作为内核提供给用户的接口，它执行的效率是比较高效和精简的，但有时候我们需要对获取的信息进行一些处理，我们把这些处理过程封装起来提供给程序员，有利于编码。</p>
+<p>库函数有可能包含一个系统调用，有可能包含几个系统调用，也有可能不包含系统调用，一些简单的操作就涉及到内核的功能。</p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li>
+<ul>
+<li><a href="#1-%E6%98%AF%E5%90%A6%E4%BA%86%E8%A7%A3raii-resource-acquisition-is-initialization-%E8%AF%B7%E9%98%90%E8%BF%B0">1. 是否了解RAII (Resource Acquisition is Initialization) ？请阐述</a></li>
+<li><a href="#2-%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F">2. 设计模式</a></li>
+<li><a href="#3-http-get-%E5%92%8Cpost%E8%AF%B7%E6%B1%82%E5%8C%BA%E5%88%AB">3. http get 和post请求区别</a></li>
+<li><a href="#4-tcp-udp">4. tcp udp</a></li>
+<li><a href="#5new%E4%B8%8Emalloc%E7%9A%84%E5%8C%BA%E5%88%AB">5.new与malloc的区别?</a></li>
+<li><a href="#6c%E7%BB%93%E6%9E%84%E4%BD%93%E5%92%8C%E7%B1%BB%E7%9A%84%E5%8C%BA%E5%88%AB%E5%92%8C%E8%81%94%E7%B3%BB">6.c++结构体和类的区别和联系</a></li>
+<li><a href="#7cpu%E6%9E%B6%E6%9E%84">7.cpu架构</a></li>
+<li><a href="#8c%E7%BC%96%E8%AF%91%E5%91%BD%E4%BB%A4gdb%E8%B0%83%E8%AF%95">8.c++编译命令，gdb调试</a></li>
+<li><a href="#9-%E5%A3%B0%E6%98%8E-%E5%AE%9A%E4%B9%89-%E5%85%B3%E9%94%AE%E5%AD%97">9. 声明、定义、关键字</a></li>
+<li><a href="#10%E6%8C%87%E9%92%88%E5%92%8C%E5%BC%95%E7%94%A8%E7%9A%84%E5%8C%BA%E5%88%AB">10.指针和引用的区别</a></li>
+<li><a href="#11-%E6%B7%B1%E6%8B%B7%E8%B4%9D-%E6%B5%85%E6%8B%B7%E8%B4%9D-%E6%99%BA%E8%83%BD%E6%8C%87%E9%92%88">11. 深拷贝、浅拷贝、智能指针</a></li>
+<li><a href="#12-char%E6%95%B0%E7%BB%84%E5%8F%8Achar%E6%8C%87%E9%92%88">12. char数组及char指针</a></li>
+<li><a href="#13-%E8%99%9A%E5%87%BD%E6%95%B0">13. 虚函数</a></li>
+<li><a href="#14-%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F-%E7%BC%93%E5%86%B2%E5%8C%BA%E6%BA%A2%E5%87%BA-%E5%86%85%E5%AD%98%E6%BA%A2%E5%87%BA">14. 内存泄漏、缓冲区溢出、内存溢出</a></li>
+<li><a href="#15-c%E5%9B%9B%E7%A7%8D%E5%BC%BA%E5%88%B6%E7%B1%BB%E5%9E%8B%E8%BD%AC%E6%8D%A2">15. C++四种强制类型转换</a></li>
+<li><a href="#16-c%E7%A9%BA%E7%B1%BB%E6%9C%89%E5%93%AA%E4%BA%9B%E6%88%90%E5%91%98%E5%87%BD%E6%95%B0">16. C++空类有哪些成员函数</a></li>
+<li><a href="#17-%E8%B0%88%E8%B0%88%E4%BD%A0%E5%AF%B9%E6%8B%B7%E8%B4%9D%E6%9E%84%E9%80%A0%E5%87%BD%E6%95%B0%E5%92%8C%E8%B5%8B%E5%80%BC%E8%BF%90%E7%AE%97%E7%AC%A6%E7%9A%84%E8%AE%A4%E8%AF%86">17. 谈谈你对拷贝构造函数和赋值运算符的认识</a></li>
+<li><a href="#19%E7%AE%80%E8%BF%B0%E6%8C%87%E9%92%88%E5%B8%B8%E9%87%8F%E4%B8%8E%E5%B8%B8%E9%87%8F%E6%8C%87%E9%92%88%E5%8C%BA%E5%88%AB">19：简述指针常量与常量指针区别</a></li>
+<li><a href="#20%E4%BD%BF%E7%94%A8strcpy%E6%B3%A8%E6%84%8F%E7%9A%84%E9%97%AE%E9%A2%98">20：使用strcpy注意的问题</a></li>
+<li><a href="#21%E8%B0%88%E8%B0%88%E4%BD%A0%E5%AF%B9%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1%E7%9A%84%E8%AE%A4%E8%AF%86">21：谈谈你对面向对象的认识</a></li>
+<li><a href="#22%E9%87%8D%E8%BD%BD-%E9%87%8D%E5%86%99%E8%A6%86%E7%9B%96%E5%92%8C%E9%9A%90%E8%97%8F%E7%9A%84%E5%AE%9A%E4%B9%89%E4%B8%8E%E5%8C%BA%E5%88%AB">22:重载、重写(覆盖)和隐藏的定义与区别</a></li>
+<li><a href="#24%E5%8F%AF%E4%BB%A5%E7%94%A8memcmp%E6%AF%94%E8%BE%83%E4%B8%A4%E4%B8%AAstruct%E5%90%97%E4%BC%9A%E6%9C%89%E4%BB%80%E4%B9%88%E9%97%AE%E9%A2%98">24.可以用memcmp比较两个struct吗？会有什么问题？</a></li>
+<li><a href="#25%E8%BF%9B%E7%A8%8B%E9%97%B4%E5%B8%B8%E7%94%A8%E7%9A%84%E9%80%9A%E4%BF%A1%E6%96%B9%E5%BC%8F%E6%9C%89%E5%93%AA%E4%BA%9B">25.进程间常用的通信方式有哪些？</a></li>
+<li><a href="#26%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8%E4%B8%8E%E5%87%BD%E6%95%B0%E8%B0%83%E7%94%A8">26.系统调用与函数调用？</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://hensonguo.github.io/post/windows-xiang-guan-zong-jie/">
+              <h3 class="post-title">
+                windows相关总结
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://hensonguo.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

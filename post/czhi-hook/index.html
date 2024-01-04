@@ -1,0 +1,197 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>C++之HOOK | Icode</title>
+<link rel="shortcut icon" href="https://hensonguo.github.io/favicon.ico?v=1704354032694">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://hensonguo.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="C++之HOOK | Icode - Atom Feed" href="https://hensonguo.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="钩子(Hook)，是Windows消息处理机制的一个平台，应用程序可以在上面设置子程以监视指定窗口的某种消息，而且所监视的窗口可以是其他进程所创建的。当消息到达后，在目标窗口处理函数之前处理它。钩子机制允许应用程序截获处理window消息或..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://hensonguo.github.io">
+  <img class="avatar" src="https://hensonguo.github.io/images/avatar.png?v=1704354032694" alt="">
+  </a>
+  <h1 class="site-title">
+    Icode
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              C++之HOOK
+            </h2>
+            <div class="post-info">
+              <span>
+                2022-09-08
+              </span>
+              <span>
+                4 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <p>钩子(Hook)，是Windows消息处理机制的一个平台，应用程序可以在上面设置子程以监视指定窗口的某种消息，而且所监视的窗口可以是其他进程所创建的。当消息到达后，在目标窗口处理函数之前处理它。钩子机制允许应用程序截获处理window消息或特定事件。</p>
+<p>使用：<br>
+主要是通过两个函数来进行Hook:<br>
+1.SetWindowsHookEx :安装钩子<br>
+2.UnhookWindowsHookEx：卸载钩子<br>
+以下是对于两个函数的解释：</p>
+<p>（1）.HHOOK WINAPI SetWindowsHookEx(</p>
+<p>__in int idHook, \钩子类型</p>
+<p>__in HOOKPROC lpfn, \回调函数地址</p>
+<p>__in HINSTANCE hMod, \实例句柄</p>
+<p>__in DWORD dwThreadId); \线程ID</p>
+<p>优先级：<br>
+钩子子程序的优先级会高于应用程序，在接受消息时会被钩子子程序先行截获，操作系统会先把消息发送给钩子，由钩子决定这些消息是否发送下去，钩子可以拦截这些消息，可以决定这些消息的作用，甚至可以屏蔽这些消息不让传递到指定应用程序当中！</p>
+<p>安装顺序：<br>
+在安装钩子的时候是由顺序之分的，链表遵循的是先进后出，也就是说钩子链表的首节点始终是最后一个安装钩子的钩子子程序，并且每个进程下只能有一个钩子，如果重复安装钩子会安装失败！钩子是堆栈，填在后面，但是从后面向前传。</p>
+<p>钩子类型：<br>
+（1）全局钩子<br>
+所有程序触发的消息都会被操作系统发送到消息队列里，全局钩子的作用就是钩系统级的消息队列，当操作系统将消息队列里的消息发送出去时会率先发送给全局钩子，并且由全局钩子截获，全局钩子决定这些消息的存亡，钩子可以决定处理或不处理，也可以决定处理完之后再发送给应用程序或者不处理直接发送给应用程序，不过这样做的话钩子的意义就不大了！<br>
+（2）局部钩子<br>
+**局部钩子即只钩进程下的消息，**当操作系统在将消息发送给各个程序时，操作系统不会把所有消息都发送给此钩子，而是只把当前进程下产生的消息在发送给进程下的消息队列时先发送给钩子子程序，而不是直接发给消息队列，由钩子子程序决定这些消息的处理方式！</p>
+<p>应用模式：<br>
+（1）观察模式：<br>
+最常用的应用模式，即简单创建一个Hook子程序，用于观察某些进程下的消息，并对其进行截获处理！<br>
+（2）注入模式：<br>
+即通过Hook子程序将DLL动态库注入到某个进程下，使其成为进程的一部分！不是很清楚。<br>
+（3）替换模式(注入模式的一种)：<br>
+利用Hook子程序将动态库注入到某个进程下，并拦截某个进程调用函数过程，将调用函数替换成自己DLL动态库函数！(黑客常用)<br>
+（4）插件模式(注入模式的一种)：<br>
+将动态库函数注入到指定进程下，并协调调用动态库函数，扩展程序业务！<br>
+（5）修复模式(替换模式的一种)：<br>
+利用Hook技术将某个消息对应的函数替换成新的执行函数！</p>
+<p>缺点：<br>
+<strong>Hook的缺点非常明显，那就是当某个程序没有触发任何窗体消息时那么Hook永远不会被执行</strong>，其Windows下用于绘制窗口和处理事件驱动的模块是user32.dll，也就是说当一个窗口被创建和事件驱动等消息机制被创建出来时就会加载user32动态库，调用里面的API来完成，倘若某个进程在进行一些复杂的计算公式，不去调用user32那么Hook。</p>
+
+              </div>
+              <div class="toc-container">
+                
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://hensonguo.github.io/post/mfc-xiao-xi-ji-zhi/">
+              <h3 class="post-title">
+                MFC消息机制
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://hensonguo.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

@@ -1,0 +1,220 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Windows核心编程-线程本地存储器TLS | Icode</title>
+<link rel="shortcut icon" href="https://hensonguo.github.io/favicon.ico?v=1704354032694">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://hensonguo.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="Windows核心编程-线程本地存储器TLS | Icode - Atom Feed" href="https://hensonguo.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="\qquad由于运行期库是在多线程应用程序出现前的许多年前的设计的，因此运行期库中的大多数函数是用于单线程应用程序的。
+\qquad例如strtok，在多线程环境中，一个线程可以调用 strtok，然后，在它能够再次调用该函数之前，另一个线..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://hensonguo.github.io">
+  <img class="avatar" src="https://hensonguo.github.io/images/avatar.png?v=1704354032694" alt="">
+  </a>
+  <h1 class="site-title">
+    Icode
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              Windows核心编程-线程本地存储器TLS
+            </h2>
+            <div class="post-info">
+              <span>
+                2023-07-08
+              </span>
+              <span>
+                4 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span>由于运行期库是在多线程应用程序出现前的许多年前的设计的，因此运行期库中的大多数函数是用于单线程应用程序的。</p>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span>例如strtok，在多线程环境中，一个线程可以调用 strtok，然后，在它能够再次调用该函数之前，另一个线程也可以调用strtok。在这种情况下，第二个线程会在第一个线程不知道的情况下，让strtok用一个新地址来改写它的静态变量。第一个线程将来调用strtok时将使用第二个线程的字符串，这就会导致各种各样难以发现和排除的错误。</p>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span><font color=green>这也叫不可重入函数,上次调用函数结果可能会影响这次调用结果.</font></p>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span><font color=red>为了解决这个问题，C/C++运行期库使用了TLS。每个线程均被赋予它自己的字符串指针，供strtok函数使用</font>。需要予以同样对待的其他C/C++运行期库函数还有asctime和gmtime。</p>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span><font color=red>如果你的应用程序需要严重依赖全局变量或静态变量，那么TLS能够帮助解决它遇到的问题。</font><br>
+<font color=green>但是编程人员往往尽可能减少对这些变量的使用，而更多地依赖自动（基于堆栈的）变量和通过<br>
+函数的参数传递的数据。这样做是很好的，因为基于堆栈的变量总是与特定的线程相联系的。</font></p>
+<h2 id="1-动态tls">1、动态TLS</h2>
+<p>若要使用动态T L S，应用程序可以调用一组 4个函数。这些函数实际上是 D L L用得最多的函数。<br>
+windows用来管理TLS的内部数据结构：<br>
+<img src="https://hensonguo.github.io/post-images/1688795129655.png" alt="" loading="lazy"><br>
+每个标志均可设置为 FREE或者INUSE，表示TLS时隙( slot )是否正在使用。</p>
+<p><strong>1.1 TlsAlloc函数</strong><br>
+若要使用动态TLS，首先必须调用TlsAlloc函数：</p>
+<pre><code class="language-c++">DWORD TlsAlloc( );
+</code></pre>
+<p>这个函数命令系统对进程中的位标志进行扫描，并找出一个 FREE标志。然后系统将该标志从FREE改为INUSE，并且TlsAlloc返回位数组中的标志的索引。</p>
+<p><strong>1.2 TlsSetValue函数</strong><br>
+要将一个值放入线程的数组，可以调用TlsSetValue函数：</p>
+<pre><code class="language-c++">BO0L TlsSetValue(DWORD dwTlsIndex,PVOID pvTlsValue);
+</code></pre>
+<p><strong>1.3 TlsGetValue函数</strong></p>
+<pre><code class="language-c++">PVOID TlsGetValue(DWORD dwTlsIndex) ;
+</code></pre>
+<p>该函数返回的值将与索引 dwTlsIndex处的 T L S时隙联系起来。与 TlsSetValue一样，TlsGetValue只查看属于调用线程的数组。</p>
+<p><strong>1.4 TlsFree函数</strong><br>
+当在所有线程中不再需要保留T L S时隙的位置的时候：</p>
+<pre><code class="language-c++">BOOL TlsFree(DWORD dwTlsIndex) ;
+</code></pre>
+<p>由进程的位标志数组管理的I N U S E标志再次被设置为F R E E。</p>
+<p><strong>1.5 使用动态TLS</strong><br>
+通常情况下，如果 DLL使用TLS，那么当它用DLL_PROCESS_ATTACH标志调用它的DllMain函数时，它也调用TlsAlloc。当它用DLL_PROCESS_DETACH调用DllMain函数时，它就调用TlsFree。对TlsSetValue和TlsGetValue的调用很可能是在调用DLL中包含的函数时进行的。</p>
+<br>
+<h2 id="2-静态tls">2、静态TLS</h2>
+<p>你想要将起始时间与应用程序创建的每个线程联系起来。只需要将起始时间变量，声明为下面的形式：</p>
+<pre><code class="language-c++">__declspec(thread)DWORD gt_dwStartTime = 0;
+</code></pre>
+<p>当编译器对程序进行编译时，它将所有的TLS变量放入它们自己的节，这个节的名字是.tls。链接程序将来自所有对象模块的所有 .tls节组合起来，形成结果的可执行文件或 DLL文件中的一个大的.tls节。</p>
+<p>缺点：<br>
+编译器必须生成一些辅助代码来引用该静态 TLS变量，这将使你的应用程序变得比较大而且运行的速度比较慢。在 x86 CPU上，将为每次引用的静态 TLS变量生成3个辅助机器指令。<br>
+系统允许包含静态 TLS变量的库在运行期进行显式加载，但是TLS数据没有进行相应的初始化。如果试图访问这些数据，就可能导致访问违规。</p>
+<h2 id="3-动态tls和静态tls区别">3、动态TLS和静态TLS区别？</h2>
+<p>动态TLS:<br>
+• 主要线程数据存放在内存中，加载dll时载入，卸载dll时释放。<br>
+静态TLS:<br>
+• 主要线程数据存在dll文件的TLS节中，增加DLL大小。</p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#1-%E5%8A%A8%E6%80%81tls">1、动态TLS</a></li>
+<li><a href="#2-%E9%9D%99%E6%80%81tls">2、静态TLS</a></li>
+<li><a href="#3-%E5%8A%A8%E6%80%81tls%E5%92%8C%E9%9D%99%E6%80%81tls%E5%8C%BA%E5%88%AB">3、动态TLS和静态TLS区别？</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://hensonguo.github.io/post/windows-he-xin-bian-cheng-dong-tai-lian-jie-ku/">
+              <h3 class="post-title">
+                windows核心编程-动态链接库
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://hensonguo.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

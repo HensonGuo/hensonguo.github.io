@@ -1,0 +1,499 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>windows核心编程-作业 | Icode</title>
+<link rel="shortcut icon" href="https://hensonguo.github.io/favicon.ico?v=1704354032694">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://hensonguo.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="windows核心编程-作业 | Icode - Atom Feed" href="https://hensonguo.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="作业
+\qquad当设计一个服务器时，也必须将一组进程作为单个进程组来处理。例如，客户机可能要求服务器执行一个应用程序（这可以生成它自己的子应用程序），并给客户机返回其结果。由于可能有许多客户机与该服务器相连接，如果服务器能够限制客户机的要..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://hensonguo.github.io">
+  <img class="avatar" src="https://hensonguo.github.io/images/avatar.png?v=1704354032694" alt="">
+  </a>
+  <h1 class="site-title">
+    Icode
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              windows核心编程-作业
+            </h2>
+            <div class="post-info">
+              <span>
+                2023-06-02
+              </span>
+              <span>
+                8 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <h2 id="作业">作业</h2>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span>当设计一个服务器时，也必须将一组进程作为单个进程组来处理。例如，客户机可能要求服务器执行一个应用程序（这可以生成它自己的子应用程序），并给客户机返回其结果。由于可能有许多客户机与该服务器相连接，如果服务器能够限制客户机的要求，即用什么手段来防止任何一个客户机垄断它的所有资源，那么这是非常有用的。这些限制包括：<strong>可以分配给客户机请求的最大CPU时间，最小和最大的工作区的大小，防止客户机的应用程序关闭计算机，以及安全性限制等。</strong></p>
+<p>1） 基本知识</p>
+<ul>
+<li>作业能够将进程组合在一起，并且创建一个“沙框”，以便限制进程能够进行的操作</li>
+<li>可以把作业对象视为一个进程容器</li>
+<li>创建单个进程的作业，可以对该进程添加平时不能加的限制</li>
+<li>关闭作业对象不会迫使作业中的所有进程终止运行，作业对象做了删除标记，只有当作业中的所有进程全部终止运行之后，该作业对象才被自动撤消。</li>
+<li>关闭作业的句柄后，尽管作业仍在，但是作业无法被所有进程访问。</li>
+</ul>
+<p>2）示例<br>
+作业可视为进程的容器，可以对其中的所有进程加上限制条件。<br>
+使用CrateJobObject函数，创建一个作业。<br>
+使用SetInformationJobObject函数，为作业添加限制条件。<br>
+使用AssignProcessToJobObject函数，将进程添加到作业。<br>
+使用IsProcessInJob函数，判断一个进程是否属于一个作业。<br>
+使用TerminateJobObject函数，可以终止作业。</p>
+<pre><code class="language-c++">#include &lt;windows.h&gt;
+#include &lt;tchar.h&gt;
+
+int WINAPI wWinMain(HINSTANCE hInstance,HINSTANCE,PWSTR lpCmdLine,int nShowCmd){
+
+    //创建一个作业内核对象
+    HANDLE hJob = CreateJobObject(NULL,NULL); //
+
+    ////////////////////////////////////////////////////////////
+    //为作业添加一些基本限制
+
+    //基本限制结构体
+    JOBOBJECT_BASIC_LIMIT_INFORMATION jobli = {0};
+
+    //作业的优先级
+    jobli.PriorityClass = IDLE_PRIORITY_CLASS; //
+
+    //作业的CPU时间限制
+    jobli.PerJobUserTimeLimit.QuadPart = 10000000; //1秒，单位是100纳秒
+
+    //指明限制条件
+    jobli.LimitFlags = JOB_OBJECT_LIMIT_PRIORITY_CLASS|JOB_OBJECT_LIMIT_JOB_TIME;
+
+    //设定作业限制
+    SetInformationJobObject(hJob,JobObjectBasicLimitInformation,&amp;jobli,sizeof(jobli));
+
+    ////////////////////////////////////////////////////////////
+    //为作业添加一些基本UI限制
+
+    //基本UI限制结构体
+    JOBOBJECT_BASIC_UI_RESTRICTIONS jobuir;
+
+    //初始无限制
+    jobuir.UIRestrictionsClass = JOB_OBJECT_UILIMIT_NONE; //
+
+    //增加限制：作业（进程）不能注销操作系统
+    jobuir.UIRestrictionsClass |= JOB_OBJECT_UILIMIT_EXITWINDOWS;
+
+    //增加限制：作业（进程）不能访问 系统的用户对象（如其他窗口）
+    jobuir.UIRestrictionsClass |= JOB_OBJECT_UILIMIT_HANDLES;
+
+    //设定作业限制
+    SetInformationJobObject(hJob,JobObjectBasicUIRestrictions,&amp;jobuir,sizeof(jobuir));
+
+    ////////////////////////////////////////////////////////////
+    //创建进程，并添加到作业中。进程初始化时必须是挂起状态，保证在添加到作业前不会执行任何代码
+
+    //创建进程
+    STARTUPINFO si={sizeof(si)};
+    PROCESS_INFORMATION pi;
+    CreateProcess(_T(&quot;C:\\Windows\\System32\\cmd.exe&quot;),NULL,NULL,NULL,FALSE,CREATE_SUSPENDED,NULL,NULL,&amp;si,&amp;pi); //CREATE_SUSPENDED
+
+    //将进程添加到作业
+    AssignProcessToJobObject(hJob,pi.hProcess);
+
+    //唤醒进程（的主线程）
+    ResumeThread(pi.hThread);
+
+    //关闭句柄
+    CloseHandle(pi.hThread);
+
+    ////////////////////////////////////////////////////////////
+    //等待进程结束或作业CPU时间耗完
+    HANDLE h[2];
+    h[0] = pi.hProcess;
+    h[1] = hJob;
+
+    DWORD ret = WaitForMultipleObjects(2,h,FALSE,INFINITE);
+    switch(ret-WAIT_OBJECT_0){
+        case 0:
+            //进程结束
+            MessageBox(NULL,_T(&quot;进程结束&quot;),_T(&quot;提示&quot;),MB_OK);
+            break;
+        case 1:
+            //作业分配的CPU时间耗完
+            MessageBox(NULL,_T(&quot;时间耗尽&quot;),_T(&quot;提示&quot;),MB_OK);
+            break;
+    }
+
+    //关闭句柄
+    CloseHandle(pi.hProcess);
+    CloseHandle(hJob);
+
+    return 0;
+}
+</code></pre>
+<p>创建作业</p>
+<pre><code class="language-c++">HANDLE WINAPI CreateJobObject( //创建作业内核对象
+    __in_opt  LPSECURITY_ATTRIBUTES lpJobAttributes, //安全结构体
+    __in_opt  LPCTSTR lpName   //名称，可以为NULL
+);
+</code></pre>
+<h2 id="对作业进程的限制">对作业进程的限制</h2>
+<p>限制类型</p>
+<ul>
+<li>基本限制和扩展基本限制，用于 防止 作业中的 进程垄断系统的资源</li>
+<li>基本的 UI 限制，用于 防止 作业中的 进程改变用户界面</li>
+<li>安全性限制，用于 防止 作业中的 进程访问保密资源（文件、注册表子关键字等）<br>
+使用SetInformationJobObject可以为作业指定限制。</li>
+</ul>
+<pre><code> BOOL WINAPI SetInformationJobObject(  //设置作业限制
+    __in  HANDLE hJob,                            //要添加限制的作业
+    __in  JOBOBJECTINFOCLASS JobObjectInfoClass,  //限制的类型
+    __in  LPVOID lpJobObjectInfo,                 //限制的值
+    __in  DWORD cbJobObjectInfoLength             //限制的值的长度
+);
+</code></pre>
+<table border="1" cellspacing="0" cellpadding="2"><tbody>
+<tr>
+<td valign="top">
+<div><strong>限制类型</strong></div>
+</td>
+<td valign="top">
+<div><strong>说明</strong></div>
+</td>
+<td valign="top">
+<div><strong>第二个参数的值</strong></div>
+</td>
+<td valign="top">
+<div><strong>第三个参数的结构</strong></div>
+</td>
+</tr>
+<tr>
+<td valign="top">
+<div>基本限制</div>
+</td>
+<td valign="top">
+<div>CPU分配限制</div>
+</td>
+<td valign="top">
+<div>JobObjectBasicLimitInformation</div>
+</td>
+<td valign="top">
+<div>JOBOBJECT_BASIC_LIMIT_INFORMATION</div>
+</td>
+</tr>
+<tr>
+<td valign="top">
+<div>扩展限制</div>
+</td>
+<td valign="top">基本限制+内存分配限制</td>
+<td valign="top">
+<div>JobObjectExtendedLimitInformation</div>
+</td>
+<td valign="top">
+<div>JOBOBJECT_EXTENDED_LIMIT_INFORMATION</div>
+</td>
+</tr>
+<tr>
+<td valign="top">
+<div>基本UI限制</div>
+</td>
+<td valign="top">防止作业中进程改变UI</td>
+<td valign="top">
+<div>JobObjectBasicUIRestictions</div>
+</td>
+<td valign="top">
+<div>JOBOBJECT_BASIC_UI_RESTRICTIONS</div>
+</td>
+</tr>
+<tr>
+<td valign="top">
+<div>安全性限制</div>
+</td>
+<td valign="top">防止作业中进程访问保密资源</td>
+<td valign="top">
+<div>JobObjectSecurityLimitInformation</div>
+</td>
+<td valign="top">
+<div>JOBOBJECT_SECURITY_LIMIT_INFORMATION</div>
+</td>
+</tr>
+</tbody></table>
+<h2 id="作业的通知消息">作业的通知消息</h2>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span>创建一个IO完成端口(IO Completion Port)内核对象，然后将作业对象或多个作业对象与完成端口关联起来（使用SetInformationJobObject函数），然后让一个或多个线程在完成端口上等待作业通知的到来。</p>
+<pre><code class="language-c++">#include &lt;windows.h&gt;
+#include &lt;process.h&gt;  //_beginthreadex
+#include &lt;tchar.h&gt;
+
+#define CMPKEY_JOBOBJECT 1
+#define CMPKEY_TERMINATE 2
+
+typedef unsigned (__stdcall *PTHREAD_START) (void *);
+
+//IO完成端口监听线程回调函数
+DWORD WINAPI JobNotify(LPVOID lpParam)
+{
+    HANDLE hIOCP = (HANDLE)lpParam;
+
+    while (TRUE)
+    {
+        DWORD dwBytesTransferred;
+        ULONG_PTR CompKey;
+        LPOVERLAPPED po;
+
+        //从IO完成端口中获取一个消息
+        GetQueuedCompletionStatus(hIOCP,&amp;dwBytesTransferred,&amp;CompKey,&amp;po,INFINITE);
+
+        //退出消息
+        if (CompKey == CMPKEY_TERMINATE)
+        {
+            MessageBox(NULL,_T(&quot;监听线程退出&quot;),_T(&quot;提示&quot;),MB_OK);
+            break;
+        }
+
+        //来自作业对象hJob的消息
+        if(CompKey == CMPKEY_JOBOBJECT)
+        {
+            MessageBox(NULL,_T(&quot;收到来自作业的消息&quot;),_T(&quot;提示&quot;),MB_OK);
+
+            switch(dwBytesTransferred){
+            case JOB_OBJECT_MSG_END_OF_JOB_TIME:
+                MessageBox(NULL,_T(&quot;作业限制时间耗尽&quot;),_T(&quot;提示&quot;),MB_OK);
+                break;
+            case JOB_OBJECT_MSG_END_OF_PROCESS_TIME:
+                {
+                    TCHAR szProcessName[MAX_PATH];
+                    HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION|PROCESS_VM_READ,FALSE,(DWORD)po);
+
+                    if(hProcess == NULL){
+                        _stprintf(szProcessName,_T(&quot;%s&quot;),_T(&quot;未知进程名&quot;));
+                    }
+                    else{
+                        DWORD dwSize = (DWORD)MAX_PATH;
+                        QueryFullProcessImageName(hProcess,0,szProcessName,&amp;dwSize);
+                        CloseHandle(hProcess);
+                    }
+
+                    TCHAR info[MAX_PATH];
+                    _stprintf(info,_T(&quot;进程%s（ID=%d）限制时间耗尽 &quot;),szProcessName,po);
+
+                    MessageBox(NULL,info,_T(&quot;提示&quot;),MB_OK);
+                }
+                break;
+            case JOB_OBJECT_MSG_ACTIVE_PROCESS_LIMIT:
+                MessageBox(NULL,_T(&quot;运行的进程超过限制&quot;),_T(&quot;提示&quot;),MB_OK);
+                break;
+            case JOB_OBJECT_MSG_NEW_PROCESS:
+                MessageBox(NULL,_T(&quot;作业中产生新进程&quot;),_T(&quot;提示&quot;),MB_OK);
+                break;
+            case JOB_OBJECT_MSG_EXIT_PROCESS:  {
+                    TCHAR szProcessName[MAX_PATH];
+                    HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION|PROCESS_VM_READ,FALSE,(DWORD)po);
+
+                    if(hProcess == NULL){
+                        _stprintf(szProcessName,_T(&quot;%s&quot;),_T(&quot;未知进程名&quot;));
+                    }
+                    else{
+                        DWORD dwSize = (DWORD)MAX_PATH;
+                        QueryFullProcessImageName(hProcess,0,szProcessName,&amp;dwSize);
+                        CloseHandle(hProcess);
+                    }
+
+                    TCHAR info[MAX_PATH];
+                    _stprintf(info,_T(&quot;进程%s（ID=%d）终止 &quot;),szProcessName,po);
+
+                    MessageBox(NULL,info,_T(&quot;提示&quot;),MB_OK);
+                }
+                break;
+            }
+        }
+    }
+    return 0;
+}
+
+int WINAPI wWinMain(HINSTANCE hInstance,HINSTANCE,PWSTR lpCmdLine,int nShowCmd){
+
+    //创建一个作业内核对象
+    HANDLE hJob = CreateJobObject(NULL,NULL); //
+
+    //创建一个IO完成端口
+    HANDLE hIOCP = CreateIoCompletionPort(INVALID_HANDLE_VALUE,NULL,0,0);
+
+    //创建一个线程监听IO完成端口通知消息
+    HANDLE hThreadIOCP = (HANDLE)_beginthreadex(NULL,0,(PTHREAD_START)JobNotify,(LPVOID)hIOCP,0,NULL);
+
+    //将IO完成端口与作业关联
+    JOBOBJECT_ASSOCIATE_COMPLETION_PORT jobacp;
+    jobacp.CompletionKey = (PVOID)CMPKEY_JOBOBJECT;  //任意一个全局唯一的值
+    jobacp.CompletionPort = hIOCP;                   //IO完成端口句柄
+    SetInformationJobObject(hJob,JobObjectAssociateCompletionPortInformation,&amp;jobacp,sizeof(jobacp)); //关联
+
+    ////////////////////////////////////////////////////////////
+    //创建进程，并添加到作业中。进程初始化时必须是挂起状态，保证在添加到作业前不会执行任何代码
+
+    STARTUPINFO si={sizeof(si)};
+    PROCESS_INFORMATION pi;
+    CreateProcess(_T(&quot;C:\\Windows\\System32\\cmd.exe&quot;),NULL,NULL,NULL,FALSE,CREATE_SUSPENDED,NULL,NULL,&amp;si,&amp;pi); //CREATE_SUSPENDED
+    AssignProcessToJobObject(hJob,pi.hProcess);//将进程添加到作业
+    MessageBox(NULL,_T(&quot;111&quot;),_T(&quot;Tips&quot;),MB_OK);
+    ResumeThread(pi.hThread);//唤醒进程（的主线程）
+    CloseHandle(pi.hThread); //关闭句柄
+    CloseHandle(pi.hProcess);
+    MessageBox(NULL,_T(&quot;MESSAGE&quot;),_T(&quot;Tips&quot;),MB_OK);
+
+    //发送一条消息给IO完成端口，结束IO完成端口线程
+    PostQueuedCompletionStatus(hIOCP,0,CMPKEY_TERMINATE,NULL);
+
+    //等待IO完成端口线程终止
+    WaitForSingleObject(hThreadIOCP,INFINITE);
+
+    //关闭句柄
+    CloseHandle(hIOCP);
+    CloseHandle(hThreadIOCP);
+    CloseHandle(hJob);
+    return 0;
+}
+</code></pre>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#%E4%BD%9C%E4%B8%9A">作业</a></li>
+<li><a href="#%E5%AF%B9%E4%BD%9C%E4%B8%9A%E8%BF%9B%E7%A8%8B%E7%9A%84%E9%99%90%E5%88%B6">对作业进程的限制</a></li>
+<li><a href="#%E4%BD%9C%E4%B8%9A%E7%9A%84%E9%80%9A%E7%9F%A5%E6%B6%88%E6%81%AF">作业的通知消息</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://hensonguo.github.io/post/windows-he-xin-bian-cheng-xian-cheng-yu-nei-he-dui-xiang-de-tong-bu/">
+              <h3 class="post-title">
+                windows核心编程-线程与内核对象的同步
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://hensonguo.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

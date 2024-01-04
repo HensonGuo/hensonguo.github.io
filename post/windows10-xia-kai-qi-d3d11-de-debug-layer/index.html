@@ -1,0 +1,203 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Windows10下开启D3D11的Debug Layer | Icode</title>
+<link rel="shortcut icon" href="https://hensonguo.github.io/favicon.ico?v=1704354032694">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://hensonguo.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="Windows10下开启D3D11的Debug Layer | Icode - Atom Feed" href="https://hensonguo.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="问题：再dx项目中，要对d3d设备进行调试，将flag设置为D3D11_CREATE_DEVICE_DEBUG时会失败。
+原因：需要开启D3D11的Debug Layer。
+参考：overviews-direct3d-11-devices-..." />
+    <meta name="keywords" content="directx" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://hensonguo.github.io">
+  <img class="avatar" src="https://hensonguo.github.io/images/avatar.png?v=1704354032694" alt="">
+  </a>
+  <h1 class="site-title">
+    Icode
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              Windows10下开启D3D11的Debug Layer
+            </h2>
+            <div class="post-info">
+              <span>
+                2022-10-13
+              </span>
+              <span>
+                3 min read
+              </span>
+              
+                <a href="https://hensonguo.github.io/tag/WcbQgGLLt/" class="post-tag">
+                  # directx
+                </a>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <p>问题：再dx项目中，要对d3d设备进行调试，将flag设置为D3D11_CREATE_DEVICE_DEBUG时会失败。<br>
+原因：需要开启D3D11的Debug Layer。</p>
+<p><a href="https://learn.microsoft.com/en-us/windows/win32/direct3d11/overviews-direct3d-11-devices-layers">参考：overviews-direct3d-11-devices-layers</a></p>
+<h2 id="d3d-runtime构造">D3D Runtime构造</h2>
+<p>D3D Runtime是分层构造的，从核心的基本功能开始，在外部层中构建可选的功能和开发人员辅助功能。各个层（layers）只会添加功能，但不会修改现有行为。</p>
+<p>可在调用D3D11CreateDevice或D3D11CreateDeviceAndSwapChain创建设备时并提供一个或多个D3D11_CREATE_DEVICE_FLAG值来创建层（layers）。</p>
+<p><strong>核心层（Core Layer）</strong></p>
+<p>核心层默认存在。在API和设备驱动程序之间提供映射，从而最大程度地减少了高频调用的开销。由于核心层对于性能至关重要，因此它仅执行关键验证。其余层是可选的。</p>
+<p><strong>调试层（Debug Layer）</strong><br>
+调试层提供了广泛的附加参数和一致性验证（例如，验证着色器链接和资源绑定，验证参数一致性以及报告错误描述）。</p>
+<p>若要创建支持调试层的设备，必须安装DirectX SDK（需要D3D11SDKLayers.dll，如果是win7及以上版本，安装windows sdk就好），然后在调用D3D11CreateDevice函数或D3D11CreateDeviceAndSwapChain函数时指定D3D11_CREATE_DEVICE_DEBUG标志。</p>
+<p>如果在启用调试层的情况下运行应用程序，则该应用程序的运行速度将大大降低。但是，要确保在发布应用程序之前清除其错误和警告，请使用调试层。</p>
+<h2 id="开启调试层">开启调试层</h2>
+<p>1)、在DirectX SDK附带的DirectX Control Panel来启用/禁用调试标志。<br>
+也可以用C:\Windows\SysWOW64\DXCpl.exe来启用/禁用调试标志。</p>
+<div align="left"><img src='file://C:/Users/g7842/Documents/Gridea/post-images/1665655573037.png'/><div>
+<p>当调试层列出内存泄漏时，它将输出对象接口指针及其友好名称的列表。 默认的友好名称是“ ”，开发者可使用ID3D11DeviceChild :: SetPrivateData方法和D3Dcommon.h中的WKPDID_D3DDebugObjectName GUID来设置友好名称。</p>
+<pre><code class="language-c++">const char c_szName[] = &quot;mytexture.jpg&quot;;
+pTexture-&gt;SetPrivateData( WKPDID_D3DDebugObjectName, sizeof( c_szName ) - 1, c_szName );
+</code></pre>
+<p>2)、安装图形工具<br>
+<font color=pink>计算机\HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU下的UseWUServer设置成0</font>，并重启计算机     注：不设置这个的话，安装Graphics Tools会因连不上微软的服务器而失败<br>
+<img src="https://hensonguo.github.io/post-images/1665661314979.png" alt="" loading="lazy"><br>
+安装Graphics Tools（图形工具）<br>
+<img src="https://hensonguo.github.io/post-images/1665661378514.jpg" alt="" loading="lazy"></p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#d3d-runtime%E6%9E%84%E9%80%A0">D3D Runtime构造</a></li>
+<li><a href="#%E5%BC%80%E5%90%AF%E8%B0%83%E8%AF%95%E5%B1%82">开启调试层</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://hensonguo.github.io/post/c11-qi-ta-te-xing/">
+              <h3 class="post-title">
+                c++11其他特性总结
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://hensonguo.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

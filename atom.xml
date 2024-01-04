@@ -1,0 +1,1241 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <id>https://hensonguo.github.io</id>
+    <title>Icode</title>
+    <updated>2024-01-04T07:40:35.544Z</updated>
+    <generator>https://github.com/jpmonette/feed</generator>
+    <link rel="alternate" href="https://hensonguo.github.io"/>
+    <link rel="self" href="https://hensonguo.github.io/atom.xml"/>
+    <subtitle>温故而知新</subtitle>
+    <logo>https://hensonguo.github.io/images/avatar.png</logo>
+    <icon>https://hensonguo.github.io/favicon.ico</icon>
+    <rights>All rights reserved 2024, Icode</rights>
+    <entry>
+        <title type="html"><![CDATA[webrtc源码编译+生成sln]]></title>
+        <id>https://hensonguo.github.io/post/webrtc-yuan-ma-bian-yi-sheng-cheng-sln/</id>
+        <link href="https://hensonguo.github.io/post/webrtc-yuan-ma-bian-yi-sheng-cheng-sln/">
+        </link>
+        <updated>2023-12-07T08:11:29.000Z</updated>
+        <content type="html"><![CDATA[<h2 id="1下载depot_tools">1.下载depot_tools</h2>
+<p>depot_tools 是用于管理 Chromium、WebRTC 等开源项目的工具集。用于管理 Chromium 等大型项目的开发和构建。它包含了一些常用的工具，如 Git、Python、Ninja 等，并提供了一些自定义的工具，如 gclient、fetch 等，用于管理代码仓库、构建项目等。</p>
+<p>使用 depot_tools 可以方便地获取 Chromium 等项目的源代码，并进行本地开发和构建。</p>
+<h3 id="11-克隆-depot_tools-仓库">1.1 克隆 depot_tools 仓库</h3>
+<pre><code>git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
+</code></pre>
+<p>谷歌git仓库克隆问题：<br>
+1.先在https://chromium.googlesource.com生成password，按照提示操作步骤完成即可<br>
+2.证书问题：unable to get local issuer certificate，采用忽略ssl证书验证</p>
+<pre><code>git config --global http.sslverify false
+</code></pre>
+<h3 id="12-配置环境变量">1.2 配置环境变量</h3>
+<p>将下载的depot_tools路径添加到环境变量中，重启电脑<br>
+在cmd中执行gclient，等待执行成功即可</p>
+<br>
+<h2 id="2下载webrtc源码">2.下载webrtc源码</h2>
+<h3 id="21代码克隆">2.1代码克隆</h3>
+<pre><code>git clone https://webrtc.googlesource.com/src.git
+</code></pre>
+<p>安装依赖项：https://webrtc.googlesource.com/src/+/refs/heads/main/docs/native-code/development/prerequisite-sw</p>
+<h3 id="22代码更新">2.2代码更新</h3>
+<pre><code>gclient sync
+</code></pre>
+<p>可能出现提示错误&quot;Error: client not configured; see 'gclient config'&quot;<br>
+解决方法：</p>
+<pre><code>gclient config https://webrtc.googlesource.com/src.git
+</code></pre>
+<p>这里还会出现各类py错误，多半是环境变量设置的问题，请先进行步骤3环境变量设置再gclient sync</p>
+<br>
+<h2 id="3ninja安装">3.Ninja安装</h2>
+<p>Ninja 是一个用于构建  C/C++  项目的快速、轻量级的工具。</p>
+<p>ninja.exe 是 Ninja 构建系统的可执行文件，它负责解析 Ninja 的构建文件（通常是一个名为“build.ninja”的文件），并根据文件中定义的规则和依赖关系构建项目。通过使用 ninja.exe，开发人员可以在命令行上快速构建和测试他们的代码，而无需手动编写和维护复杂的构建脚本。</p>
+<p>Ninja 可以与许多不同的编译器和构建工具一起使用，例如 GCC、Clang、MSVC、Make 等。它还可以与许多不同的构建系统集成，例如 CMake、Meson、Bazel 等。由于 Ninja 的快速和可靠性，它已经成为许多开源项目的首选构建系统之一。</p>
+<ol>
+<li>首先，你需要下载 Ninja 的可执行文件。你可以在 Ninja 的官方 GitHub 仓库中找到最新版本的可执行文件。下载地址为：https://github.com/ninja-build/ninja/releases。</li>
+<li>下载完成后，你需要将可执行文件添加到系统的 PATH 环境变量中。打开 Windows 的“高级系统设置”窗口，选择“环境变量”，在“系统变量”中找到 PATH 变量，点击“编辑”，在变量值的最后加上 Ninja 可执行文件所在的路径，多个路径之间用分号隔开。例如：C:\ninja。</li>
+<li>点击“确定”保存设置，然后打开命令行窗口，输入 ninja --version 命令，如果能够正确输出 Ninja 的版本信息，说明安装成功。</li>
+</ol>
+<br>
+<h2 id="4设置环境变量">4.设置环境变量</h2>
+<p>告诉depot_tools使用我们本机的VS进行编译<br>
+set DEPOT_TOOLS_WIN_TOOLCHAIN=0<br>
+set GYP_GENERATORS=msvs-ninja,ninja<br>
+set GYP_MSVS_VERSION=2022</p>
+<br>
+<h2 id="5生成-ninja-工程文件">5.生成 Ninja 工程文件</h2>
+<p>WebRTC 目前使用 GN 来生成构建脚本，Ninja 进行构建，因此系统平台均是。<br>
+Ninja 工程文件由 GN 生成，为其选择一个放置的目录中，如 out/Debug 或者 out/Release，这里官方建议选择 out/Default 这样能够放置 debug 和 release，在 src 目录下还行一下命令：</p>
+<pre><code>gn gen out/Default
+</code></pre>
+<p>5.1可能会出现错误提示：&quot;gn.py: Could not find checkout in any parent of the current path. This must be run inside a checkout.&quot;<br>
+此时需要更新下，可能是depot_tools没有正确安装或者初始化</p>
+<pre><code>gclient sync
+</code></pre>
+<p>5.2可能出现错误提示：Exception: Path &quot;C:\Program Files (x86)\Windows Kits\10\include\10.0.22621.0\shared&quot; from environment variable &quot;include&quot; does not exist. Make sure the necessary SDK is installed.<br>
+这需要安装对应版本的windows sdk</p>
+<p>5.3其他参数：</p>
+<pre><code>gn gen --ide=vs out/Default &quot;--args=is_debug=true is_clang=false use_rtti=true use_lld=false rtc_build_tools=false rtc_include_tests=false rtc_build_examples=false target_cpu=\&quot;x86\&quot;&quot;
+</code></pre>
+<ul>
+<li>is_debug=true：生成调试版本的项目。</li>
+<li>is_clang=false：使用 Visual C++ 编译器而不是 Clang 编译器。</li>
+<li>use_rtti=true：启用运行时类型信息。</li>
+<li>use_lld=false：禁用 LLD 链接器。</li>
+<li>rtc_build_tools=false：不编译 WebRTC 工具。</li>
+<li>rtc_include_tests=false：不编译 WebRTC 测试代码。</li>
+<li>rtc_build_examples=false：不编译 WebRTC 示例代码。</li>
+<li>rtc_enable_protobuf=true：启用 protobuf 库。</li>
+<li>enable_iterator_debugging=true：debug模式要打开这个选项，否则_ITERATOR_DEBUG_LEVEL不匹配</li>
+<li>dcheck_always_on=true：始终启用断言检查。</li>
+<li>treat_warnings_as_errors=false：不将警告视为错误。</li>
+<li>target_cpu=&quot;x86&quot;：生成 x86 架构的项目。</li>
+<li>use_custom_libcxx=false：不使用自定义的 libc++ 库</li>
+<li>use_custom_libcxx_for_host=false：不在主机上使用自定义的 libc++ 库。</li>
+<li>rtc_use_h264=true：启用 H.264 编码器</li>
+<li>is_component_ffmpeg=true：构建 FFmpeg 库。</li>
+<li>enable_libaom=false：禁用 libaom 库。</li>
+</ul>
+<p>5.4不建议禁用clang而使用msvc，即is_clang=true<br>
+禁用时编译会提示error C7555: use of designated initializers requires at least '/std:c++20'&quot;<br>
+参考：<a href="">https://groups.google.com/g/discuss-webrtc/c/PBJK6LMzNmU/m/XrUDrYU1BAAJ</a></p>
+<p>建议生成的命令参数：</p>
+<pre><code>gn gen --ide=vs out/Default &quot;--args=is_debug=false use_rtti=true use_lld=false rtc_build_tools=false rtc_include_tests=false rtc_build_examples=false target_cpu=\&quot;x86\&quot; use_custom_libcxx=false use_custom_libcxx_for_host=false treat_warnings_as_errors=false&quot;
+</code></pre>
+<br>
+<h2 id="6其他项目引入webrtc库">6.其他项目引入webrtc库</h2>
+<p>WebRTC编译后会在src\out\Default\obj目录下生成整个WebRTC工程的静态库：webrtc.lib，链接下这个就可以了。</p>
+<pre><code>如果VS应用没配置Clang编译器，链接这个webrtc.lib，生成工程文件时需要配置如下参数：
+gn gen --ide=vs out/Default --args=&quot;is_clang=false use_lld=false&quot;
+禁用clang与lld
+</code></pre>
+<h3 id="61-编译时错误-webrtc-failifmismatch-mismatch-detected-for-runtimelibrary">6.1 编译时错误 webrtc failifmismatch: mismatch detected for 'RuntimeLibrary'</h3>
+<p>如果webrtc静态库是debug的，而引入项目是release的则可能导致这个问题</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[客户端更新相关问题]]></title>
+        <id>https://hensonguo.github.io/post/ke-hu-duan-geng-xin-xiang-guan-wen-ti/</id>
+        <link href="https://hensonguo.github.io/post/ke-hu-duan-geng-xin-xiang-guan-wen-ti/">
+        </link>
+        <updated>2023-11-28T09:18:37.000Z</updated>
+        <content type="html"><![CDATA[<h3 id="1权限问题">1.权限问题</h3>
+<p>如果用户是非管理员，是无法将文件下载到Program Files文件夹以及子文件下的，因为这是一个受保护的目录，只有管理员或具有管理员权限的用户才能在其中写入文件。</p>
+<p>如果您的程序需要在 Program Files 中写入文件，您可以使用以下方法：</p>
+<ol>
+<li>将文件下载到用户的临时文件夹中，例如 C:\Users\username\AppData\Local\Temp。以管理员身份运行您的应用程序，并将文件复制到 Program Files 目录中。</li>
+<li>将您的应用程序注册为管理员权限，使其能够在 Program Files 目录中写入文件。</li>
+</ol>
+<p>请注意，第两种方法需要您的应用程序能够处理 UAC（用户账户控制）提示。</p>
+<br>
+<h3 id="2复制移动到program-files时的权限">2.复制移动到Program Files时的权限</h3>
+<p>1）以管理员权限启动一个进程进行复制<br>
+已知将文件移动到Program Files需要管理员权限，那么可以新启动一个进程，并将进程设置为管理员权限，如：</p>
+<pre><code class="language-python">SW_HIDE = 0
+ctypes.windll.shell32.ShellExecuteW(
+    None,
+    'runas', #管理员
+    exePath,
+    updateCmd,
+    None,
+    SW_HIDE)
+</code></pre>
+<p>但是如果用户账户控制会对更改程序进行拦截弹窗提示</p>
+<p>2）将目标进程UAC执行级别设置为管理员<br>
+当程序更新文件下载完成后，需要写入Program Files中，我们通常会将写入安装的过程作为一个工程处理，将对应的exe程序的UAC执行级别设置为管理员。</p>
+<p>在属性/链接器/UAC执行级别的选项中进行设置。</p>
+<p>如果非管理员启动这个可执行程序，会提示需要管理员权限</p>
+<br>
+<h3 id="3更新完成启动程序">3.更新完成启动程序</h3>
+<p>如果并未将启动exe拷贝到安装目录下，而且启动exe依赖安装目录下的动态文件，如何处理<br>
+1）通过manifests指定dll的搜索目录<br>
+<a href="https://learn.microsoft.com/en-us/windows/win32/sbscs/application-manifests#file-location">参考1</a><br>
+<a href="https://stackoverflow.com/questions/3832290/altering-dll-search-path-for-static-linked-dll">参考2</a><br>
+2) 通过修改进程的环境变量确定dll的搜索目录</p>
+<pre><code class="language-python">os.environ['PATH'] = os.pathsep.join([appPath, os.environ['PATH']])
+originEnv = dict(os.environ)
+subprocess.Popen(self._params, env=originEnv)
+</code></pre>
+<p>如果有qt依赖，还需要在对应的exe目录创建一个qt.conf文件</p>
+<pre><code class="language-python">qtConfigPath = self.getAppPath(&quot;qt.conf&quot;)
+file = QtCore.QFile(qtConfigPath)
+file.open(QtCore.QIODevice.OpenModeFlag.WriteOnly)
+pluginPath = ccpath.replace(&quot;\\&quot;, &quot;/&quot;)
+file.write(f&quot;[Paths]\nPrefix={pluginPath}/Qt5&quot;.encode('utf-8'))
+file.close()
+</code></pre>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[即时通讯实时视频聊天技术]]></title>
+        <id>https://hensonguo.github.io/post/ji-shi-tong-xun-shi-shi-shi-pin-liao-tian-ji-zhu/</id>
+        <link href="https://hensonguo.github.io/post/ji-shi-tong-xun-shi-shi-shi-pin-liao-tian-ji-zhu/">
+        </link>
+        <updated>2023-10-09T14:23:39.000Z</updated>
+        <content type="html"><![CDATA[<h2 id="1概述">1.概述</h2>
+<h3 id="11-压缩了什么东西">1.1 压缩了什么东西？</h3>
+<p>原始视频压缩的目的是去除冗余信息，可以去除的冗余包括：</p>
+<ul>
+<li>空间冗余：图像相邻像素之间有较强的相关性</li>
+<li>时间冗余：视频序列的相邻图像之间内容相似</li>
+<li>编码冗余：不同像素值出现的概率不同</li>
+<li>视觉冗余：人的视觉系统对某些细节不敏感</li>
+<li>知识冗余：规律性的结构可由先验知识和背景知识得到</li>
+</ul>
+<h3 id="12-数据压缩是怎么分类的">1.2 数据压缩是怎么分类的？</h3>
+<ul>
+<li>无损压缩（Lossless）：压缩前、解压缩后图像完全一致X=X'，压缩比低(2:1~3:1)。典型格式例如：Winzip，JPEG-LS。</li>
+<li>有损压缩（Lossy）：压缩前解压缩后图像不一致X≠X'，压缩比高(10:1~20:1)，利用人的视觉系统的特性。典型格式例如：MPEG-2，H.264/AVC，AVS。</li>
+</ul>
+<h3 id="13-编解码的技术流程和原理">1.3 编解码的技术流程和原理</h3>
+<p><img src="http://www.52im.net/data/attachment/forum/201604/16/131633dhhwn5aj72hw8hja.png" alt="" loading="lazy"><br>
+<img src="http://www.52im.net/data/attachment/forum/201604/16/131639c5cxopo2d6ciqjj2.png" alt="" loading="lazy"></p>
+<h3 id="14-视频编码的标准">1.4 视频编码的标准</h3>
+<h4 id="141-编码标准作用">1.4.1 编码标准作用：</h4>
+<ul>
+<li>兼容：不同厂家生产的编码器压缩的码流能够被不同厂家的解码器解码</li>
+<li>高效：标准编解码器可以进行批量生产，节约成本。</li>
+</ul>
+<h3 id="142-主流的视频编码标准">1.4.2 主流的视频编码标准：</h3>
+<ul>
+<li>MPEG-2</li>
+<li>MPEG-4 Simple Profile</li>
+<li>H.264/AVC</li>
+<li>AVS</li>
+<li>VC-1</li>
+</ul>
+<h3 id="15-视频传输面临的问题">1.5 视频传输面临的问题</h3>
+<p>传输系统不可靠：</p>
+<ul>
+<li>带宽限制</li>
+<li>信号衰减</li>
+<li>噪声干扰</li>
+<li>传输延迟</li>
+</ul>
+<p>视频传输出现的问题：</p>
+<ul>
+<li>不能解码出正确的视频</li>
+<li>视频播放延迟</li>
+</ul>
+<h3 id="16-视频传输差错控制">1.6 视频传输差错控制</h3>
+<p>差错控制（Error Control）解决视频传输过程中由于数据丢失或延迟导致的问题。<br>
+差错控制技术有：</p>
+<ul>
+<li>信道编码差错控制技术</li>
+<li>编码器差错恢复</li>
+<li>解码器差错隐藏</li>
+</ul>
+<br>
+<h2 id="2数字视频介绍">2.数字视频介绍</h2>
+<h3 id="21-什么是图像什么是视频">2.1 什么是图像？什么是视频？</h3>
+<p>图像：是人对视觉感知的物质再现。三维自然场景的对象包括：深度，纹理和亮度信息。二维图像：纹理和亮度信息。<br>
+视频：连续的图像。视频由多幅图像构成，包含对象的运动信息，又称为运动图像。</p>
+<h3 id="22-何为数字视频">2.2 何为数字视频？</h3>
+<p>数字视频可以理解为自然场景空间和时间的数字采样表示。<br>
+空间采样的主要技术指标为：解析度（Resolution）(尺寸)<br>
+<img src="http://www.52im.net/data/attachment/forum/201604/16/133531j11txt22lqrkl2ik.png" alt="" loading="lazy"><br>
+时间采样的主要技术指标为：帧率（帧/秒）<br>
+<img src="http://www.52im.net/data/attachment/forum/201604/16/133400shn3fzexfoyknsef.png" alt="" loading="lazy"></p>
+<h3 id="23-人类视觉系统hvs">2.3 人类视觉系统HVS</h3>
+<p>HVS的构成：<br>
+眼睛、神经、大脑</p>
+<p>HVS特点：</p>
+<ul>
+<li>对高频信息不敏感</li>
+<li>对高对比度更敏感</li>
+<li>对亮度信息比色度信息更敏感</li>
+<li>对运动的信息更敏感</li>
+</ul>
+<h3 id="24-针对hvs的特点数字视频系统的设计应该考虑哪些因素">2.4 针对HVS的特点，数字视频系统的设计应该考虑哪些因素？</h3>
+<ul>
+<li>丢弃高频信息，只编码低频信息</li>
+<li>提高边缘信息的主观质量</li>
+<li>降低色度的解析度</li>
+<li>对感兴趣区域（Region of Interesting，ROI）进行特殊处理<br>
+<img src="http://www.52im.net/data/attachment/forum/201604/16/134008hc66ie7suttjmt6a.png" alt="" loading="lazy"></li>
+</ul>
+<h3 id="25-什么是rgb色彩空间">2.5 什么是RGB色彩空间？</h3>
+<p>三原色分别是红（R），绿（G），蓝（B）。任何颜色都可以通过按一定比例混合三原色产生。<br>
+RGB色度空间：</p>
+<ul>
+<li>由RGB三原色组成</li>
+<li>广泛用于BMP，TIFF，PPM等</li>
+<li>每个色度成分通常用8bit表示[0,255]</li>
+</ul>
+<h3 id="26-什么是yuv色彩空间">2.6. 什么是YUV色彩空间？</h3>
+<p>YUV色彩空间是指，Y：亮度分量，UV：两个色度分量。YUV能更好的反映HVS特点。YUV将颜色的亮度和色度分离开来，这使得在视频编码和传输时更加高效。</p>
+<ul>
+<li>由于YUV将亮度和色度分离，因此在视频压缩时可以对色度进行更多的压缩，从而达到更好的压缩效果。</li>
+<li>YUV主要用于视频编码、传输和解码等领域。</li>
+<li>色彩范围是-128到127。</li>
+</ul>
+<h3 id="27-rgb如何转化到yuv空间">2.7 RGB如何转化到YUV空间？</h3>
+<p>亮度分量Y与三原色有如下关系：<br>
+Y = 0.299R + 0.587G + 0.114B，其中R、G、B分别表示红、绿、蓝三个颜色通道的强度值。这个加权比例是由国际电联（ITU）制定的标准，用于将彩色视频信号转换为黑白视频信号。<br>
+<img src="http://www.52im.net/data/attachment/forum/201604/16/134433gmjcmzeeeaem7xhc.png" alt="" loading="lazy"><br>
+主流的编解码标准的压缩对象都是YUV图像。</p>
+<h3 id="28-何为yuv图像分量采样">2.8 何为YUV图像分量采样？</h3>
+<p>YUV图像可以根据HVS的特点，对色度进行分量采样，可以降低视频数据量。<br>
+根据亮度和色度分量的采样比率，YUV图像通常有以下几种分量方式：<br>
+<img src="https://upload-images.jianshu.io/upload_images/305749-48f6b80a529984bc.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/576/format/webp" alt="" loading="lazy"></p>
+<h3 id="29-通用的yuv图像格式有哪些">2.9 通用的YUV图像格式有哪些？</h3>
+<p>根据YUV图像的亮度、分辨率定义了如下图像格式：<br>
+<img src="https://upload-images.jianshu.io/upload_images/305749-0a5d5514f490a078.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/576/format/webp" alt="" loading="lazy"></p>
+<h3 id="210-如何理解帧和场图像">2.10  如何理解帧和场图像？</h3>
+<p>一帧图像包括两场——顶场，底场：<br>
+<img src="https://upload-images.jianshu.io/upload_images/305749-cc4c4f460dde9e38.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/563/format/webp" alt="" loading="lazy"><br>
+<img src="https://upload-images.jianshu.io/upload_images/305749-df1387f47e94e980.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/576/format/webp" alt="" loading="lazy"></p>
+<h3 id="211-如何理解帧和场图像">2.11  如何理解帧和场图像？</h3>
+<p>逐行图像：一帧图像的两场在同一时间得到，ttop=tbot。<br>
+隔行图像：一帧图像的两场在不同时间得到，ttop≠tbot。<br>
+<img src="https://images.cnblogs.com/cnblogs_com/xkfz007/201207/201207290832396422.png" alt="" loading="lazy"></p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[H264]]></title>
+        <id>https://hensonguo.github.io/post/h264/</id>
+        <link href="https://hensonguo.github.io/post/h264/">
+        </link>
+        <updated>2023-10-09T12:49:57.000Z</updated>
+        <content type="html"><![CDATA[<h3 id="1什么是h264编码标准">1.什么是h264编码标准？</h3>
+<p>H.264是一种视频压缩标准，也被称为MPEG-4 Part 10，或AVC（Advanced Video Coding）。它是一种高效的压缩算法，可在保持视频质量的同时减少文件大小。</p>
+<br>
+<h3 id="2-h264编码标准的优点是什么">2. h264编码标准的优点是什么？</h3>
+<p>H.264编码标准具有以下优点：</p>
+<ul>
+<li>高压缩比：相对于其他压缩标准，H.264可以在保持视频质量的同时减小文件大小。</li>
+<li>高质量视频：H.264可以提供高质量的视频，最高可以达到1080p分辨率。</li>
+<li>适用于多种应用：H.264可以用于多种应用，包括流媒体、视频会议、移动设备等。</li>
+<li>低延迟：H.264可以提供低延迟的视频传输，适用于实时应用，如视频会议和直播。</li>
+</ul>
+<br>
+<h3 id="3h264编码标准的缺点是什么">3.h264编码标准的缺点是什么？</h3>
+<p>H.264编码标准的缺点包括：</p>
+<ul>
+<li>高算力需求：H.264编码需要大量的计算资源，因此在低端设备上可能会出现性能问题。</li>
+<li>版权问题：H.264是一种专利技术，使用H.264编码需要支付专利费用。</li>
+<li>不适用于低码率：H.264在低码率下的表现不如其他编码标准。</li>
+</ul>
+<br>
+<h3 id="4什么是h264的i帧-p帧和b帧">4.什么是H.264的I帧、P帧和B帧？</h3>
+<p>H.264编码标准使用三种帧类型：</p>
+<ul>
+<li>I帧（Intra Frame）：I帧是一种关键帧，它是视频序列中的第一帧，也是其他帧的参考帧。I帧包含完整的图像信息，不依赖于其他帧。</li>
+<li>P帧（Predictive Frame）：P帧是一种预测帧，它依赖于前一帧的I帧或P帧，并通过运动估计和运动补偿来预测当前帧的图像信息。</li>
+<li>B帧（Bidirectional Frame）：B帧是一种双向预测帧，它依赖于前一帧和后一帧的I帧或P帧，并通过双向运动估计和运动补偿来预测当前帧的图像信息。</li>
+</ul>
+<br>
+<h3 id="5h264编码中的运动估计和运动补偿是什么">5.H.264编码中的运动估计和运动补偿是什么？</h3>
+<p>运动估计和运动补偿是H.264编码中的两个重要概念。运动估计是指通过比较两个帧之间的像素差异来估计当前帧中的运动信息。运动补偿是指通过使用运动估计的结果来对当前帧进行预测，从而减小编码后的数据量。运动补偿可以使用单向预测（P帧）或双向预测（B帧）来实现。通过运动估计和运动补偿，H.264可以在保持视频质量的同时减少数据量。</p>
+<br>
+<h3 id="6什么是x264">6.什么是x264？</h3>
+<ul>
+<li>h264是一种视频编码标准，x264是一种实现h264标准的开源软件库。</li>
+<li>x264相对于其他h264编码器，具有更高的压缩比和更好的视频质量，但需要更高的计算资源。</li>
+<li>x264编码器通过使用先进的压缩算法和优化的编码参数，可以实现高效的视频压缩率。此外，x264还支持多种压缩模式和自适应压缩技术，以进一步提高视频压缩率。</li>
+</ul>
+<br>
+<h3 id="7h264可以硬编码吗">7.h264可以硬编码吗</h3>
+<p>是的，h264可以进行硬件编码，这种编码方式通常使用专门的硬件编码器来完成。硬件编码可以提高编码速度和效率，并减少计算机的负载。许多现代的图形处理器（GPU）和其他硬件设备都支持h264硬件编码。</p>
+<br>
+<h3 id="8x264是软编还是硬编">8.x264是软编还是硬编</h3>
+<p>264是软编，它是一种开源的视频编码库，可以将视频流压缩成H.264/MPEG-4 AVC格式，以实现更高效的视频传输和存储。它不依赖于特定的硬件设备，而是通过软件算法实现视频编码。</p>
+<br>
+<h3 id="9h264和mpeg4的区别">9.h264和mpeg4的区别</h3>
+<p>H.264和MPEG-4都是视频编码标准，它们有以下几点区别：</p>
+<ol>
+<li>压缩效率：H.264比MPEG-4更先进，可以在相同的比特率下提供更高的视频质量，或者在相同的视频质量下减少文件大小。</li>
+<li>处理速度：H.264需要更多的计算资源来进行编码和解码，因此相对于MPEG-4来说，处理速度可能会更慢。</li>
+<li>支持的分辨率：H.264支持更高的分辨率和帧率，可以处理更高清晰度的视频。</li>
+<li>应用场景：H.264适用于需要高质量视频和较小文件大小的应用场景，如高清视频、流媒体和视频会议等；MPEG-4适用于低比特率和较小分辨率的应用场景，如移动设备视频和视频邮件等。</li>
+</ol>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[面试题汇总3]]></title>
+        <id>https://hensonguo.github.io/post/mian-shi-ti-hui-zong-3/</id>
+        <link href="https://hensonguo.github.io/post/mian-shi-ti-hui-zong-3/">
+        </link>
+        <updated>2023-10-08T12:43:20.000Z</updated>
+        <content type="html"><![CDATA[<h3 id="1c源代码到可执行文件的过程">1.C++源代码到可执行文件的过程</h3>
+<p>预处理--&gt;编译--&gt;汇编--&gt;链接</p>
+<ol>
+<li>预处理：删除又有的宏定义#define；处理所有的预编译指令#include”、&quot;#if&quot;”、“#endif”、“#ifdef”、“#elif”和“#else”等；删除所有的注释，“//”和“/**/”。</li>
+<li>编译：把预编译之后生成的xxx.i或xxx.ii文件，进行一系列词法分析、语法分析、语义分析及优化后，生成相应的汇编代码文件。</li>
+<li>汇编：将汇编代码转变成机器可以执行的指令(机器码文件)。</li>
+<li>链接：将不同的源文件产生的目标文件进行链接，从而形成一个可以执行的程序。</li>
+</ol>
+<h3 id="2深浅拷贝">2.深浅拷贝</h3>
+<ol>
+<li>在未定义拷贝构造函数的情况下，系统会调用默认的拷贝函数——即浅拷贝（不用自己构造），它能够完成成员的简单的值的拷贝一一复制。当数据成员中没有指针时，浅拷贝是可行的；但当数据成员中有指针时，如果采用简单的浅拷贝，则两类中的两个指针将指向同一个地址（同一个堆区），当对象快结束时，<strong>会调用两次析构函数（析构函数也无需自己构造，但想要知道析构函数的工作可以自己构造析构函数用输出来记录），而导致指针悬挂现象</strong>，所以，此时，必须采用深拷贝。</li>
+<li>深拷贝与浅拷贝的区别就在于深拷贝会在堆内存中另外申请空间来储存数据（新的堆区空间进行拷贝），从而也就解决了指针悬挂的问题。</li>
+</ol>
+<h3 id="3为什么通常要把析构函数设置为虚的">3.为什么通常要把析构函数设置为虚的</h3>
+<p><strong>虚析构函数 为了避免内存泄露，基类的析构函数一般都是虚函数。</strong><br>
+如果基类析构函数不是虚函数：基类指针指向子类对象，delete基类指针，调用基类析构函数，不会调用子类析构函数，造成内存泄露。</p>
+<h3 id="4-什么是回调函数">4. 什么是回调函数</h3>
+<p>回调函数是一种在程序运行期间通过函数指针调用的函数，它通常用于实现事件驱动、异步通信、消息传递等功能。</p>
+<h3 id="5什么是粘包解决办法">5.什么是粘包，解决办法</h3>
+<p>粘包是指在网络传输过程中，多个数据包被合并成一个数据包的现象。这种现象可能会导致数据传输的错误或者数据丢失。<br>
+解决粘包问题的办法包括：</p>
+<ol>
+<li>使用定长包，即每个包的长度固定，这样就不会出现多个包合并成一个包的情况。</li>
+<li>使用分隔符，即在每个包的结尾添加一个特定的分隔符，接收方根据分隔符来判断每个包的结束位置。</li>
+<li>使用消息头和消息体的方式，即在每个包的开头添加一个消息头，消息头中包含消息体的长度信息，接收方根据消息头中的长度信息来正确地分割每个包。</li>
+</ol>
+<h3 id="6进程和线程的关系">6.进程和线程的关系</h3>
+<p>一个进程，就是一个正在运行的程序！一个程序，可以产生多个进程。然后进程有两个部分：</p>
+<ol>
+<li>一个内核对象，被系统用来管理这个进程，这个内核对象中，还包含了进程的一些策略信息。</li>
+<li>一个地址空间，这个地址空间中包含了可执行代码，动态链接库模块代码，数据，程序动态内存分配获取的内存，也在这个内存地址空间中。</li>
+</ol>
+<p>线程也是由两个部分组成的：</p>
+<ol>
+<li>一个是线程的内核对象，操作系统用它来对线程实施管理。内核对象也是系统用来存放<br>
+线程统计信息的地方。</li>
+<li>另一个是线程堆栈，它用于维护线程在执行代码时需要的所有函数参数和局部变量</li>
+</ol>
+<p>进程是由“惰性“的，进程要做任何事情都必须让一个线程在它的上下文中运行。该线程负责执行进程地址空间包含的代码。事实上，一个进程可以有多个线程，所有线程都在进程的地址空间中”同时执行代码“。当系统创建一个进程的时候，会自动为进程创建第一个线程，这称为主线程。</p>
+<h3 id="7mfc消息机制">7.MFC消息机制</h3>
+<p>MFC框架中的消息机制实现了Windows消息的处理和分发。在MFC应用程序中，每个窗口都有一个消息队列，用于存储接收到的消息。当应用程序运行时，MFC框架会不断地从消息队列中取出消息，并将其分发给相应的窗口进行处理。每个窗口都可以通过重载相应的消息处理函数来处理不同类型的消息。例如，OnMouseMove函数可以处理鼠标移动消息，OnPaint函数可以处理窗口重绘消息等。</p>
+<p>MFC消息机制的核心是消息映射表（Message Map），它是一个用于存储消息处理函数的表格。消息映射表中的每一行对应一个消息处理函数，其中包含了消息的类型、消息处理函数的名称等信息。当应用程序收到一个消息时，MFC框架会根据消息的类型在消息映射表中查找相应的消息处理函数，并调用它来处理消息。</p>
+<h3 id="7什么是void指针">7.什么是void指针</h3>
+<p>void指针是C++语言中的一种特殊指针类型，也称为无类型指针。与其他指针类型不同的是，void指针可以指向任何类型的数据，包括基本数据类型、结构体、类、数组等等。<br>
+在使用void指针时，需要注意以下几点：</p>
+<ol>
+<li>不能对void指针直接进行解引用操作，因为void指针没有指定具体的数据类型，无法确定其大小和内部结构。</li>
+<li>在使用void指针时，需要将其转换为具体的指针类型，才能进行指针运算和解引用操作。</li>
+<li>在进行类型转换时，需要确保转换的类型与实际数据类型相匹配，否则可能会导致内存错误或者程序崩溃。</li>
+</ol>
+<h3 id="8局部变量和静态局部变量有什么区别">8.局部变量和静态局部变量有什么区别</h3>
+<p>局部变量和静态局部变量都是在函数内部定义的变量，它们的区别在于作用域和生命周期。</p>
+<ol>
+<li>存储位置：局部变量通常存储在栈（stack）上，栈上的内存分配和释放是自动进行的。而静态局部变量存储在静态存储区（静态区、全局数据区）中，它的内存分配和释放是由编译器控制的。</li>
+<li>作用域：局部变量的作用域仅限于定义它的函数内部，当函数执行完毕后，局部变量就会被销毁，无法再被访问。<br>
+静态局部变量的作用域仍然仅限于定义它的函数内部，但是它的值在函数调用结束后不会被销毁，下次调用该函数时，它的值仍然保持上次调用结束时的值。</li>
+<li>生命周期：局部变量的生命周期与函数的执行周期相同，当函数执行完毕后，局部变量就会被销毁，无法再被访问。<br>
+静态局部变量的生命周期与程序的执行周期相同，在程序开始运行时被初始化，在程序结束时被销毁。</li>
+</ol>
+<p>因此，局部变量适用于只在函数内部使用的临时变量，而静态局部变量适用于需要在函数调用之间保持状态的变量。静态局部变量还可以用于在函数内部实现全局变量的效果，但是它的作用域仍然仅限于定义它的函数内部。</p>
+<h3 id="9导出接口为什么要加extern">9.导出接口为什么要加extern</h3>
+<p>在C语言中，<code>extern</code>关键字用于声明一个全局变量或函数的外部链接。当我们在一个源文件中声明一个全局变量或函数时，该变量或函数默认具有外部链接，也就是说它可以被其他源文件访问和使用。</p>
+<p>为了在其他源文件中使用这些全局变量或函数，我们需要使用<code>extern</code>关键字进行外部声明。通过在其他源文件中使用<code>extern</code>关键字声明该变量或函数，我们告诉编译器，这些变量或函数是在其他文件中定义的，可以在链接时找到其定义并进行链接。</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[windows核心编程-硬件输入模型和局部输入状态]]></title>
+        <id>https://hensonguo.github.io/post/windows-he-xin-bian-cheng-ying-jian-shu-ru-mo-xing-he-ju-bu-shu-ru-zhuang-tai/</id>
+        <link href="https://hensonguo.github.io/post/windows-he-xin-bian-cheng-ying-jian-shu-ru-mo-xing-he-ju-bu-shu-ru-zhuang-tai/">
+        </link>
+        <updated>2023-09-22T11:16:28.000Z</updated>
+        <content type="html"><![CDATA[<h2 id="1原始输入线程">1.原始输入线程</h2>
+<p>下图概括描述了系统的硬件输入模型。当系统初始化时会创建一个原始输入线程和一个系统硬件输入队列：</p>
+<ul>
+<li>原始输入线程（raw input thread RIT），简称 RIT。</li>
+<li>系统硬件输入队列（System hardware input queue SHIQ），简称 SHIQ。<br>
+<img src="https://img-blog.csdnimg.cn/d914db19a4cc46408bc7f422fee32aae.png" alt="" loading="lazy"></li>
+</ul>
+<p>RIT 处理 Input 消息<br>
+Windows 输入消息大多数只有鼠标和键盘两种：</p>
+<ul>
+<li>对于键盘消息，RIT 会把消息放入跟 RIT 连接的线程的虚拟输入队列</li>
+<li>对于鼠标消息，RIT 可以确定哪个窗口在鼠标光标之下，通过这个窗口调用GetWindowThreadProcessId 来确定哪个线程建立了这个窗口，返回该线程的 ID，指出这个 ID 的线程得到鼠标消息。<br>
+与按键硬件事件的处理不同，在任何时刻下，只有一个线程与 RIT 连接，这个线程称为 “前景线程”（因为它建立与用户交互的窗口，且线程中的窗口相对与其他窗口来说，处于画面的前景）<br>
+如：<br>
+<img src="https://img-blog.csdnimg.cn/09b7c1145f374136b6bc5e7eb1438bc7.png" alt="" loading="lazy"><br>
+按键消息进入虚拟输入队列：<br>
+<img src="https://img-blog.csdnimg.cn/e5a66b29ea3844ca918559637c781027.png" alt="" loading="lazy"></li>
+</ul>
+<br>
+<h3 id="11不同的线程如何连接到-rit">1.1不同的线程如何连接到 RIT</h3>
+<ol>
+<li>连接前景线程：当创建一个进程时，进程的线程可以建立一个窗口，使创建窗口的线程同 RIT 连接（鼠标放在上面点一下）</li>
+<li>用键盘激活的窗口：RIT 要负责处理特殊的键组合：Alt + Tab、Alt + Esc、Ctrl + Alt + Del 等，处理这些键组合时，可以保证总能用键盘激活窗口。 因为应用程序不能废弃这些键组合功能，当用户按下某个特殊组合时， RIT 激活选定的窗口，并将窗口的（创建）线程连接到 RIT</li>
+<li>Windows 也提供激活窗口的功能，使窗口的线程连接到 RIT</li>
+</ol>
+<p>注意：</p>
+<ul>
+<li>若当前的激活窗口无反应，可以通过按下 Alt + Tab 切换到其他窗口，不会有任何问题，除非电脑由于某种原因死机</li>
+<li>切换到其他窗口后，即使线程、窗口都没有响应，用户也可以对窗口一直输入（输入，但无响应的状态！就是那样！）</li>
+</ul>
+<br>
+<h2 id="2局部输入状态">2.局部输入状态</h2>
+<p>每个线程都有自己的输入状态变量，每个线程都有不同的焦点窗口、鼠标捕获窗口等概念</p>
+<h3 id="21键盘输入与焦点">2.1键盘输入与焦点</h3>
+<ol>
+<li>RIT 使用户的键盘输入流向一个线程的虚拟输入队列，而不是流向一个窗口（不涉及具体窗口）</li>
+<li>当线程调用 GetMessage 时，键盘事件从队列中移出，并分派给当前有输入焦点的窗口（调用接口的线程建立的窗口 ）<br>
+<img src="https://img-blog.csdnimg.cn/d141103087af46b686f1c0f54c4bb365.png" alt="" loading="lazy"></li>
+</ol>
+<h3 id="22激活窗口函数">2.2激活窗口函数</h3>
+<h4 id="221setactivewindow-和-getactivewindow">2.2.1SetActiveWindow 和 GetActiveWindow</h4>
+<ul>
+<li>激活系统中一个最高层（top-level）的窗口，并对这个窗口设定焦点</li>
+<li>同 SetFocus 函数一样，若调用线程没有创建（作为函数参数的）窗口，则这个函数什么也不做</li>
+<li>与 SetActiveWindow 配合的函数 ： GetActiveWindow</li>
+<li>与 GetFocus 函数差不多，不同在于，此函数返回（由调用线程的局部输入状态变量 所指出的） 活动窗口的句柄</li>
+</ul>
+<h4 id="222bringwindowtotop-和-setwindowpos">2.2.2BringWindowToTop 和 SetWindowPos</h4>
+<ul>
+<li>两个都是可以改变窗口的 Z 序（Z-order）、活动状态、焦点状态的函数</li>
+<li>BringWindowToTop 函数在内部调用 SetWindowPos 实现，以 HWND_TOP 作为第二个参数</li>
+<li>若调用这两个函数的线程没有连接到 RIT，则函数什么也不做（无法操控状态变量值）</li>
+<li>若调用这两个函数的线程与 RIT 连接，即使指定的窗口不是调用线程的，系统也会激活该窗口，且创建窗口的线程被连接到 RIT （会引起调用线程、新连接到 RIT 的线程的局部输入状态变量的更新）</li>
+</ul>
+<pre><code class="language-c++">BOOL BringWindowToTop(HWWD hwnd);
+BOOL SetWindowPos(
+    HWND hwnd,
+    HWND hwndInsertAfter,
+    int x,
+    int y,
+    int cx,
+    int cy,
+    UINI fuFlags);
+</code></pre>
+<h4 id="223setforegroundwindow">2.2.3SetForegroundWindow</h4>
+<ul>
+<li>仅当调用一个函数的线程，已经连接到 RIT 或者当前与 RIT 连接的线程在一定时间内（时间由 SystemParametersInfo 函数和 SPI_SETFOREGROUND_LOCKTIMEOUT 值来控制）没有接收到任何输入时，此函数才有效，若有一个菜单（GUI 的基础部分）是活动的，此函数失效</li>
+<li>若不允许 SetForegroundWindow 将窗口移到前景，它会闪烁窗口标题栏和任务条的窗口按钮，提示用户应该手工激活，有报告信息输出，可以用 SystemParametersInfo 函数和SPI_SETFOREGROUNDFLASHCOUNT 值来控制闪烁<br>
+为了使这个函数内容更完整，系统提供了另外的一些函数：<pre><code class="language-c++">AllowSetForegroundWindow
+</code></pre>
+</li>
+<li>调用 AllowSetForegroundWindow 函数可使指定进程的一个线程成功调用SetForegroundWindow</li>
+<li>为了使任何进程都可以在线程的窗口上，弹出一个窗口，指定 ASFW_ANY（定义为-1）作为dwProcessId 参数<pre><code class="language-c++">    BOOL AllowSetForegroundWindow(DWORD dwProcessId);
+</code></pre>
+</li>
+</ul>
+<h4 id="224locksetforegroundwindow">2.2.4LockSetForegroundWindow</h4>
+<ul>
+<li>锁定 SetForegroundWindow 函数，使它总是失效的</li>
+<li>对于 uLockCode 参数可以指定 LSFW_LOCK 或 LSFW_UNLOCK<pre><code class="language-c++">    BOOL LockSetForegroundWindow(UINI uLockCode);
+</code></pre>
+</li>
+<li>当一个菜单被激活时，系统在内部调用这个函数，这样试图跳到前景的窗口，不能关闭这个的菜单</li>
+<li>Windows 在显示 Start 菜单时，需要明确地调用这些函数，因为 Start 菜单不是一个内置菜单</li>
+<li>当用户按下 Alt 或将一个窗口拉到前景时，系统自动解锁 SetForegroundWindow 函数，这样可以防止一个程序一直对 SetForegroundWindow 函数封锁</li>
+</ul>
+<h4 id="225-同步键状态">2.2.5 同步键状态</h4>
+<ul>
+<li>每个线程的局部输入状态变量，都包含一个同步键状态数组</li>
+<li>所有的线程共享一个同步键状态数组，这些数组反应了：在任何给定时刻键盘所有键的状态<br>
+用 GetAsyncKeyState 函数，确定用户当前是否按下了键盘的一个键：</li>
+</ul>
+<pre><code class="language-c++">SHORT GetAsyncKeyState(int nVirtKey);
+</code></pre>
+<ul>
+<li>nVirtKey 指出要检查键的虚键代码</li>
+<li>返回的结果高位指出该键当前是否被按下：是为1，否为0</li>
+<li>可以用来检查用户是否释放了某些按键</li>
+</ul>
+<h3 id="23-鼠标光标管理">2.3 鼠标光标管理</h3>
+<h4 id="231-clipcursor">2.3.1 ClipCursor</h4>
+<ul>
+<li>ClipCursor 函数将鼠标光标剪贴到一个矩形区域</li>
+<li>使鼠标被限制在一个由 prc 参数指定的矩形区域内<pre><code class="language-c++">BOOL ClipCursor(CONST RECT *prc);
+</code></pre>
+</li>
+<li>允许剪贴鼠标光标可能会对其他线程产生不利的影响，而不允许剪贴鼠标光标会影响调用线程，系统实现了一种折中的方案：
+<ul>
+<li>当一个线程调用这个函数时，程序将光标剪贴到指定的矩形区域</li>
+<li>但若同步激活事件（用户点击其他程序的窗口、调用了 SetForgroundWindow，或按下了 Ctrl + Esc 组合键）发生，系统会停止剪贴鼠标光标的移动，允许鼠标在整个屏幕上自由移动</li>
+</ul>
+</li>
+</ul>
+<h4 id="232-鼠标捕获">2.3.2  鼠标捕获</h4>
+<p>捕获调用 SetCapture，释放调用 ReleaseCapture</p>
+<ul>
+<li>当一个窗口捕获鼠标时，它要求所有的鼠标消息从 RIT 发到调用线程的虚拟输入队列，并且所有的鼠标消息从虚拟输入队<br>
+列发到设置捕获的窗口，在调用 ReleaseCapture 之前，要一直持续这种鼠标消息的捕捉<br>
+鼠标的捕获必须与系统的强壮性折衷：</li>
+<li>当一个程序调用 SetCapture 时，RIT 将所有鼠标信息放入线程的虚拟输入队列</li>
+<li>SetCapture 要为调用 SetCapture 的线程设置局部输入状态变量</li>
+</ul>
+<p>做和不做鼠标捕获时，消息传递情况：</p>
+<ul>
+<li>一个程序在用户按一个鼠标按钮时调用 SetCapture</li>
+<li>鼠标没有按下时，RIT 不再将鼠标信息发往线程的虚拟输入队列，而是发往与鼠标光标所在的窗口相联系的输入队列</li>
+<li>也可以说，当用户释放了所有鼠标按钮时，鼠标捕获不再 在全系统范围内执行，而是在一个线程的局部范围内执行<br>
+若用户想激活一个其他线程所建立的窗口，系统自动向设置捕获的线程发送：鼠标按钮按下、鼠标按钮放开的消息，然后更新线程的局部输入状态变量，指出该线程不再有鼠标捕获</li>
+</ul>
+<br>
+<h2 id="3-将虚拟输入队列同局部输入状态挂接在一起">3. 将虚拟输入队列同局部输入状态挂接在一起</h2>
+<p>由上述讨论得：输入模型是强壮的，每个线程都有自己的局部输入状态环境，在必要时，每个线程还可以连接到 RIT 或从 RIT 断开</p>
+<h3 id="31-attachthreadinput-函数">3.1 AttachThreadInput 函数</h3>
+<ul>
+<li>可以通过多次调试 AttachThreadInput 函数让多个线程共享一个虚拟输入队列和局部输入状态变量</li>
+<li>可以利用 AttachThreadInput 函数来强制两个或多个线程共享同一个虚拟输入队列和一组局部输入状态变量<pre><code class="language-c++">BOOL AttachThreadInput(
+ DWORD idAttach,		//线程的ID，该线程所包含的虚拟输入队列是你不想再使用的
+ DWORD idAttachTo,	//另一个线程的ID，线程包含的虚拟输入队列，是想让两个线程共享的B
+ OOL fAttach;		//共享设为TRUE, 分开设为 FALSE
+ )
+</code></pre>
+</li>
+</ul>
+<h3 id="32-案例">3.2 案例</h3>
+<p>线程 A 调用 AttachThreadInput，传递线程 A 的 ID 作为第一个参数，线程 B 的 ID 作为第二个参数， TRUE 作为最后一个参数：</p>
+<pre><code class="language-c++">AttachThreadInput(AThreadID, BThreadID, TRUE);
+</code></pre>
+<ul>
+<li>发往 A1、B1、B2 的硬件输入事件，都将添加到线程 B 的虚拟输入队列中</li>
+<li>线程 A 的虚拟输入队列不再接收输入事件，除非再调用一次 AttachThreadInput 最后一个参数设为 FALSE</li>
+</ul>
+<h3 id="33-总结">3.3 总结</h3>
+<p>两个线程的输入都挂接在一起时，使线程共享单一的虚拟输入队列、同一组局部输入状态变量，但线程仍然使用自己的 登记消息队列、发送消息队列、应答消息队列和唤醒标志。<br>
+使用 AttachThreadInput 函数存在的问题：</p>
+<ul>
+<li>若让所有的线程都共享一个输入队列，就会严重削弱系统的强壮性</li>
+<li>若某一个线程接收一个按键消息并且挂起，其他的线程就不能接收任何输入</li>
+</ul>
+<p>综上所述，应该尽量避免使用 AttachThreadInput 函数，但也不是绝对的，以下列举两种使用AttachThreadInput 的情况<br>
+安装日志记录挂钩（journal record hook）或日志播放挂钩（journal playback hook）时</p>
+<ul>
+<li>当挂钩被卸载时，系统自动恢复所有线程，这样线程就可以使用 （挂钩安装前它们所使用的相同）输入队列</li>
+<li>当某个线程安装日志记录挂钩时，这个线程通常将 “硬件事件的通知信息” 保存或记录在一个文件上，因输入必须按进入的次序来记录，所以系统中每个线程要共享一个虚拟输入队列，使所有的输入处理同步<br>
+设某程序建立了两个线程：</li>
+<li>第一个线程建立了一个对话框，在这个对话框建立之后，第二个线程调用 GreatWindow，使用 WS_CHILD 风格，并向这个子窗口的双亲传递对话框的句柄</li>
+<li>系统用子窗口的线程调用 AttachThreadInput，让子窗口的线程使用（对话框线程所使用的）输入队列，这样就使对话框的 所有子窗口之间，对输入强制同步</li>
+</ul>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[windows核心编程-窗口]]></title>
+        <id>https://hensonguo.github.io/post/windows-he-xin-bian-cheng-chuang-kou/</id>
+        <link href="https://hensonguo.github.io/post/windows-he-xin-bian-cheng-chuang-kou/">
+        </link>
+        <updated>2023-09-21T11:46:40.000Z</updated>
+        <content type="html"><![CDATA[<h2 id="窗口消息">窗口消息</h2>
+<p>对但是要注意的是 窗口 和 挂钩(hook) 这两种用户对象，它们分别由建立窗口和安装挂钩的线程所拥有。如果一个线程建立一个窗口或安装一个挂钩，然后线程结束，操作系统会自动删除窗口或卸载挂钩。这种线程拥有关系的概念对窗口有重要的意义：<strong>建立窗口的线程必须是为窗口处理所有消息的线程。</strong></p>
+<p>每个线程，如果它建立了一个窗口，都会由系统为它分配一个消息队列。这个队列用于窗口消息的派送(dispatch).为了使窗口接收这些消息，线程必须有它自己的消息循环。</p>
+<br>
+<h2 id="线程的消息队列">线程的消息队列</h2>
+<p>系统分配一个THREADINFO结构，并将这个数据结构与线程联系起来。这个THREADINFO结构包含一组成员变量，利用这组成员，线程可以认为它是在自己独占的环境中运行。</p>
+<p>THREADINFO是一个内部的，未公开的数据结构，用来指定线程的 登记消息队列(Posted)、发送消息队列(Send)、应答消息队列(Reply)、虚拟输入队列、唤醒标志(WakeFlags)、以及用来描述线程局部输入状态的若干变量。<br>
+<img src="http://www.tkxiong.com/wp-content/uploads/2016/09/THREADINFO.jpg" alt="" loading="lazy"><br>
+↑上图描述了线程的THREADINFO的基本样子。这张图是的THREADINFO结构是窗口消息系统的基础。</p>
+<br>
+<h2 id="将消息发送到线程的消息队列中">将消息发送到线程的消息队列中</h2>
+<p>当线程有了与之联系的THREADINFO结构时，它就有了自己的消息队列集合。<br>
+如果一个进程建立了三个线程，并且这些线程都调用了CreateWindow，则有三个消息队列集合。</p>
+<p><font color=red>登记消息：</font><br>
+如果要将消息放置在线程的登记消息队列中，这要通过调用PostMessage函数来完成：</p>
+<pre><code class="language-c++">BOOL PostMessage(
+	HWND hWnd,
+	UINT Msg,
+	WPARAM wParam,
+	LPARAM lParam);
+</code></pre>
+<ol>
+<li>当一个线程第一次调用这个函数时，系统要确定是哪一个线程建立了hwnd参数标识的窗口。然后<strong>系统分配一块内存，将这个消息参数存储在这块内存中，并将这块内存增加到相应线程的登记消息队列中。</strong></li>
+<li>并且这个参数还<strong>设置唤醒标志位的 QS_POSTMESSAGE 唤醒位。</strong></li>
+<li>函数PostMessage在<strong>登记了消息之后立即返回</strong>，调用该函数的线程不知道登记的消息是否被指定的窗口过程所处理。甚至发送的消息有可能根本没有被处理：比如建立特定窗口的线程还没有处理完消息队列中的消息，就已经结束了，就会发生这种事情。</li>
+</ol>
+<p>还可以通过PostThreadMessage将消息放置在线程的登记消息队列中：</p>
+<pre><code class="language-c++">BOOL PostThreadMessage(
+	DWORD idThread,
+	UINT Msg,
+	WPARAM wParam,
+	LPARAM lParam);
+</code></pre>
+<p>PostThreadMessage 函数有四个参数，第一个参数标记了函数所期望的线程，即将消息发送到哪个线程的消息队列中去。当消息被设置到队列中时，MSG(消息数据结构)的hwnd成员会被设置为NULL。</p>
+<p>对线程编写主消息循环以便在GetMessage或PeekMessage取出一个消息时，主消息循环代码检查hwnd是否为NULL，并检查MSG(消息数据结构)的msg成员来执行特殊的处理。如果线程确定了该消息不被指派给一个窗口，则不会调用DispatchMessage函数，消息循环继续取下一个消息。</p>
+<p>同PostMessage函数一样，PostThreadMessage在向线程的队列登记了消息之后就立即返回。调用该函数的线程不知道消息是否被处理。</p>
+<p><font color=red>获取窗口线程：</font><br>
+通过 GetWindowThreadProcessId 来确定是哪个线程建立了一个窗口。</p>
+<pre><code class="language-c++">DWORD GetWindowThreadProcessId(
+	HWND hWnd,
+	LPDWORD lpdwProcessId);
+</code></pre>
+<p>这个函数返回线程的ID，这个线程建立了hwnd参数所标识的窗口。线程ID在全系统范围内是唯一的。还可以通过对lpdwProcessId参数传递一个DWORD地址来获取该线程的进程ID – 这个进程ID也是唯一的哦，如果不需要进程ID的话，传递NULL即可。</p>
+<p><font color=red>终止线程的消息循环：</font></p>
+<pre><code class="language-c++">VOID PostQuitMessage(int nExitCode);
+</code></pre>
+<p>为了终止线程的消息循环，可以调用这个函数。调用这个函数就类似于调用：</p>
+<pre><code class="language-c++">PostThreadMessage(GetCurrentThreadId(), WM_QUIT, nExitCode, 0);
+</code></pre>
+<br>
+<h2 id="向窗口发送消息">向窗口发送消息</h2>
+<p>使用SendMessage可以将消息发送给一个窗口：</p>
+<pre><code class="language-c++">LRESULT SendMessage(
+	HWND hWnd,
+	UINT Msg,
+	WPARAM wParam,
+	LPARAM lParam);
+</code></pre>
+<p>窗口过程将处理这个消息，而且只有消息被处理之后，SendMessage才能返回到调用程序。由于具有这种同步的特性，比之PostMessage或PostThreadMessage，SendMessage用地更频繁。</p>
+<p>那么，SendMessage是如何工作的呢？有两种情况：</p>
+<ol>
+<li>调用SendMessage的线程向该线程所建立的一个窗口发送一个消息：</li>
+</ol>
+<p>在这种情况下它只是<font color=red>调用指定窗口的窗口过程函数</font>，将其作为一个子例程。<font color=red>当窗口过程函数完成对消息的处理时，它向SendMessage返回一个值，SendMessage再将这个值返回给调用它的线程。</font></p>
+<ol start="2">
+<li>
+<p>调用SendMessage的线程向其他线程所建立的一个窗口发送消息：</p>
+<p>此时工作就稍微复杂一些。Windows要求了<strong>建立窗口的线程处理窗口的消息，所以当一个线程调用SendMessage向另一个线程建立的窗口发送一个消息，也就是向其他线程发送消息后，发送线程要挂起而由另外一个线程处理消息。</strong></p>
+</li>
+</ol>
+<p>所以系统会执行下面的动作：</p>
+<p>(1) 首先，<font color=red>发送的消息要追加到接收线程的发送消息队列，同时还为这个线程(接收线程)设定QS_SENDMESSAGE标志。</font></p>
+<p>(2)其次，如果<font color=red>接收消息的线程已经在执行代码并且没有等待消息(GetMessage、PeekMessage、WaitMessage)，发送的消息不会被即时处理，系统不能中断线程来立即处理消息</font>。要等它处理完才可以继续处理下一个消息。</p>
+<p>当接收进程在等待消息的时候，系统首先会检查<font color=red>QS_SENDMESSAGE 标志是否被设置</font>了，如果是，系统扫描发送消息队列的列表，并<font color=red>找到第一个发送的消息</font>(可能有多个发送来的消息，因为可能存在多个线程同时向一个线程发送消息的情况 – 注意：系统只是把消息追加到线程的发送消息队列中)并<font color=red>调用适当的窗口过程来处理消息。</font></p>
+<p>如果在发送消息队列中再没有消息了，则 QS_SENDMESSAGE 唤醒标志被关闭。</p>
+<p>(3) 当接收线程处理消息的时候，调用SendMessage函数发送消息的线程被设置为空闲(Idle)状态，等待一个消息出现在它的应答消息队列中。<strong>在发送的消息处理之后，窗口过程的返回值被登记到发送线程的应答消息队列中，唤醒发送线程，取出包含在应答消息队列中的返回值，这个返回值就是调用SendMessage的返回值。然后发送线程就可以继续运行了。</strong></p>
+<p><strong>存在的问题是：发送消息之后，线程就挂起了，那么当处理发送消息的线程含有错误的时候，会导致进入死循环。那么对于调用SendMessage的线程会发生什么事呢</strong>？它会恢复执行吗？是不是一个程序中的BUG会导致另一个程序挂起呢？的确是有这种可能！</p>
+<p>利用四个函数：SendMessageTimeout、 SendMessageCallback、SendNotifyMessage、ReplyMessage，可以编写保护型代码防止出现这种情况。我们一个个来看。</p>
+<p>第一个函数是，SendMessageTimeout：</p>
+<pre><code class="language-c++">LRESULT SendMessageTimeout(
+	HWND hWnd,
+	UINT Msg,
+	WPARAM wParam,
+	LPARAM lParam,
+	UINT fuFlags,
+	UINT uTimeout,
+	PDWORD_PTR lpdwResult);
+</code></pre>
+<p>相比SendMessage函数它多了三个参数：</p>
+<p>第五个参数：fuFlags参数，给它传递的值可以是 如下：(空格是为了方便阅读 – 实际使用是没有的)</p>
+<ul>
+<li>SMTO_NORMAL标志在&lt;Winuser.h&gt;中定义成0，如果不想指定任何其他标志及组合，就使用这个标志。</li>
+<li>SMTO_ABORT IF HUNG – 查看接收消息线程是否处于挂起状态，如果是，立即返回。</li>
+<li>SMTO_NO TIME OUT IF NOT HUNG – 标志使函数在接收消息的线程没有挂起时不考虑等待时间限定值。</li>
+<li>SMTO_BLOCK – 标志使调用线程在 SendMessageTimeout 返回之前，不再处理任何其他发送来的消息。</li>
+</ul>
+<p>前面提到过了，线程在等待发送的消息返回结果时可以被中断，以便处理另一个发送来的消息。如果我们在这个参数里面用BLOCK标志的话，就意味着我们不让系统同意这样的中断。要注意！使用这个标志可能会导致死锁情况的发生，而且会一直等待到时间期满为止。</p>
+<p>第六个参数和第七个参数：uTimeout 参数指定了等待应答消息时间的毫秒数。如果函数执行成功，返回TRUE，消息的结果复制到一个缓冲区中，该缓冲区的地址由最后一个参数lpdwResult指定。</p>
+<p>最后要注意的两个问题是：</p>
+<ol>
+<li>
+<p>返回值问题。</p>
+<ul>
+<li>
+<p>如果给窗口传递一个无效的窗口句柄或者是等待超时，都会返回FALSE，唯一区别它们的办法是调用GetLastError函数。</p>
+</li>
+<li>
+<p>如果是由于等待超时而失败，GetLastError得到的值为0(ERROR_SUCCESS)<br>
+如果对参数传递了一个无效的句柄，GetLastError为1400( ERROR_INVALID_WINDOW_HANDLE)</p>
+</li>
+</ul>
+</li>
+<li>
+<p>同线程的窗口发送消息。</p>
+<p>如果调用SendMessageTimeout向调用线程所建立的窗口发送一个消息，系统只是调用这个窗口的窗口过程，并将返回值赋给pdwResult。因为所有的处理都必须发生在一个线程里，调用SendMessageTimeout函数之后的代码要等待消息被处理完之后才能执行。</p>
+</li>
+</ol>
+<p>第二个函数是，SendMessageCallback：</p>
+<pre><code class="language-c++">BOOL SendMessageCallback(
+	HWND hWnd,
+	UINT Msg,
+	WPARAM wParam,
+	LPARAM lParam,
+	SENDASYNCPROC lpResultCallBack,
+	ULONG_PTR dwData);
+</code></pre>
+<p>lpResultCallBack 是一个函数指针，指向的函数就是被系统调用，用来通知发送线程消息已经被接收线程处理的 – 函数。函数原型如下：</p>
+<pre><code class="language-c++">VOID CALLBACK ResultCallBack (
+	HWND hWnd,
+	UINT Msg,
+	ULONG_PTR dwData,
+	LRESULT lResult);
+</code></pre>
+<p>因为SendMessageCallback在执行线程间发送时会立即返回，所以在接收线程完成对消息的处理时不是立即调用这个回调函数。而是由接收线程先将一个消息登记到发送线程的应答消息队列。</p>
+<p>发送线程在下一次调用GetMessage、PeekMessage、WaitMessage或 某个SendMessage* 函数时，消息从应答消息队列中取出，并执行ResultCallBack函数。</p>
+<p>SendMessageCallback函数还有一个好处：<font color=red>消息广播！</font><br>
+Windows提供了一种广播消息方法，用这种方法你可以向系统中所有现存的重叠窗口广播一个消息。这可以通过调用SendMessage函数，在参数hWnd传递 HWND_BROADCAST(定义值为-1)。问题是，SendMessage只能返回一个结果，这样的话我们就没法获得全部的结果。但是如果我们使用SendMessageCallback函数，就可以向每一个重叠窗口广播消息，并查看每一个返回结果。简直棒！这样我们需要做的就是对每一个返回结果调用ResultCallBack函数。</p>
+<p>第三个函数是，SendNotifyMessage：</p>
+<pre><code class="language-c++">BOOL SendNotifyMessage(
+	HWND hWnd,
+	UINT Msg,
+	WPARAM wParam,
+	LPARAM lParam);
+</code></pre>
+<p>该函数将一个消息置于接收线程的发送消息队列中，并立即返回到调用线程。立即返回这一点和PostMessage是一样的，但是SendNotifyMessage函数在两个方面与之不同：</p>
+<ol>
+<li>消息优先级问题：向另外的线程建立的窗口发送消息时，发送的消息 比 登记消息队列的消息有更高的优先级。即：由<font color=red>SendNotifyMessage函数存放在队列中的消息总是在PostMessage函数登记到消息队列中的消息之前取出。</font></li>
+<li><font color=red>向同一个线程创建的窗口发送消息时</font>：SendNotifyMessage同SendMessage函数完全一样。 <font color=red>SendNotifyMessage在消息处理完之后才能返回。</font></li>
+</ol>
+<p>第四个用于线程发送消息的函数是 – ReplyMessage：</p>
+<pre><code class="language-c++">BOOL ReplyMessage(LRESULT lResult);
+</code></pre>
+<ol>
+<li>接收线程可以在窗口过程还没处理完消息的情况下，<strong>提前</strong>向通过SendMessage发送消息的线程的应答消息队列添加一个应答消息，这会<strong>唤醒发送线程</strong>。</li>
+<li>接收线程把lResult作为消息处理结果传递给发送线程。<strong>当调用ReplyMessage后，发送线程被提前唤醒。当接收线程真正从窗口过程中返回时，系统将忽略这个返回值，即不再向发送线程回复本应在窗口过程正常结束才发送的应答消息。</strong></li>
+<li><strong>ReplyMessage必须在接收消息的窗口过程中被调用</strong>，而不能由某个调用Send<em>的线程调用，因为他是用来回复调用SendMessage的线程。前面讨论过的3个SendMessage</em>函数会立即返回。<strong>而SendMessage函数的返回，可以由窗口过程的实现者通过调用ReplyMessage来控制。</strong></li>
+<li>**如果消息不是通过SendMessage发送的，或者消息由同一个线程发送，ReplyMessage不起作用。**这也是返回值指出的，如果在处理线程间的消息发送时调用了ReplyMessage返回TRUE。处理线程内的消息发送时调用ReplyMessage会返回FALSE。<br>
+可以调用InSendMessage(Ex)来确定是线程间的消息发送还是线程内的发送消息。如果是线程间发送的会返回TRUE，线程内Send或Post的会返回FALSE。</li>
+</ol>
+<p>示例：</p>
+<pre><code class="language-c++">//WM_USER+5是由其他线程发送过来的消息。
+//如果是其他进程发送过来的消息，那个进程里要先调用RegisterWindowMessage注册为全局的消息类型
+case WM_USER + 5:
+	......//处理些其他事情
+	if (InSendMessage())    //是否是线程间发送的消息，只有线程间的才能Reply
+	{
+	//该消息己经处理了差不多了，SendMessage的线程可以被唤醒了，
+	//因为后面我还要做些其他事情，比如弹出对话框（DialogBox），你就不要傻等下去了。
+	//注意：在哪里调用ReplyMessage就可以在哪里通知系统去唤醒SendMessage线程 
+	ReplyMessage(TRUE); 
+	}
+	DialogBox(hInst, &quot;MyDialogBox&quot;, hwndMain, (DLGPROC) MyDlgProc);
+break;
+</code></pre>
+<p>就是相当于一个提前返回的效果。</p>
+<br>
+<h2 id="唤醒线程">唤醒线程</h2>
+<p>当一个线程调用GetMessage或WaitMessage打算获取一个消息的时候，恰好又没有这个线程或者这个线程建立的窗口的时候，系统可以挂起这个线程，这样就不再给它分配CPU时间。</p>
+<p>当有一个消息登记(Post)或发送(Send)到这个线程，系统要设置一个唤醒标志，指出要给这个线程分配CPU时间，以便处理消息。</p>
+<p>正常情况下，如果用户不按键或者移动鼠标，就没有消息发送给窗口。这意味着系统中大多数线程没有被配给CPU时间。</p>
+<br>
+<h3 id="队列状态标识">队列状态标识</h3>
+<p>当一个线程正在运行的时候，是可以通过调用 GetQueueStatus 函数来查询队列的状态的：</p>
+<pre><code class="language-c++">DWORD GetQueueStatus(UINT fuFlags);
+</code></pre>
+<p>参数fuFlags是一个标志或一组由OR连接起来的标志，可以用来测试特定的唤醒位。</p>
+<p>以下是各个唤醒位的取值和含义：</p>
+<table>
+<tbody>
+<tr>
+<td>标志</td>
+<td>取值 – 及其对应的消息</td>
+</tr>
+<tr>
+<td>QS_KEY</td>
+<td>&nbsp;0x0001 –&nbsp;WM_KEYUP、WM_KEYDOWN、WM_SYSKEYUP、WM_SYSKEYDOWN</td>
+</tr>
+<tr>
+<td>QS_MOUSEMOVE</td>
+<td>&nbsp;0x0002 –&nbsp;WM_MOUSEMOVE –&nbsp;只要队列中存在一个未处理的WM_MOUSEMOVE消息，这个标志被设置，当最后一条WM_MOUSEMOV消息被从队列删除时，标志被关闭</td>
+</tr>
+<tr>
+<td>QS_MOUSEBUTTON</td>
+<td>&nbsp;0x0004 –&nbsp;WM_(L/M/R)BUTTON(DOWN/UP/DBCLICK) – 鼠标消息</td>
+</tr>
+<tr>
+<td>QS_MOUSE</td>
+<td>(QS_MOUSEMOVE | QS_MOUSEBUTTON)</td>
+</tr>
+<tr>
+<td>QS_INPUT</td>
+<td>(QS_MOUSE | QS_KEY | QS_RAWINPUT)</td>
+</tr>
+<tr>
+<td>QS_PAINT</td>
+<td>&nbsp;0x0020 – WM_PAINT –&nbsp;该线程创建的窗口中，只要窗口存在无效区时，该位被设置。只有当线程建立的所有窗口都有效时，这个标志才关闭</td>
+</tr>
+<tr>
+<td>QS_TIMER</td>
+<td>&nbsp;0x0010 – WM_TIMER –&nbsp;当定时器报时，QS_TIMER被设置，当GetMessage返回WM_TIMER消息后，该标志被关闭</td>
+</tr>
+<tr>
+<td>QS_HOTKEY</td>
+<td>&nbsp;0x0080 – WM_HOTKEY</td>
+</tr>
+<tr>
+<td>QS_POSTMESSAGE</td>
+<td>&nbsp;0x0008 – 登记的消息 –&nbsp;如果队列在期望的消息过滤范围内没有post的消息，该标志被关闭。只要Posted-Message(登记消息)队列中有一条消息，该标志就被设置。</td>
+</tr>
+<tr>
+<td>QS_ALLPOSTMESSAGE</td>
+<td>&nbsp;0x0100 – 登记的消息 –&nbsp;如果Posted-Message(登记消息)队列中完全没有消息，这个标志被清除。</td>
+</tr>
+<tr>
+<td>QS_ALLEVENTS</td>
+<td>&nbsp;(QS_INPUT | QS_POSTMESSAGE | QS_TIMER | QS_PAINT | QS_HOTKEY)</td>
+</tr>
+<tr>
+<td>QS_QUIT</td>
+<td>&nbsp;已调用PostQuitMessage，则该标志被设置，但系统并不向线程添加WM_QUIT消息。 – 这个标志没有公开，它在系统内部使用。</td>
+</tr>
+<tr>
+<td>QS_SENDMESSAGE</td>
+<td>&nbsp;0x0040 – 由另一个线程发送的消息 –&nbsp;即Send-Message(发送消息)队列中有消息时被设置，没有时被清除。</td>
+</tr>
+<tr>
+<td>QS_ALLINPUT</td>
+<td>&nbsp;(QS_INPUT | QS_POSTMESSAGE | QS_TIMER | QS_PAINT | QS_HOTKEY | QS_SENDMESSAGE) – 同 QS_ALLEVENTS | QS_SENDMESSAGE</td>
+</tr>
+</tbody>
+</table>
+当函数返回的时候，线程队列中当前消息的类型在返回值的高字中(一个字是两个字节哦)。
+<p>而在低字中指出已经添加到队列中，并且在上一次对函数GetQueueStatus、GetMessage 或 PeekMessage调用以来还没有处理的消息的类型。</p>
+<br>
+<h3 id="从线程的队列中提取消息的算法">从线程的队列中提取消息的算法</h3>
+<ol>
+<li>
+<p>如果QS_SENDMESSAGE 被设置，系统向相应的窗口过程发送消息。GetMessage 或 PeekMessage函数在内部进行这种处理，并且在窗口过程处理完消息之后不返回线程，这些函数要等待其他消息的处理 —— 可以是任何的消息，包括本线程或其他线程Send或Post过来的消息。</p>
+</li>
+<li>
+<p>系统查看posted-message(登记消息)队列，如果posted-message队列有消息，Get/PeekMessage会填充MSG结构体，然后函数返回。在线程的消息循环中通常会调用DispatchMessage，将这个消息<strong>分派到相应的窗口过程中去处理。</strong></p>
+</li>
+<li>
+<p>如果 QS_QUIT标志被设置了，Get/Peek Message返回一个 WM_QUIT 消息（在消息的wParam参数中指出了退出代码），并关闭QS_QUIT标志。</p>
+</li>
+<li>
+<p>如果有消息在线程的虚拟输入队列，Get/Peek Message会返回硬件输入消息（如键盘或鼠标消息）。</p>
+</li>
+<li>
+<p>如果QS_PAINT 标志被设置， Get/Peek Message会返回一个WM_PAINT消息给相应窗口。</p>
+</li>
+<li>
+<p>如果QS_TIMER 标志被设置，Get/Peek Message会返回一个WM_TIMER消息。</p>
+</li>
+</ol>
+<figure data-type="image" tabindex="1"><img src="http://www.tkxiong.com/wp-content/uploads/2016/09/GetMessageFromQueue.png" alt="" loading="lazy"></figure>
+<ol>
+<li>
+<p>为什么 “posted-message”队列在“虚拟Input-Queue”队列之前被检查？</p>
+<ol>
+<li>
+<p>由于某个硬件事件可能引起其他的软件事件，所以系统要等用户读取下一个硬件事件之前，先处理这些软件事件。</p>
+</li>
+<li>
+<p>比如，调用TranslateMessage函数。这个函数会检查是否有一个WM_KEYDOWN（或WM_SYSKEYDOW硬件消息）从“Input-Queue”(虚拟输入)队列中被取出。如果有，系统会检查虚键信息能否转化为等价的字符，当可以转换时TranslateMessage会调用PostMessage将一个WM_CHAR（或WM_SYSCHAR）的软件消息投递到“posted-message”队列。下次调用GetMessage时，系统首先会检查“posted-message”队列，将这个WM_CHAR（或WM_SYSCHAR）消息取出。直到这个队列为空，再去检查“input-queue”队列。所以才会生成WM_KEYDOWN → WM_CHAR → WM_KEYUP这样的消息序列。</p>
+</li>
+</ol>
+</li>
+<li>
+<p>为什么QS_QUIT的检测在检查“post-message”队列之后。原因如下：<br>
+使用QS_QUIT标志可以让线程在结束消息循环前，处理完所有“posted-message”队列中的消息，比如下面代码：</p>
+</li>
+</ol>
+<pre><code class="language-c++">case WM_CLOSE:
+   PostQuitMessage(0);//虽然比后面的PostMessage更早调用，但不会更早退出！
+   PostMessage(hwnd,WM_USER,0,0);// 会先取出“posted-message”队列中的
+                                 //WM_USER，队列空时再检查QS_QUIT标志。
+   Break;
+</code></pre>
+<ol start="3">
+<li>
+<p>为什么PostQuitMessage只设置QS_QUIT而不将WM_QUIT消息投递到“posted-message”队列？</p>
+<p>调用PostQuitMessage类似于（但不同于）调用PostThreadMessage(,WM_QUIT,…)。后者会将消息添加到“posted-message”(登记消息)队列的尾端，并使消息在系统检查“input-queue”(虚拟输入队列)前被处理。但PostQuitMessage只会设置QS_QUIT标志位，而不会将WM_QUIT消息放入“posted-queue”队列。原因如下：</p>
+<ol>
+<li>因为当低内存时，post一个消息到“posted-message”可能会失败，如果一个程序想退出，即使是低内存时也应该被允许，但postQuitMessage函数调用不会失败（其返回值为void），因为它只改变QS_QUIT标志。</li>
+<li>使用标志可以使线程在线程消息循环结束前完成对其他登记消息的处理。</li>
+<li>尽管<strong>PostQuitMessage不会向消息队列投递WM_QUIT消息</strong>，但当系统检测到QS_QUIT标志被设置时，会先填充MSG结构体,将uMsg字段设为WM_QUIT，然后设置GetMessage的返回值为FALSE。由于系统内部自动填充了这个带有WM_QUIT信息的MSG结构体，让人感觉GetMessage好象从posted-message队列取出了一条WM_QUIT消息。但实际上这条消息并不是从“posted-message”队列中取出的，而是系统伪造的一个MSG结构体。</li>
+</ol>
+</li>
+<li>
+<p><strong>WM_PAINT优先级低于键盘消息，WM_TIMER的优先级比WM_PAINT更低（防止用定器时在短时间内重复的WM_PAINT）。</strong></p>
+</li>
+<li>
+<p><strong>Get/PeekMessage只检查唤醒标志和调用线程的消息队列。这意味不能从其他线程的消息队列中取得消息，包括同一进程内的其他线程的消息。</strong></p>
+</li>
+</ol>
+<br>
+<h3 id="利用内核对象或队列状态标志唤醒线程">利用内核对象或队列状态标志唤醒线程</h3>
+<p>当内核对象触发或某种消息到达时唤醒线程，既可以兼顾让线程运行一个长时间的操作时，又可以响应界面操作，<font color=red>防止界面出现一种“假死”的现象</font>。例如：一个线程可能启动一个长时间运行的操作，并可以让用户取消这个操作。这个线程 需要知道何时操作结束(这是一个与UI无关的任务)，或用户是否按了cancel按钮(与UI有关的任务)来结束操作。</p>
+<p>一个线程可以调用MsgWaitForMultipleObjects或 MsgWaitForMultipleObjectsEx函数，使线程等待它的消息。函数原型如下：</p>
+<pre><code class="language-c++">DWORD MsgWaitForMultipleObjects(
+	DWORD nCount,
+	CONST HANDLE *pHandles,
+	BOOL fWaitAll,
+	DWORD dwMilliseconds,
+	DWORD dwWakeMask);
+	
+DWORD MsgWaitForMultipleObjectsEx(
+	DWORD nCount,
+	CONST HANDLE *pHandles,
+	DWORD dwMilliseconds,
+	DWORD dwWakeMask,
+	DWORD dwFlags);
+</code></pre>
+<p>这两个函数类似于WaitFroMultipleObjects函数，不同之处在于：当一个内核对象变成触发状态(有信号状态 – signaled) 或 当一个窗口消息需要派送到调用线程建立的窗口时，这两个函数用于线程调度。</p>
+<br>
+<h2 id="通过消息发送数据">通过消息发送数据</h2>
+<p>如何利用窗口消息在进程之间传递数据<br>
+主要还是三个消息吧：<strong>WM_SETTEXT、WM_GETTEXT、WM_COPYDATA</strong><br>
+例如我们用 WM_SETTEXT消息使用lParam参数作为指向一个以零结尾的字符串指针，这个字符串为窗口规定了新的文本标题串。考虑下面的调用：</p>
+<pre><code class="language-c++">SendMessage(FindWindow(NULL,&quot;Calculator&quot;),WM_SETTEXT,0,(LPARAM)&quot;A Test Caption&quot;);
+</code></pre>
+<p>新标题的字符串包含在调用进程的地址空间里。所以这个在调用进程空间的字符串地址将传递给lParam参数。当Calculator窗口的窗口过程收到这个消息时，它要查看lParam参数，并要读取这个以零结尾的字符串，使其成为新的标题。</p>
+<p>但是存在这么一个问题哈：还记不记进程地址空间的概念，lParam中的地址指向的是<strong>调用进程的地址空间，而不一定是Calculator窗口的进程地址空间</strong>。这会发送内存存取违规这种严重的问题！</p>
+<p>但是，当我们执行这段代码的时候，看到的却是执行成功？因为系统真正的处理方式如下：</p>
+<ol>
+<li>当调用SendMessage时，函数会检查是否要发送WM_SETTEXT消息。如果是，就将以零结尾的字符串从调用进程的地址空间放入到一个内存映射文件（可在进程间共享）。</li>
+<li>然后再发送消息到共他进程的线程。</li>
+<li>当接收线程己准备好处理WM_SETTEXT消息时，它在自己的地址空间中找到上述内存映射文件（该文件包含要发送的文本），并让lParam指向那个文本，然后消息被分派到指定的窗口过程去进行处理。</li>
+<li>处理完消息之后，内存映射文件被删除。</li>
+</ol>
+<p>是不是很棒！通过内存映射文件解决了进程地址空间并不是同一个空间的问题。问题是，这样是不是太麻烦了一点？所幸的是大多数消息并不要求这种类型的处理。仅当这种消息是程序在进程间发送的消息，特别是消息的wParam或lParam参数表示一个指向数据结构的指针的时候，才会做这样的处理。</p>
+<p>然后还有另外两个消息对不对，我们先来看看WM_GETTEXT消息：假定一个程序包含下面的代码：</p>
+<pre><code class="language-c++">char szBuffer[200];
+SendMessage(FindWindow(NULL,&quot;Calculator&quot;,WM_GETTEXT,sizeof(szBuff),(LPARAM)szBuff);
+</code></pre>
+<p>WM_GETTEXT消息请求Calculator窗口的窗口过程用该窗口的标题填充szBuffer所指定的缓冲区。当一个进程向另一个进程的窗口发送这个消息的时候，实际上我们又碰到了前面的进程地址空间的问题。</p>
+<p>所以，SendMessage时，系统检测到WM_GETTEXT消息时，实际上会发送两个消息。</p>
+<ol>
+<li>首先系统向那个窗口发送WM_GETTEXTLENGTH消息，以获得文本的长度。</li>
+<li>系统利用这个长度创建一个内存映射文件，用于在两个进程间共享。然后再发送消息来填充它。</li>
+<li>然后转到调用SendMessage的进程，从内存映射文件中复制文本到指定的缓冲区（由lParam参数指定）</li>
+<li>最后SendMessage函数返回。</li>
+</ol>
+<p>如果我们用自己定义的 WM_USER+X 消息，并从一个进程的窗口向另一个进程的窗口发送类似的消息，那会怎么样？系统并不知道要用内存映射文件共享数据并在发送消息的时候改变指针，那该怎么办呢？</p>
+<p>为此系统特定定义了一个特殊的窗口消息，就是这里的 WM_COPYDATA 来解决问题：</p>
+<pre><code class="language-c++">COPYDATASTRUCT cds;
+SendMessage(hwndReceiver, WM_COPYDATA, (WPARAM)hwndSender, (lParam)&amp;cds);
+</code></pre>
+<p>COPYDATASTRUCT 是一个结构体，定义如下：</p>
+<pre><code class="language-c++">typedef struct tagCOPYDATASTRUCT {
+	ULONG_PTR dwData;
+	DWORD cbData;
+	PVOID lpData;
+} COPYDATASTRUCT,*PCOPYDATASTRUCT;
+</code></pre>
+<p>当一个进程要向另一个进程发送一些数据时，必须先初始化COPYDATASTRUCT结构。</p>
+<p>dwData是一个备用数据项，可以存放任何值。</p>
+<p>cbData数据成员规定了发送的<strong>字节数</strong></p>
+<p>lpData数据成员指向了发送的第一个字节，这个地址在发送<strong>进程地址</strong>空间中</p>
+<p>所以系统对WM_COPYDATA消息的处理方式如下：</p>
+<ol>
+<li>当SendMessage看到要发送一个WM_COPYDATA消息时，会建立一个内存映像文件，大小是cbData字节。</li>
+<li>从发送进程的地址空间中将数据复制到这个内存映像文件。</li>
+<li>然后向目标窗口发送消息</li>
+<li>接收线程在处理这个消息时，lParam参数己指定接收进程地址空间中的一个COPYDATASTRUCT结构体。这个结构的lpData成员指向了接收进程地址空间中的共享内存映像文件的视图。</li>
+</ol>
+<p>关于WM_COPYDATA这个消息，还要注意以下三点：</p>
+<ol>
+<li>只能发送(Send)这个消息，不能登记(Post)这个消息。不能登记这个消息是 因为接收窗口的窗口过程处理完之后，必须释放掉内存映射文件。如果登记这个消息，我们就不知道什么时候处理完毕，就没办法释放。</li>
+<li>系统从另外的进程的地址空间中复制数据要花费一些时间。所以不应该让发送程序中运行的其他线程修改这个内存块，直到SendMessage调用返回。</li>
+<li>WM_COPYDATA消息，可以实现16位到32位之间的通信，也能实现32位到64位之间的通信。但Win98以下没有WM_COPYDATA消息和COPYDATASTRUCT结构本的定义，要自己增加定义。<br>
+我想现在应该用不到第三条了，我就忽视它好了。</li>
+</ol>
+<br>
+<h2 id="windows如何处理ansiunicode字符和字符串">Windows如何处理ANSI／Unicode字符和字符串</h2>
+<p>当你注册一个新的窗口类时，必须将负责为这个类处理消息的窗口过程的地址告诉系统。对某些消息（如WMSETTEXT），消息的lParam参数指向一个字符串。在此之前，为了派送消息，使它被正确地处理，系统需要知道窗口过程要求该字符串是ANSI字符串还是Unicode字符串。</p>
+<p><strong>告诉系统一个窗口过程是要求ANSI字符串还是Unicode字符串，实际上取决于注册窗口类时所使用的函数。如果构造WNDCLASS结构，并调用RegisterClassA，系统就认为窗口过程要求所有的字符串和字符都属于ANSI。而用RegisterClassW注册窗口类，则系统就向窗口过程派送Unicode字符串和字符。宏RegisterClass对RegisterClassA和RegisterClassW都做了扩展，究竟代表哪一个要看在编译源模块时是否定义了UNICODE。</strong></p>
+<p>如果有了一个窗口句柄，就可以确定窗口过程所要求的字符和字符串类型。这可以通过调用下面的函数实现：</p>
+<pre><code class="language-c++">BOOL IsWindowUnicode(HWND hwnd);
+</code></pre>
+<p>如果你建立一个ANSI串，并向一个窗口过程要求Unicode串的窗口发送WM_SETTEXT消息，则系统在发送消息之前，为你自动地转换字符串。很少需要调用IsWindowUnicode函数。</p>
+<p>如果你对窗口过程派生子类，系统也会为你执行自动的转换。假定一个编辑控制框的窗口过程要求字符和字符串是Unicode，这可以调用:</p>
+<pre><code class="language-c++">LONG_PTR SetWindowLongPrtA(
+    LWND hwnd, 
+    int nIndex,
+    LONG_PTR dwNewLong
+);
+
+LONG_PTR SetWindowLongPrtW(
+    LWND hwnd, 
+    int nIndex,
+    LONG_PTR dwNewLong
+);
+</code></pre>
+<p>并将nIndex参数设置成GCLPWNDPROC，dwNewLong参数设置成子类过程的地址。如果这个子类过程要求ANSI字符和字符串会出现什么情况？这可能引起严重的问题。系统决定怎样转换字符串和字符，要取决于究竟是用上面两个函数中的哪一个来建立子类。<strong>如果是调用SetWindowLongPrtA，就是告诉系统新的窗口过程（即子类过程）要接收ANSI字符和字符串。实际上，如果在调用SetWindowLongPrtA之后调用IsWindowUnicode函数，将返回FALSE，表示这个子类的编辑窗口过程不再要求Unicode字符和字符串。</strong></p>
+<p>但现在又有一个新的问题：<font color=red>如何能够保证原来的窗口过程得到正确的字符和字符串类型？</font>系统需要有两条信息，才能正确地转换字符和字符串。第一条信息就是字符和字符串当前所具有的形式。这可以通过调用CallWindowProcA或CallWindowProcW来告诉系统：</p>
+<pre><code class="language-c++">RESULT CallWindowProcA(
+    WNDPRROC wndprcPrev,
+    LWND hwnd, 
+    UINT uMsg,
+    WPARAM wParam，
+    LPRAMA lParam,
+);
+
+RESULT CallWindowProcW(
+    WNDPRROC wndprcPrev,
+    LWND hwnd, 
+    UINT uMsg,
+    WPARAM wParam，
+    LPRAMA lParam,
+);
+</code></pre>
+<p>如果子类过程要把ANSI字符串传递给原来的窗口过程，子类过程必须调用CallWindowProcA。如果子类过程要把Unicode字符串传递给原来的窗口过程，则子类过程必须调用CallWindowProcW。</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[跨域问题处理]]></title>
+        <id>https://hensonguo.github.io/post/kua-yu-wen-ti-chu-li/</id>
+        <link href="https://hensonguo.github.io/post/kua-yu-wen-ti-chu-li/">
+        </link>
+        <updated>2023-09-13T02:59:57.000Z</updated>
+        <content type="html"><![CDATA[<p>跨域表现：<br>
+<img src="https://hensonguo.github.io/post-images/1694574035322.png" alt="" loading="lazy"><br>
+表现是前一个域名不允许跨域访问</p>
+<br>
+<p>在页面出口处配置跨域许可：<br>
+譬如nginx.conf配置</p>
+<pre><code>location /magicpen_search/ {
+    add_header Access-Control-Allow-Origin *;
+    add_header Access-Control-Allow-Methods *;
+    add_header Access-Control-Allow-Headers *;
+    root /home/;
+    index index.html;
+}
+</code></pre>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[客户端打包]]></title>
+        <id>https://hensonguo.github.io/post/ke-hu-duan-da-bao/</id>
+        <link href="https://hensonguo.github.io/post/ke-hu-duan-da-bao/">
+        </link>
+        <updated>2023-09-07T12:55:33.000Z</updated>
+        <content type="html"><![CDATA[<h2 id="注册环境变量">注册环境变量</h2>
+<p><strong>批处理文件：vcvarsall.bat</strong>，用于配置环境变量、工作目录，运行后VC才能找到编译所需要的库<br>
+使用参数可以指定主机和目标体系结构、Windows SDK以及平台选项。<br>
+下面是批处理文件的内容：</p>
+<pre><code class="language-shell">@echo off 
+if &quot;%1&quot; == &quot;&quot; goto x86 
+if not &quot;%2&quot; == &quot;&quot; goto usage 
+
+if /i %1 == x86  goto x86 
+if /i %1 == amd64  goto amd64 
+if /i %1 == x64  goto amd64 
+if /i %1 == ia64  goto ia64 
+if /i %1 == x86_amd64 goto x86_amd64 
+if /i %1 == x86_ia64 goto x86_ia64 
+goto usage 
+
+:x86 
+if not exist &quot;%~dp0bin\vcvars32.bat&quot; goto missing 
+call &quot;%~dp0bin\vcvars32.bat&quot; 
+goto :eof 
+
+:amd64 
+if not exist &quot;%~dp0bin\amd64\vcvars64.bat&quot; goto missing 
+call &quot;%~dp0bin\amd64\vcvars64.bat&quot; 
+goto :eof 
+
+:ia64 
+if not exist &quot;%~dp0bin\ia64\vcvars64.bat&quot; goto missing 
+call &quot;%~dp0bin\ia64\vcvars64.bat&quot; 
+goto :eof 
+
+:x86_amd64 
+if not exist &quot;%~dp0bin\x86_amd64\vcvarsx86_amd64.bat&quot; goto missing 
+call &quot;%~dp0bin\x86_amd64\vcvarsx86_amd64.bat&quot; 
+goto :eof 
+
+:x86_ia64 
+if not exist &quot;%~dp0bin\x86_ia64\vcvarsx86_ia64.bat&quot; goto missing 
+call &quot;%~dp0bin\x86_ia64\vcvarsx86_ia64.bat&quot; 
+goto :eof 
+
+:usage 
+echo Error in script usage. The correct usage is: 
+echo  %0 [option] 
+echo where [option] is: x86 ^| ia64 ^| amd64 ^| x86_amd64 ^| x86_ia64 
+echo: 
+echo For example: 
+echo  %0 x86_ia64 
+goto :eof 
+
+:missing 
+echo The specified configuration type is missing. The tools for the 
+echo configuration might not be installed. 
+goto :eof 
+</code></pre>
+<p>可以看出根据目标平台会跳转不同的批处理文件，如vcvars32.bat或vcvars64.bat，这些批处理文件将用于配置环境变量、工作目录。如下生成用于编译32位代码的命令行编译环境：</p>
+<pre><code>C:\Program Files (x86)\Microsoft Visual Studio 14.0&gt;cd VC
+C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC&gt;vcvarsall x86
+</code></pre>
+<br>
+<h2 id="执行构建脚本">执行构建脚本</h2>
+<p><strong>MSBuild</strong>：MSBuild是 Microsoft Build Engine 的缩写。MSBuild是在.NET 2.0中引入的针对Visual Studio的构建系统。它可以执行构建脚本，完成各种Task——最主要的是把.NET项目编译成可执行文件或者DLL。从技术角度来说，制作EXE或者DLL的重要工作是由编译器（csc，vbc等等）完成的。MSBuild会从内部调用编译器，并完成其他必要的工作（例如拷贝引用——CopyLocal，执行构建前后的准备及清理工作等）。</p>
+<p>这些工作都是MSBuild执行脚本中的Task完成的。MSBuild脚本就是XML文件，根元素是Project，使用MSBuild自己的命名空间。MSBuild 项目文件的格式使开发人员能够充分描述哪些项需要生成，以及如何利用不同的平台和配置生成这些项。</p>
+<p>MSBuild 编译后生成的是.exe 可执行文件，但却不能生成.msi 安装包文件。如果想要使用MSBuild 生成安装包文件，还需要借助WiX编辑一个wxs类型的工程。</p>
+<p><a href="https://learn.microsoft.com/zh-cn/visualstudio/msbuild/msbuild?view=vs-2022">参阅</a></p>
+<br>
+<h2 id="签名">签名</h2>
+<p>微软代码签名证书工具：SignTool.exe，旧版是signcode.exe。签名工具是一个命令行工具，用于对文件进行数字签名，以及验证文件和时间戳文件中的签名。<br>
+<a href="https://learn.microsoft.com/zh-cn/dotnet/framework/tools/signtool-exe">参阅</a><br>
+<a href="https://www.wosign.com/Support/signcode_guide_new.htm?tdsourcetag=s_pcqq_aiomsg">微软代码签名证书使用指南(SignCode)</a><br>
+<a href="https://www.dongchuanmin.com/vscode/3481.html">signtool对exe进行签名</a></p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[shell入门]]></title>
+        <id>https://hensonguo.github.io/post/shell-ru-men/</id>
+        <link href="https://hensonguo.github.io/post/shell-ru-men/">
+        </link>
+        <updated>2023-09-07T09:27:09.000Z</updated>
+        <content type="html"><![CDATA[<h2 id="shell和bash">shell和bash</h2>
+<p>shell是运行在终端中的文本互动程序，bash（GNU Bourne-Again Shell）是最常用的一种shell。是当前大多数Linux发行版的默认Shell。</p>
+<p>Shell[壳]相当于是一个翻译，把我们在计算机上的操作或我们的命令，翻译为计算机可识别的二进制命令，传递给内核，以便调用计算机硬件执行相关的操作；同时，计算机执行完命令后，再通过Shell翻译成自然语言，呈现在我们面前。</p>
+<p>其他的shell还有：sh、bash、ksh、rsh、csh等。Ubuntu系统常用的是bash，Bio-linux系统是基于ubuntu定制的，但是却使用了zsh。windows下的powershell。</p>
+<p>查看系统shell类型：</p>
+<pre><code>echo $SHELL
+</code></pre>
+<br>
+<h2 id="shell命令">shell命令</h2>
+<p>shell命令可以分为以下三类：</p>
+<ul>
+<li>内建函数(built-in function)：shell自带的功能</li>
+<li>可执行文件(executable file)：保存在shell之外的脚本，提供了额外的功能。</li>
+<li>别名(alias)：给某个命令的简称</li>
+</ul>
+<p>shell的<strong>内建函数</strong>是自带的预先写好的，实现一定功能的程序。</p>
+<p><strong>可执行文件</strong>是shell之外的脚本，提供了使用者自定义的功能。Shell必须在系统中找到对应命令名的可执行文件，才能正确执行。我们可以用绝对路径来告诉Shell可执行文件所在的位置。如果用户只是给出了命令名，而没有给出准确的位置，那么Shell必须自行搜索一些特殊的位置，也就是所谓的默认路径。Shell会执行第一个名字和命令名相同的可执行文件。我们可以通过which命令，来确定命令名对应的是哪个可执行文件：</p>
+<pre><code>which date
+which pwd  
+#以上两个命令分别返回date和pwd命令对应的可执行文件的绝对路径
+</code></pre>
+<p><strong>别名</strong>是给某个命令一个简称，以后在Shell中就可以通过这个简称来调用对应的命令。在Shell中，我们可以用alias来定义别名：</p>
+<pre><code>alias freak=“free -h”
+</code></pre>
+<p>可以用alias将一些常用的命令进行简化，比如“ls -l”简化为“ll”。<br>
+如何了解命令的类型？</p>
+<pre><code>type date
+type pwd
+#可以用type命令查看命令类型。如果是内建函数会返回builtin字样，如果是可执行文件，将返回文件的路径
+</code></pre>
+<br>
+<h2 id="shell命令-2">shell命令</h2>
+<p>我们已经看到，一行命令里还可以包含着<strong>选项和参数。总的来说，选项用于控制命令的行为，而参数说明了命令的作用对象</strong>。</p>
+<p>比如说uname命令，该命令的主要功能是输出系统信息。它有很多个选项，不同的选项指定输出不同想系统信息。</p>
+<pre><code>uname --help
+Usage：uname [OPTION]...
+print certain system information. with no OPTION, same as -s.
+-a,--all               print all informationin the follow order,except omit -p and -i if unknown
+-s,--kernel-name       print the kernel name
+-n,--nodename          print the network node hostname
+-r,--kernel-release    print the kernel release
+-v,--kernel-version    print the kernel version
+-m,--machine           print the machin hardware name
+-p,--processor         print the processor type or &quot;unknown&quot;
+-i,--hardware-platform print the hardware platform or &quot;unknown&quot;
+-o,--operating-system  print the operating system
+ --help              display this help and exit
+ --version           output version information and exit
+....
+</code></pre>
+<p>上面例子中短横引领的字母叫短选项，双短横引领的单词叫长选项，对应的短选项等价于长选项。比如“uname -s”等价于“uname --kenel-name”。</p>
+<p>多个短选项的字母可以合在一起，跟在同一个&quot;-&quot;后面。比如，下面的两个命令就等价：</p>
+<pre><code>uname -m -r 
+uname -mr
+</code></pre>
+<p>一个命令可能有非常多的选项，要弄清楚它们的用法还需要阅读相应的帮助文档。一般情况下是该命令后加“-h”选项，或者是加&quot;--help&quot;选项。</p>
+<p>参数说明了命令的作用对象。就拿echo这个命令来说，它能把字符打印到终端。它选择打印的对象，正是它的参数：</p>
+<pre><code>echo hello
+</code></pre>
+<p>有的时候，选项也会携带变量，以便来说明选项行为的原材料。比如：</p>
+<pre><code>sudo date --set=&quot;1999-01-01 08:00:00&quot;
+</code></pre>
+<p>date是参数，选项&quot;--set&quot;用于设置时间，用等号连接的，就是它的参数。date会把日期设置成这一变量所代表的日期。如果用短选项，那么就要用空格取代等号了：</p>
+<pre><code>sudo date -s &quot;1999-01-01 08:00:00&quot;
+</code></pre>
+<br>
+<h2 id="常见shell命令">常见shell命令</h2>
+<ol>
+<li>echo 输出打印
+<ul>
+<li>输出一行文本：echo &quot;hellow world&quot;</li>
+<li>输出计算机用户名：echo My Name is %username%.</li>
+<li>输出当前日期 echo Today is %date%.</li>
+<li>输出当前日期 echo The time is %time%.</li>
+<li>关闭回显，但是显示命令行本身 echo off</li>
+<li>关闭回显，且不显示命令行本身 @echo off</li>
+<li>显示回显，与上相反 echo on/@echo on</li>
+<li>空一行 echo.</li>
+<li>输出并覆盖到指定文件 echo &quot;Hello World!&quot; &gt; d:\output.txt（如果文件不存在，则会自动创建该文件）</li>
+<li>输出并追加到指定文件 echo &quot;This is a second line!&quot; &gt;&gt; d:\output.txt</li>
+<li>使用环境变量输出文本 echo &quot;My home directory is %userprofile%&quot;</li>
+<li>创建一个脚本<br>
+echo ^@echo off&gt;d:\test.bat<br>
+echo title 这是一个关闭休眠的脚本&gt;&gt;d:\test.bat<br>
+echo ping -n 3 127.1&gt;&gt;d:\test.bat</li>
+</ul>
+</li>
+<li>sudo<br>
+sudo 命令以系统管理者的身份执行指令，也就是说，经由 sudo 所执行的指令就好像是 root 亲自执行。使用权限：在 /etc/sudoers 中有出现的使用者。</li>
+<li>cat 查看文件 cat test.txt</li>
+<li><a href="http://www.codebaoku.com/it-shell/it-shell-203918.html">参考</a></li>
+</ol>
+]]></content>
+    </entry>
+</feed>

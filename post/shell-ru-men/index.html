@@ -1,0 +1,268 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>shell入门 | Icode</title>
+<link rel="shortcut icon" href="https://hensonguo.github.io/favicon.ico?v=1704354032694">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://hensonguo.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="shell入门 | Icode - Atom Feed" href="https://hensonguo.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="shell和bash
+shell是运行在终端中的文本互动程序，bash（GNU Bourne-Again Shell）是最常用的一种shell。是当前大多数Linux发行版的默认Shell。
+Shell[壳]相当于是一个翻译，把我们在计算机..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://hensonguo.github.io">
+  <img class="avatar" src="https://hensonguo.github.io/images/avatar.png?v=1704354032694" alt="">
+  </a>
+  <h1 class="site-title">
+    Icode
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              shell入门
+            </h2>
+            <div class="post-info">
+              <span>
+                2023-09-07
+              </span>
+              <span>
+                6 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <h2 id="shell和bash">shell和bash</h2>
+<p>shell是运行在终端中的文本互动程序，bash（GNU Bourne-Again Shell）是最常用的一种shell。是当前大多数Linux发行版的默认Shell。</p>
+<p>Shell[壳]相当于是一个翻译，把我们在计算机上的操作或我们的命令，翻译为计算机可识别的二进制命令，传递给内核，以便调用计算机硬件执行相关的操作；同时，计算机执行完命令后，再通过Shell翻译成自然语言，呈现在我们面前。</p>
+<p>其他的shell还有：sh、bash、ksh、rsh、csh等。Ubuntu系统常用的是bash，Bio-linux系统是基于ubuntu定制的，但是却使用了zsh。windows下的powershell。</p>
+<p>查看系统shell类型：</p>
+<pre><code>echo $SHELL
+</code></pre>
+<br>
+<h2 id="shell命令">shell命令</h2>
+<p>shell命令可以分为以下三类：</p>
+<ul>
+<li>内建函数(built-in function)：shell自带的功能</li>
+<li>可执行文件(executable file)：保存在shell之外的脚本，提供了额外的功能。</li>
+<li>别名(alias)：给某个命令的简称</li>
+</ul>
+<p>shell的<strong>内建函数</strong>是自带的预先写好的，实现一定功能的程序。</p>
+<p><strong>可执行文件</strong>是shell之外的脚本，提供了使用者自定义的功能。Shell必须在系统中找到对应命令名的可执行文件，才能正确执行。我们可以用绝对路径来告诉Shell可执行文件所在的位置。如果用户只是给出了命令名，而没有给出准确的位置，那么Shell必须自行搜索一些特殊的位置，也就是所谓的默认路径。Shell会执行第一个名字和命令名相同的可执行文件。我们可以通过which命令，来确定命令名对应的是哪个可执行文件：</p>
+<pre><code>which date
+which pwd  
+#以上两个命令分别返回date和pwd命令对应的可执行文件的绝对路径
+</code></pre>
+<p><strong>别名</strong>是给某个命令一个简称，以后在Shell中就可以通过这个简称来调用对应的命令。在Shell中，我们可以用alias来定义别名：</p>
+<pre><code>alias freak=“free -h”
+</code></pre>
+<p>可以用alias将一些常用的命令进行简化，比如“ls -l”简化为“ll”。<br>
+如何了解命令的类型？</p>
+<pre><code>type date
+type pwd
+#可以用type命令查看命令类型。如果是内建函数会返回builtin字样，如果是可执行文件，将返回文件的路径
+</code></pre>
+<br>
+<h2 id="shell命令-2">shell命令</h2>
+<p>我们已经看到，一行命令里还可以包含着<strong>选项和参数。总的来说，选项用于控制命令的行为，而参数说明了命令的作用对象</strong>。</p>
+<p>比如说uname命令，该命令的主要功能是输出系统信息。它有很多个选项，不同的选项指定输出不同想系统信息。</p>
+<pre><code>uname --help
+Usage：uname [OPTION]...
+print certain system information. with no OPTION, same as -s.
+-a,--all               print all informationin the follow order,except omit -p and -i if unknown
+-s,--kernel-name       print the kernel name
+-n,--nodename          print the network node hostname
+-r,--kernel-release    print the kernel release
+-v,--kernel-version    print the kernel version
+-m,--machine           print the machin hardware name
+-p,--processor         print the processor type or &quot;unknown&quot;
+-i,--hardware-platform print the hardware platform or &quot;unknown&quot;
+-o,--operating-system  print the operating system
+ --help              display this help and exit
+ --version           output version information and exit
+....
+</code></pre>
+<p>上面例子中短横引领的字母叫短选项，双短横引领的单词叫长选项，对应的短选项等价于长选项。比如“uname -s”等价于“uname --kenel-name”。</p>
+<p>多个短选项的字母可以合在一起，跟在同一个&quot;-&quot;后面。比如，下面的两个命令就等价：</p>
+<pre><code>uname -m -r 
+uname -mr
+</code></pre>
+<p>一个命令可能有非常多的选项，要弄清楚它们的用法还需要阅读相应的帮助文档。一般情况下是该命令后加“-h”选项，或者是加&quot;--help&quot;选项。</p>
+<p>参数说明了命令的作用对象。就拿echo这个命令来说，它能把字符打印到终端。它选择打印的对象，正是它的参数：</p>
+<pre><code>echo hello
+</code></pre>
+<p>有的时候，选项也会携带变量，以便来说明选项行为的原材料。比如：</p>
+<pre><code>sudo date --set=&quot;1999-01-01 08:00:00&quot;
+</code></pre>
+<p>date是参数，选项&quot;--set&quot;用于设置时间，用等号连接的，就是它的参数。date会把日期设置成这一变量所代表的日期。如果用短选项，那么就要用空格取代等号了：</p>
+<pre><code>sudo date -s &quot;1999-01-01 08:00:00&quot;
+</code></pre>
+<br>
+<h2 id="常见shell命令">常见shell命令</h2>
+<ol>
+<li>echo 输出打印
+<ul>
+<li>输出一行文本：echo &quot;hellow world&quot;</li>
+<li>输出计算机用户名：echo My Name is %username%.</li>
+<li>输出当前日期 echo Today is %date%.</li>
+<li>输出当前日期 echo The time is %time%.</li>
+<li>关闭回显，但是显示命令行本身 echo off</li>
+<li>关闭回显，且不显示命令行本身 @echo off</li>
+<li>显示回显，与上相反 echo on/@echo on</li>
+<li>空一行 echo.</li>
+<li>输出并覆盖到指定文件 echo &quot;Hello World!&quot; &gt; d:\output.txt（如果文件不存在，则会自动创建该文件）</li>
+<li>输出并追加到指定文件 echo &quot;This is a second line!&quot; &gt;&gt; d:\output.txt</li>
+<li>使用环境变量输出文本 echo &quot;My home directory is %userprofile%&quot;</li>
+<li>创建一个脚本<br>
+echo ^@echo off&gt;d:\test.bat<br>
+echo title 这是一个关闭休眠的脚本&gt;&gt;d:\test.bat<br>
+echo ping -n 3 127.1&gt;&gt;d:\test.bat</li>
+</ul>
+</li>
+<li>sudo<br>
+sudo 命令以系统管理者的身份执行指令，也就是说，经由 sudo 所执行的指令就好像是 root 亲自执行。使用权限：在 /etc/sudoers 中有出现的使用者。</li>
+<li>cat 查看文件 cat test.txt</li>
+<li><a href="http://www.codebaoku.com/it-shell/it-shell-203918.html">参考</a></li>
+</ol>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#shell%E5%92%8Cbash">shell和bash</a></li>
+<li><a href="#shell%E5%91%BD%E4%BB%A4">shell命令</a></li>
+<li><a href="#shell%E5%91%BD%E4%BB%A4-2">shell命令</a></li>
+<li><a href="#%E5%B8%B8%E8%A7%81shell%E5%91%BD%E4%BB%A4">常见shell命令</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://hensonguo.github.io/post/docker-kuai-su-ru-men/">
+              <h3 class="post-title">
+                docker快速入门
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://hensonguo.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

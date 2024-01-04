@@ -1,0 +1,220 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>python调试dll的一些问题处理总结 | Icode</title>
+<link rel="shortcut icon" href="https://hensonguo.github.io/favicon.ico?v=1704354032694">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://hensonguo.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="python调试dll的一些问题处理总结 | Icode - Atom Feed" href="https://hensonguo.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="1.调试一些dll文件时，需要将当前工作目录进行设置为dll文件所在目录
+调用os.chdir(dir)进行设置
+    def _openProcess(self):
+        _isStartUpFromDebug = os.en..." />
+    <meta name="keywords" content="python" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://hensonguo.github.io">
+  <img class="avatar" src="https://hensonguo.github.io/images/avatar.png?v=1704354032694" alt="">
+  </a>
+  <h1 class="site-title">
+    Icode
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              python调试dll的一些问题处理总结
+            </h2>
+            <div class="post-info">
+              <span>
+                2022-08-22
+              </span>
+              <span>
+                2 min read
+              </span>
+              
+                <a href="https://hensonguo.github.io/tag/ej4xuHAGJ/" class="post-tag">
+                  # python
+                </a>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <h5 id="1调试一些dll文件时需要将当前工作目录进行设置为dll文件所在目录">1.调试一些dll文件时，需要将当前工作目录进行设置为dll文件所在目录</h5>
+<p>调用os.chdir(dir)进行设置</p>
+<pre><code class="language-python">    def _openProcess(self):
+        _isStartUpFromDebug = os.environ.get(&quot;_isStartUpFromDebug&quot;)
+        if _isStartUpFromDebug:
+            curDir = os.getcwd()
+            os.chdir(misc.getCCPathForDebug())
+        try:
+            dll = ctypes.cdll.LoadLibrary(str(self._interfacePath))
+            if _isStartUpFromDebug:
+                os.chdir(curDir)
+            return {&quot;dll&quot;:dll}
+        except Exception:
+            return {}
+</code></pre>
+<h5 id="2python3向dll的接口传递字符串时需要将字符串bytes处理">2.Python3向dll的接口传递字符串时，需要将字符串bytes处理</h5>
+<p>通过str.encode转为bytes</p>
+<pre><code class="language-python">Wrapper.DLL.StartLive(self._liverInstance, str.encode(jsonParams))
+</code></pre>
+<h4 id="3shellexecutew函数执行-python-文本命令">3.ShellExecuteW函数执行 Python 文本命令</h4>
+<pre><code class="language-python"># 提升权限
+import ctypes
+import sys
+cmd = &quot;&quot;&quot;
+import os
+while True:
+    print(&quot;11111&quot;)
+    try:
+        cur = os.getcwd()
+        print(&quot;&quot;)
+    except Exception as e:
+        print(e.args)
+&quot;&quot;&quot;
+# ctypes.windll.shell32.ShellExecuteW(None, 'runas', 'python', 'test_script.py', None, 1)
+ctypes.windll.shell32.ShellExecuteW(None, 'runas', 'python', f'-c &quot;{cmd}&quot;', None, 1)
+</code></pre>
+<p>注意单引号和双引号字符的嵌套还有缩进</p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li>
+<ul>
+<li>
+<ul>
+<li>
+<ul>
+<li><a href="#1%E8%B0%83%E8%AF%95%E4%B8%80%E4%BA%9Bdll%E6%96%87%E4%BB%B6%E6%97%B6%E9%9C%80%E8%A6%81%E5%B0%86%E5%BD%93%E5%89%8D%E5%B7%A5%E4%BD%9C%E7%9B%AE%E5%BD%95%E8%BF%9B%E8%A1%8C%E8%AE%BE%E7%BD%AE%E4%B8%BAdll%E6%96%87%E4%BB%B6%E6%89%80%E5%9C%A8%E7%9B%AE%E5%BD%95">1.调试一些dll文件时，需要将当前工作目录进行设置为dll文件所在目录</a></li>
+<li><a href="#2python3%E5%90%91dll%E7%9A%84%E6%8E%A5%E5%8F%A3%E4%BC%A0%E9%80%92%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%97%B6%E9%9C%80%E8%A6%81%E5%B0%86%E5%AD%97%E7%AC%A6%E4%B8%B2bytes%E5%A4%84%E7%90%86">2.Python3向dll的接口传递字符串时，需要将字符串bytes处理</a></li>
+</ul>
+</li>
+<li><a href="#3shellexecutew%E5%87%BD%E6%95%B0%E6%89%A7%E8%A1%8C-python-%E6%96%87%E6%9C%AC%E5%91%BD%E4%BB%A4">3.ShellExecuteW函数执行 Python 文本命令</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://hensonguo.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

@@ -1,0 +1,541 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>QT常见问题汇总 | Icode</title>
+<link rel="shortcut icon" href="https://hensonguo.github.io/favicon.ico?v=1704354032694">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://hensonguo.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="QT常见问题汇总 | Icode - Atom Feed" href="https://hensonguo.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="1.qt4和qt5切换
+切换完成直接创建qt工程失败，需要重新打开下vs studio
+2.link错误
+
+3.qt简介与概念
+
+跨平台的GUI开发库，常用的桌面系统windows，mac，linux，unix，也支持手机应用andriod..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://hensonguo.github.io">
+  <img class="avatar" src="https://hensonguo.github.io/images/avatar.png?v=1704354032694" alt="">
+  </a>
+  <h1 class="site-title">
+    Icode
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              QT常见问题汇总
+            </h2>
+            <div class="post-info">
+              <span>
+                2023-03-14
+              </span>
+              <span>
+                26 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <h3 id="1qt4和qt5切换">1.qt4和qt5切换</h3>
+<p>切换完成直接创建qt工程失败，需要重新打开下vs studio</p>
+<h3 id="2link错误">2.link错误</h3>
+<figure data-type="image" tabindex="1"><img src="https://hensonguo.github.io/post-images/1678777603190.jpg" alt="" loading="lazy"></figure>
+<h3 id="3qt简介与概念">3.qt简介与概念</h3>
+<ol>
+<li>跨平台的GUI开发库，常用的桌面系统windows，mac，linux，unix，也支持手机应用andriod、ios、winphone系统，嵌入式系统开发</li>
+<li>支持多脚本语言绑定，python，ruby，perl等</li>
+<li>商业授权软件，遵循gpl开源协议，GPL 是什么都要开源，这对商业软件应用是不利的，所以诺基亚增加了 LGPL 授权</li>
+</ol>
+<ul>
+<li>uic，rcc，moc，qmake 都是 qt 的工具</li>
+<li>uic 主要是 编译 .ui文件 -》 ui_xxx.cpp</li>
+<li>rcc 主要是 编译 资源文件.qrc文件 -》 xxx.rcc</li>
+<li>moc 主要是 编译 带有Q_OBJECT宏的.h文件 -》moc_xxx.cpp</li>
+<li>qmake 主要是 用来编译 生成makefile 文件的 以及 .pro文件</li>
+</ul>
+<h3 id="4moc原理">4.moc原理</h3>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span><font color=red>moc机制是一种预处理机制，核心是生成metaclass(元类)</font>，而这个机制早就已经在动态语言普及了，以用于反射，Qt只是帮C++补全了这个功能而已。moc全称是meta-object-complier，也就是“元对象编译器”。这就是moc文件的到来<br>
+<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span><font color=red>qt不是使用标准的&quot;c++&quot;语言来编写，而是对其进行了一定程度的扩展</font>。我们可以从qt增加的一些关键字可以看出来：signals、slots、emit等。编译器不认识这些非c++标准的关键字，那么就需要qt自己将扩展的关键字处理成标准的c++代码。<br>
+<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span><font color=red>qt编译器会分析源文件，如果这个源文件中包含了Q_OBJECT宏实现的代码，此时，qt会将自己增加的扩展转换成标准的c++文件，这个源文件名字是将原文件名前面加上moc_构成，这个新的文件同样将进入编译系统，最终被链接到二进制代码中去。</font></p>
+<h3 id="5qt内存管理">5.qt内存管理</h3>
+<ol>
+<li>QT的父子对象机制是在 QWidget和QOject中实现的。当我们使用父对象来创建一个对象的时候 ，父对象会把这个对象添加到自己的子对象列表中。</li>
+<li>当这个父对象被删除的时候，它会遍历它的子对象类表并且删除每一个子对象，然后子对象们自己再删除它们自己的子对象，这样递归调用直到所有对象都被删除。</li>
+<li>这种父子对象机制会在很大程度上简化我们的内存管理工作，减少内存泄露的风险。</li>
+</ol>
+<p>半自动化的内存管理<br>
+（1）QObject及其派生类的对象，如果其parent非0，那么其parent析构时会析构该对象。<br>
+（2）QWidget及其派生类的对象，可以设置 Qt::WA_DeleteOnClose 标志位(当close时会析构该对象)。<br>
+（3）QAbstractAnimation派生类的对象，可以设置 QAbstractAnimation::DeleteWhenStopped。<br>
+（4）QRunnable::setAutoDelete()、MediaSource::setAutoDelete()。</p>
+<h3 id="6qt智能指针下能否使用标准库智能指针">6.qt智能指针下能否使用标准库智能指针</h3>
+<p>在QObject使用QObject父级创建或派生类型时，所有权（清理责任）将交给父级QObject。<br>
+在这种情况下，标准库智能指针是不必要的，甚至是危险的，因为它们可能会<strong>导致双重删除</strong>。</p>
+<ul>
+<li>然而，当一个QObject在堆上创建而没有父类时，QObject情况就非常不同。在这种情况下，你不应该只保存一个原始指针，而是一个智能指针，最好是一个std::unique_ptr对象。这样你就可以获得资源安全。</li>
+<li>如果你稍后将对象所有权交给QObject你可以使用的父项std::unique_ptr::release()</li>
+</ul>
+<h3 id="7信号槽的调用流程">7.信号槽的调用流程</h3>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span>moc查找头文件中的signals，slots，标记出信号和槽。将信号槽信息存储到类静态变量staticMetaObject中，并且按声明顺序进行存放，建立索引。当发现有connect连接时，将信号槽的索引信息放到一个双向链表中，彼此配对。当调用emit时，调用信号函数，并且传递发送信号的对象指针，元对象指针，信号索引，参数列表到active函数。通过active函数找到在双向链表中找到所有与信号对应的槽索引根据槽索引找到槽函数，执行槽函数。以上，便是信号槽的整个流程，<font color=red>总的来说就是一个“注册-索引”机制，并不存在发送系统信号之类的事情。</font></p>
+<h3 id="8qt的事件循环">8.QT的事件循环</h3>
+<p>1）、主事件循环</p>
+<pre><code class="language-c++">int main(int argc, char *argv[])
+{
+    //app最主要的是设置一些线程相关的数据（QThreadData），比如事件调度器（QAbstractEventDispatcher）等。
+    QCoreApplication app(argc, argv);
+    ……
+    //app.exec()则是为了启动一个事件循环来分发事件。如果没有事件循环或事件循环没有启动，则对象永远不会接收到事件。
+    return app.exec();
+}
+</code></pre>
+<p>启动一个事件循环的代码大致如下：</p>
+<pre><code class="language-c++">int QCoreApplication::exec()
+{
+    ……
+    QEventLoop eventLoop;
+    ……
+    int returnCode = eventLoop.exec();
+    ……
+    return returnCode;
+}
+</code></pre>
+<p><br>
+2）、事件循环<br>
+如下代码可见QEventLoop::exec()是通过循环不断地调用QEventLoop::processEvents()来分发事件队列中的事件。</p>
+<pre><code class="language-c++">int QEventLoop::exec(ProcessEventsFlags flags = AllEvents))
+{
+    Q_D(QEventLoop);
+    ……
+    while (!d-&gt;exit.loadAcquire())
+        processEvents(flags | WaitForMoreEvents | EventLoopExec);
+    ……
+    return d-&gt;returnCode.load();
+}
+</code></pre>
+<p><strong><font color=red>而最终完成事件分发的是事件调度器。通过下面的代码我们可以看出，事件调度器存在于各自线程相关数据中。也就是说每个线程都可以有、并且只使用自己专属的事件调度器。</font></strong></p>
+<pre><code class="language-c++">bool QEventLoop::processEvents(ProcessEventsFlags flags)
+{
+    Q_D(QEventLoop);
+    if (!d-&gt;threadData-&gt;hasEventDispatcher())
+        return false;
+    return d-&gt;threadData-&gt;eventDispatcher.load()-&gt;processEvents(flags);
+}
+</code></pre>
+<p>到这里我们已经能够看出，<font color=green>为何在通过QEventLoop::exec()阻塞程序执行，程序却不会卡死了。因为QEventLoop::exec()开启了一个新的事件循环来分发事件，而且相同线程上的所有事件循环采用同一个事件调度器。</font><br>
+<br>
+3）、事件调度器<br>
+事件调度器就比较依赖于各个平台的实现了，各平台上的事件调度器实现都不尽相同。QCoreApplicationPrivate::sendPostedEvents(0, 0, d-&gt;threadData)会派发当前线程事件队列中所有的事件。那么当事件分发完毕后是否就立即进入下一个事件队列派发周期与其平台实现有关。</p>
+<h3 id="9qt消息怎么传到到组件上">9.qt消息怎么传到到组件上</h3>
+<ul>
+<li>信号槽机制</li>
+<li>事件机制</li>
+<li>回调</li>
+</ul>
+<h3 id="10多线程情况下-qt中的信号槽分别在什么线程中执行-如何控制">10.多线程情况下, Qt中的信号槽分别在什么线程中执行, 如何控制?</h3>
+<p>可以通过connect函数的第五个参数来控制, 信号槽执行时所在的线程<br>
+<font color=red>1&gt;. 直接连接 – 信号槽函数在信号发出者所在线程中执行(<strong>同一线程</strong>)<br>
+2&gt;. 队列连接 – 信号在信号发出者所在线程中执行,槽函数在信号接收者所在线程中执行.(<strong>不同线程</strong>)<br>
+3&gt;. 自动连接 – 多线程时为队列连接方式, 单线程时为直接连接方式<br>
+默认情况为自动连接方式.</font></p>
+<h3 id="11描述qt中的文件流qtextstream和数据流qdatastream的区别">11.描述QT中的文件流(QTextStream)和数据流(QDataStream)的区别</h3>
+<p>QTextStream – 文本流, 操作轻量级数据(int, double, QString), 数据写入文件中之后以文本的方式呈现。<br>
+QDataStream – 数据流, 通过数据流可以操作各种数据类型, 包括类对象, 存储到文件中数据可以还原到内存。<br>
+QTextStream, QDataStream可以操作磁盘文件, 也可以操作内存数据, 通过流对象可以将数据打包到内存, 进行数据的传输.</p>
+<h3 id="12qt中的多线程是如何实现的">12.Qt中的多线程是如何实现的?</h3>
+<p>Qt中通过<strong>QThread类+信号槽机制</strong>来实现多线程编程，可以方便地创建和管理多个线程，并实现线程之间的通信和同步。</p>
+<h3 id="13qt中的国际化和本地化是如何实现的">13.Qt中的国际化和本地化是如何实现的？</h3>
+<p>Qt中通过QTranslator类和相关的子类来实现国际化和本地化功能，可以方便地将应用程序翻译成多种语言，并根据用户的语言设置来自动切换。</p>
+<h3 id="14qt中的单元测试是如何实现的">14.Qt中的单元测试是如何实现的？</h3>
+<p>Qt中通过Qt Test框架来实现单元测试，可以方便地编写和运行各种测试用例，以保证应用程序的质量和稳定性。</p>
+<h3 id="15什么是qml">15.什么是QML?</h3>
+<p>QML是Qt Quick Markup Language的缩写，是一种基于JavaScript的声明性语言，用于描述图形用户界面和交互行为。</p>
+<h3 id="16什么是qt-quick">16.什么是Qt Quick？</h3>
+<p>Qt Quick是一种用于创建现代、流畅的用户界面的技术，它基于QML和Qt Quick Controls等组件库，可以方便地创建各种样式和主题的应用程序。</p>
+<h3 id="17什么是qquickview">17.什么是QQuickView？</h3>
+<p>QQuickView是Qt Quick中的一个组件，用于显示QML文件和与之关联的C++代码，可以方便地创建和管理QML界面。</p>
+<h3 id="18什么是qquickitem">18.什么是QQuickItem？</h3>
+<p>QQuickItem是Qt Quick中的一个组件，用于创建可视化的QML元素和控件，可以方便地实现自定义的界面和交互行为。</p>
+<h3 id="19qt中的插件是什么">19.Qt中的插件是什么？</h3>
+<p>插件是一种可以动态加载和卸载的模块，可以扩展Qt应用程序的功能。Qt中通过QPluginLoader类和相关的子类来实现插件的加载和管理。</p>
+<h3 id="20qt-creator的性能分析工具">20.qt creator的性能分析工具</h3>
+<p>1）Clang-Tidy 和 CLazy 对你的代码进行静态检查，以此提高 Qt 代码质量<br>
+2）Performance Analyzer cpu性能检测</p>
+<h3 id="21c的线程和qt的线程在实现上有一些区别">21.C++的线程和Qt的线程在实现上有一些区别</h3>
+<p>事件循环：Qt的线程模型中，每个线程都有一个事件循环，可以处理事件和信号槽机制，避免了线程阻塞的问题。</p>
+<ul>
+<li>信号槽机制：Qt的线程模型中，信号槽机制可以跨线程使用，方便了线程之间的通信。</li>
+<li>互斥锁：Qt的线程模型中，提供了QMutex类和QReadWriteLock类等互斥锁，方便了线程之间的同步。</li>
+<li>信号量：Qt的线程模型中，提供了QSemaphore类来实现线程之间的同步。</li>
+<li>事件过滤器：Qt的线程模型中，提供了事件过滤器来处理事件，可以方便地实现自定义事件</li>
+</ul>
+<h3 id="22qt信号槽机制">22.qt信号槽机制</h3>
+<p>Qt的信号槽机制是一种事件驱动的编程方式，用于实现对象之间的通信。信号槽机制可以跨线程使用，可以方便地实现异步编程和多线程编程。</p>
+<p>信号槽机制的核心是信号和槽。信号是一种特殊的函数，用于通知其他对象发生了某个事件；槽是一种普通的函数，用于响应信号并执行相应的操作。信号和槽通过connect()函数进行连接，当信号发生时，与之相连接的槽函数将会被自动调用。</p>
+<p>因此，Qt的信号本质上是一种基于元数据的机制，通过元数据来实现信号和槽之间的连接和调用。这种机制使得Qt的信号槽机制具有很强的灵活性和扩展性，可以方便地支持自定义信号和槽，并且可以跨线程使用。</p>
+<h3 id="23qt4和qt5信号槽连接有什么区别">23.qt4和qt5信号槽连接有什么区别</h3>
+<p>Qt4和Qt5的信号槽连接有以下几个区别：</p>
+<ol>
+<li>
+<p>连接方式不同：<br>
+在Qt4中，信号槽连接可以使用QObject::connect()函数或者SIGNAL和SLOT宏来实现。而在Qt5中，建议使用新的语法连接信号和槽，即使用QObject::connect()函数和lambda表达式来连接信号和槽。</p>
+</li>
+<li>
+<p>信号槽参数匹配规则不同：<br>
+在Qt4中，信号槽的参数匹配规则比较宽松，只要信号和槽的参数类型和个数匹配即可。而在Qt5中，信号槽的参数匹配规则更加严格，要求信号和槽的参数类型和个数完全匹配，否则会编译错误。</p>
+</li>
+<li>
+<p>信号槽的返回值不同：<br>
+在Qt4中，信号槽的返回值会被忽略，即使槽函数有返回值，也不会被使用。而在Qt5中，信号槽的返回值可以被使用，如果槽函数有返回值，它的返回值会被传递给信号的发射者。</p>
+</li>
+<li>
+<p>信号槽的连接断开方式不同：<br>
+在Qt4中，可以使用QObject::disconnect()函数来断开信号和槽的连接，但是需要指定信号和槽的参数类型。而在Qt5中，可以使用QMetaObject::Connection对象来断开信号和槽的连接，无需指定参数类型。</p>
+</li>
+</ol>
+<p>总之，Qt4和Qt5的信号槽连接有一些区别，主要表现在连接方式、参数匹配规则、返回值和连接断开方式等方面。在使用时需要注意这些区别，以便正确地连接和断开信号槽。</p>
+<h3 id="24qt信号槽主要有哪些问题">24.qt信号槽主要有哪些问题</h3>
+<p>Qt信号槽机制是Qt框架中的一个重要特性，但是也存在一些问题，主要包括以下几个方面：</p>
+<ol>
+<li>
+<p>线程安全问题：<br>
+Qt信号槽机制默认是在同一线程中执行的，如果在多线程环境下使用信号槽，需要注意线程安全问题，否则可能会导致程序崩溃或数据不一致等问题。</p>
+</li>
+<li>
+<p>内存管理问题：<br>
+在使用Qt信号槽机制时，需要注意内存管理问题，特别是在使用自定义信号和槽时，需要手动管理对象的生命周期，否则可能会导致内存泄漏或程序崩溃等问题。</p>
+</li>
+<li>
+<p>信号槽连接问题：<br>
+在连接信号和槽时，需要注意信号和槽的参数匹配规则，如果不匹配，会导致编译错误或运行时错误。此外，还需要注意信号槽的连接断开问题，避免出现连接泄漏或重复连接等问题。</p>
+</li>
+<li>
+<p>性能问题：<br>
+Qt信号槽机制是一种动态调用的方式，相对于直接调用函数，会有一定的性能损失。在需要高性能的场景下，可以考虑使用直接调用函数或者其他更高效的通信方式。</p>
+</li>
+</ol>
+<p>总之，Qt信号槽机制是一个非常强大和灵活的通信机制，但是在使用时需要注意上述问题，以避免出现意外的错误和性能问题。</p>
+<h3 id="25qt如何交叉编译">25.qt如何交叉编译</h3>
+<p>Qt 是一款跨平台的 C++ 应用程序开发框架，可以在多种操作系统和硬件平台上运行。为了在嵌入式设备上运行 Qt 应用程序，需要进行交叉编译。</p>
+<p>以下是 Qt 交叉编译的基本步骤：</p>
+<ol>
+<li>
+<p>准备交叉编译工具链：在开发 PC 上安装交叉编译工具链，该工具链需要包含交叉编译器、库和头文件等。</p>
+</li>
+<li>
+<p>配置 Qt 编译环境：在 PC 上安装 Qt 开发环境，并配置 Qt 编译环境，包括设置 Qt 版本、交叉编译工具链、目标设备的硬件架构等。</p>
+</li>
+<li>
+<p>编译 Qt 库：使用 Qt 编译工具链编译 Qt 库，生成适用于目标设备的 Qt 库文件。</p>
+</li>
+<li>
+<p>编译 Qt 应用程序：使用 Qt 开发环境编写 Qt 应用程序，并使用交叉编译工具链编译该应用程序，生成适用于目标设备的可执行文件。</p>
+</li>
+</ol>
+<p>需要注意的是，Qt 交叉编译过程中可能会遇到一些问题，如编译错误、链接错误、库依赖问题等。为了解决这些问题，需要进行一些额外的配置和调试工作。</p>
+<p>另外，Qt 还提供了一些工具和插件，如 Qt Creator、Qt Installer Framework 等，可以帮助开发者更方便地进行交叉编译和部署工作。</p>
+<h3 id="26qt插件机制">26.qt插件机制</h3>
+<p>Qt提供了插件机制，允许您将可扩展功能以插件的形式动态加载到应用程序中。Qt插件机制基于Qt的元对象系统和动态链接库（DLL）的特性，使得应用程序可以在运行时灵活地加载和使用插件。</p>
+<ol>
+<li>
+<p>定义插件接口：首先，您需要定义一个插件接口，它描述了插件应该具备的功能和行为。插件接口是一个纯虚类（抽象类），其中声明了插件的虚拟函数。</p>
+</li>
+<li>
+<p>实现插件：您可以创建实现插件接口的插件类。这些插件类将提供具体的功能实现，并实现插件接口中声明的虚拟函数。</p>
+</li>
+<li>
+<p>编译插件：将插件代码编译成动态链接库（DLL）或共享对象（SO）。插件代码可以与应用程序分开编译，以便在需要时进行动态加载。</p>
+</li>
+<li>
+<p>加载插件：在应用程序中，使用Qt的插件管理类（QPluginLoader）来加载插件。您可以指定插件的文件路径，然后使用QPluginLoader加载插件。</p>
+</li>
+<li>
+<p>使用插件：一旦插件加载成功，您可以通过实例化插件类来使用插件的功能。您可以调用插件接口中的函数，实现与插件的交互。</p>
+</li>
+</ol>
+<p>Qt的插件机制允许应用程序在运行时动态加载和卸载插件，从而实现了灵活的功能扩展和模块化设计。通过将功能封装为插件，您可以实现应用程序的可扩展性和可定制性。同时，插件机制也提供了一种松耦合的方式，使得应用程序的不同部分可以独立开发和维护。</p>
+<h3 id="27qt插件机制和extern有什么区别">27.qt插件机制和extern有什么区别</h3>
+<p>Qt插件机制和extern关键字在功能和使用上是不同的概念，它们没有直接的关系。</p>
+<p>Qt插件机制：Qt插件机制是一种用于在运行时动态加载和扩展应用程序功能的机制。它允许应用程序通过加载插件来添加新的功能或模块。插件是作为动态链接库（DLL）或共享对象（SO）实现的，使用Qt的插件管理类（如QPluginLoader）进行加载和使用。通过插件机制，应用程序可以实现灵活的功能扩展和模块化设计。</p>
+<p>extern关键字：extern关键字用于在C/C++中声明外部变量或函数。当使用extern关键字声明变量时，它表示该变量在其他文件中定义，当前文件中只是对其进行声明。这样可以在多个源文件中共享同一变量。类似地，使用extern关键字声明函数时，它表示该函数在其他文件中定义，当前文件中只是对其进行声明。这样可以在多个源文件中调用同一函数。</p>
+<p>虽然extern关键字可以用于声明外部变量和函数，这些外部变量和函数可以是插件的一部分，但它与Qt插件机制本身没有直接的关系。extern关键字的使用是为了在不同的源文件中共享变量或函数，而Qt插件机制是一种在运行时加载和使用插件的机制。</p>
+<h3 id="28qt插件的底层是怎么实现的">28.qt插件的底层是怎么实现的</h3>
+<p>在底层实现中，<strong>Qt使用了元对象系统来处理插件的注册、元数据解析和对象实例化等功能</strong>。元对象系统是Qt的一项核心功能，它通过在编译时为每个QObject派生类生成额外的元数据信息，包括类名、信号、槽函数和属性等。这些元数据信息在运行时可以被动态访问和使用，使得Qt能够提供许多强大的功能，包括信号与槽机制、对象反射和动态属性等。</p>
+<p>通过动态链接库和元对象系统的结合，Qt插件机制实现了在运行时动态加载和使用插件的能力，使得应用程序可以灵活地扩展和定制功能。</p>
+<h3 id="29qt元对象机制">29.qt元对象机制</h3>
+<p>Qt的元对象机制是Qt框架的核心功能之一，它提供了<strong>一种在运行时处理对象的类型信息和动态操作的能力</strong>。元对象机制主要包括以下几个方面：</p>
+<ol>
+<li>
+<p>Q_OBJECT 宏：在使用元对象机制的类中，需要在类的声明中添加Q_OBJECT宏。这个宏会在编译时生成额外的代码，用于支持元对象的功能。</p>
+</li>
+<li>
+<p>元对象（QMetaObject）：在使用了Q_OBJECT宏的类中，Qt会在编译时为每个类生成一个与之对应的元对象。元对象是一个描述类的结构和属性的数据结构，包括类名、父类、信号、槽函数、属性等信息。每个元对象都有一个唯一的标识符，可以用于在运行时访问和操作元对象。</p>
+</li>
+<li>
+<p>类的元对象：通过metaObject()函数，可以在类的实例中获取对应的元对象。元对象可以用于获取类的类型信息，包括类名、父类、信号、槽函数和属性等。</p>
+</li>
+<li>
+<p>信号与槽机制：元对象机制支持Qt的信号与槽机制。通过在类中声明信号和槽函数，并使用signals和slots关键字进行标记，可以在运行时建立对象之间的通信连接。信号和槽函数在编译时会被注册到元对象中，使得可以在运行时动态建立和断开连接。</p>
+</li>
+<li>
+<p>反射机制：元对象机制支持类的反射操作。通过元对象，可以在运行时动态访问和操作类的属性、调用槽函数、发送信号等。这使得可以在不知道具体类类型的情况下，通过元对象来操作对象。</p>
+</li>
+<li>
+<p>动态属性：元对象机制允许在运行时为对象添加动态属性。通过使用Q_PROPERTY宏，可以在类中声明属性，并为属性提供读写函数。这样，通过元对象机制，可以在运行时获取和设置对象的属性。</p>
+</li>
+</ol>
+<p>元对象机制使得Qt具有了很多强大的功能，如信号与槽机制、对象的反射、动态属性等。它为Qt的事件处理、GUI编程、模型-视图架构等提供了基础，使得Qt应用程序具备了灵活、可扩展的特性。</p>
+<h3 id="30qt为什么要对stl进行再次封装">30.qt为什么要对stl进行再次封装</h3>
+<p>在Qt中对STL（标准模板库）进行再次封装有几个主要原因：</p>
+<ol>
+<li>
+<p>跨平台一致性：Qt是一个跨平台的框架，可以在多个操作系统上运行。STL在不同的编译器和平台上的实现可能存在差异，这可能导致代码在不同平台上的行为不一致。通过对STL进行封装，Qt可以提供跨平台一致性，使得使用STL的代码在不同平台上具有相同的行为。</p>
+</li>
+<li>
+<p>容器和算法扩展：Qt封装了STL的容器和算法，并提供了一些扩展和增强功能。例如，Qt的容器类（如QList、QVector）提供了与STL容器类相似的接口，但还添加了一些额外的功能，如隐式共享、可重入性等。此外，Qt还提供了许多特定的算法和数据结构，如QStringList、QMap等，以满足特定的需求。</p>
+</li>
+<li>
+<p>兼容性和互操作性：Qt的封装允许在Qt代码和STL代码之间进行交互和互操作。Qt提供了一些用于转换和适配的工具类和函数，使得可以方便地在Qt代码和STL代码之间进行数据共享和操作。</p>
+</li>
+<li>
+<p>特定功能和性能优化：Qt的STL封装可能针对特定的功能和性能进行了优化。这意味着在某些情况下，Qt的封装可能提供更高的性能或更适合特定用例的功能。</p>
+</li>
+</ol>
+<p>总的来说，Qt对STL进行再次封装是为了提供跨平台一致性、功能扩展、兼容性和性能优化等优势。这样可以使开发者更方便地使用Qt框架，并在开发中获得更好的体验和效果。</p>
+<h3 id="31qt的渲染逻辑">31.qt的渲染逻辑</h3>
+<ol>
+<li>图形渲染引擎：<br>
+Qt 使用了一个称为 QPainter 的绘图 API，它提供了一套高级别的绘图操作接口，允许开发者在应用程序中进行图形绘制。<br>
+对于 2D 图形，Qt 的 QPainter 提供了丰富的绘制功能，包括绘制图形、文本、图像等。<br>
+对于 3D 图形，Qt 提供了 Qt 3D 模块，它可以用于创建和呈现 3D 场景。</li>
+<li>渲染系统：<br>
+在底层，Qt 的渲染通常依赖于操作系统提供的图形系统和硬件加速。<br>
+对于不同的平台，Qt 使用不同的渲染后端。例如，对于桌面系统，可能使用 OpenGL 或者 DirectX 加速；对于移动设备，可能使用 OpenGLES。<br>
+Qt 提供了抽象接口来处理这些不同的渲染后端，使得开发者可以使用相同的 Qt API，而无需关心底层的差异。</li>
+<li>基于事件驱动的渲染更新：<br>
+Qt 的渲染逻辑通常是事件驱动的，例如，当窗口大小改变、用户输入或者程序显示要更新时，Qt 会触发相应的事件来更新需要重新渲染的部分。<br>
+通常情况下，Qt 会尽量减少不必要的重绘操作，采用脏区域（dirty regions）的概念，只更新发生变化的部分，以提高效率。</li>
+</ol>
+<p>总的来说，Qt 的渲染逻辑涉及多个层面，包括图形绘制 API、底层的渲染系统和硬件加速支持，以及事件驱动的渲染更新机制。这些层面共同作用，使得 Qt 能够在不同的平台上提供一致且高效的图形渲染。</p>
+<h3 id="32qt默认是使用cpu还是gpu渲染呢">32.qt默认是使用cpu还是gpu渲染呢</h3>
+<p>Qt 默认会尝试使用最佳的渲染引擎，这通常是本地绘图系统或者 OpenGL，取决于你的硬件和操作系统。如果你没有特别的需求，你通常不需要手动设置渲染引擎。<br>
+Qt 在默认情况下会尽可能地利用 GPU 进行图形渲染。但是这取决于多个因素：</p>
+<ol>
+<li>平台和系统支持：<br>
+在支持硬件加速的系统上，Qt 会默认利用 GPU 进行图形渲染。<br>
+桌面系统通常会使用 OpenGL 或 DirectX 等图形库来实现 GPU 加速。<br>
+移动设备通常会使用 OpenGLES 来利用 GPU。</li>
+<li>QPainter 和 Qt Quick：<br>
+对于使用 QPainter 进行 2D 绘图的部分，Qt 会尝试使用底层的硬件加速来提高性能。<br>
+对于 Qt Quick（QML）界面，它通常会更直接地利用 GPU 来渲染。</li>
+<li>配置和设置：<br>
+开发者可以通过设置 QSurfaceFormat 或者其他相关的选项来指定使用特定的渲染方式（如 OpenGL、DirectX）或者特定的渲染后端。</li>
+</ol>
+<p>总的来说，在默认情况下，Qt 会尽量利用系统中可用的 GPU 进行图形渲染，以提供更好的性能和效率。但是，具体的渲染方式会受到系统支持、硬件能力以及开发者设置的影响。</p>
+<h3 id="33qt如何指定使用-opengl-或者-directx-加速">33.qt如何指定使用 OpenGL 或者 DirectX 加速</h3>
+<p>在 Qt 中，你可以通过设置一些特定的选项和标志来指定使用 OpenGL 或者 DirectX 加速进行图形渲染。</p>
+<ol>
+<li>使用 OpenGL：<br>
+通过在应用程序初始化时设置一些标志来告知 Qt 使用 OpenGL 加速渲染。<br>
+使用 QSurfaceFormat 类来设置 OpenGL 的格式和选项，然后将这些格式应用到你的 Qt 窗口或视图中。<br>
+在初始化时，设置合适的 QSurfaceFormat，然后将它应用到 Qt 的绘图设备上下文中。<br>
+例如：</li>
+</ol>
+<pre><code class="language-c++">QSurfaceFormat format;
+format.setRenderableType(QSurfaceFormat::OpenGL);
+// 设置其他 OpenGL 格式选项
+QSurfaceFormat::setDefaultFormat(format);
+</code></pre>
+<ol start="2">
+<li>使用 DirectX：<br>
+在 Windows 上，Qt 默认使用 ANGLE (Almost Native Graphics Layer Engine) 作为 DirectX 的中间层，通过 OpenGL ES 2.0 的实现来实现 DirectX 加速。<br>
+若要使用 DirectX 而不是 ANGLE，可以在程序中指定使用 ANGLE 的 DirectX 11 或者 9 后端。<br>
+通过设置环境变量 QT_ANGLE_PLATFORM 来选择 DirectX 后端。<br>
+例如，使用 DirectX 11 后端：</li>
+</ol>
+<pre><code class="language-c++">set QT_ANGLE_PLATFORM=d3d11
+</code></pre>
+<ol start="3">
+<li>设置Qt默认的图形引擎</li>
+</ol>
+<pre><code class="language-c++">// 使用 OpenGL（调用桌面版 OpenGL，性能仅次于调用 ANGLE）
+QCoreApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
+// 使用 OpenGLES（调用 ANGLE，性能最好，使用Angle库来将 DirectX 11或者DirectX 9的接口转成OpenGL ES2.0的API，从而使得windows上显卡驱动不满足要求的设备也能够正常运行）
+QCoreApplication::setAttribute(Qt::AA_UseOpenGLES);
+// 使用 Mesa llvmpipe（软件模拟显卡，性能很差，正常情况下尽量不要使用）
+QCoreApplication::setAttribute(Qt::AA_UseSoftwareOpenGL);
+</code></pre>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li>
+<ul>
+<li><a href="#1qt4%E5%92%8Cqt5%E5%88%87%E6%8D%A2">1.qt4和qt5切换</a></li>
+<li><a href="#2link%E9%94%99%E8%AF%AF">2.link错误</a></li>
+<li><a href="#3qt%E7%AE%80%E4%BB%8B%E4%B8%8E%E6%A6%82%E5%BF%B5">3.qt简介与概念</a></li>
+<li><a href="#4moc%E5%8E%9F%E7%90%86">4.moc原理</a></li>
+<li><a href="#5qt%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86">5.qt内存管理</a></li>
+<li><a href="#6qt%E6%99%BA%E8%83%BD%E6%8C%87%E9%92%88%E4%B8%8B%E8%83%BD%E5%90%A6%E4%BD%BF%E7%94%A8%E6%A0%87%E5%87%86%E5%BA%93%E6%99%BA%E8%83%BD%E6%8C%87%E9%92%88">6.qt智能指针下能否使用标准库智能指针</a></li>
+<li><a href="#7%E4%BF%A1%E5%8F%B7%E6%A7%BD%E7%9A%84%E8%B0%83%E7%94%A8%E6%B5%81%E7%A8%8B">7.信号槽的调用流程</a></li>
+<li><a href="#8qt%E7%9A%84%E4%BA%8B%E4%BB%B6%E5%BE%AA%E7%8E%AF">8.QT的事件循环</a></li>
+<li><a href="#9qt%E6%B6%88%E6%81%AF%E6%80%8E%E4%B9%88%E4%BC%A0%E5%88%B0%E5%88%B0%E7%BB%84%E4%BB%B6%E4%B8%8A">9.qt消息怎么传到到组件上</a></li>
+<li><a href="#10%E5%A4%9A%E7%BA%BF%E7%A8%8B%E6%83%85%E5%86%B5%E4%B8%8B-qt%E4%B8%AD%E7%9A%84%E4%BF%A1%E5%8F%B7%E6%A7%BD%E5%88%86%E5%88%AB%E5%9C%A8%E4%BB%80%E4%B9%88%E7%BA%BF%E7%A8%8B%E4%B8%AD%E6%89%A7%E8%A1%8C-%E5%A6%82%E4%BD%95%E6%8E%A7%E5%88%B6">10.多线程情况下, Qt中的信号槽分别在什么线程中执行, 如何控制?</a></li>
+<li><a href="#11%E6%8F%8F%E8%BF%B0qt%E4%B8%AD%E7%9A%84%E6%96%87%E4%BB%B6%E6%B5%81qtextstream%E5%92%8C%E6%95%B0%E6%8D%AE%E6%B5%81qdatastream%E7%9A%84%E5%8C%BA%E5%88%AB">11.描述QT中的文件流(QTextStream)和数据流(QDataStream)的区别</a></li>
+<li><a href="#12qt%E4%B8%AD%E7%9A%84%E5%A4%9A%E7%BA%BF%E7%A8%8B%E6%98%AF%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%E7%9A%84">12.Qt中的多线程是如何实现的?</a></li>
+<li><a href="#13qt%E4%B8%AD%E7%9A%84%E5%9B%BD%E9%99%85%E5%8C%96%E5%92%8C%E6%9C%AC%E5%9C%B0%E5%8C%96%E6%98%AF%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%E7%9A%84">13.Qt中的国际化和本地化是如何实现的？</a></li>
+<li><a href="#14qt%E4%B8%AD%E7%9A%84%E5%8D%95%E5%85%83%E6%B5%8B%E8%AF%95%E6%98%AF%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%E7%9A%84">14.Qt中的单元测试是如何实现的？</a></li>
+<li><a href="#15%E4%BB%80%E4%B9%88%E6%98%AFqml">15.什么是QML?</a></li>
+<li><a href="#16%E4%BB%80%E4%B9%88%E6%98%AFqt-quick">16.什么是Qt Quick？</a></li>
+<li><a href="#17%E4%BB%80%E4%B9%88%E6%98%AFqquickview">17.什么是QQuickView？</a></li>
+<li><a href="#18%E4%BB%80%E4%B9%88%E6%98%AFqquickitem">18.什么是QQuickItem？</a></li>
+<li><a href="#19qt%E4%B8%AD%E7%9A%84%E6%8F%92%E4%BB%B6%E6%98%AF%E4%BB%80%E4%B9%88">19.Qt中的插件是什么？</a></li>
+<li><a href="#20qt-creator%E7%9A%84%E6%80%A7%E8%83%BD%E5%88%86%E6%9E%90%E5%B7%A5%E5%85%B7">20.qt creator的性能分析工具</a></li>
+<li><a href="#21c%E7%9A%84%E7%BA%BF%E7%A8%8B%E5%92%8Cqt%E7%9A%84%E7%BA%BF%E7%A8%8B%E5%9C%A8%E5%AE%9E%E7%8E%B0%E4%B8%8A%E6%9C%89%E4%B8%80%E4%BA%9B%E5%8C%BA%E5%88%AB">21.C++的线程和Qt的线程在实现上有一些区别</a></li>
+<li><a href="#22qt%E4%BF%A1%E5%8F%B7%E6%A7%BD%E6%9C%BA%E5%88%B6">22.qt信号槽机制</a></li>
+<li><a href="#23qt4%E5%92%8Cqt5%E4%BF%A1%E5%8F%B7%E6%A7%BD%E8%BF%9E%E6%8E%A5%E6%9C%89%E4%BB%80%E4%B9%88%E5%8C%BA%E5%88%AB">23.qt4和qt5信号槽连接有什么区别</a></li>
+<li><a href="#24qt%E4%BF%A1%E5%8F%B7%E6%A7%BD%E4%B8%BB%E8%A6%81%E6%9C%89%E5%93%AA%E4%BA%9B%E9%97%AE%E9%A2%98">24.qt信号槽主要有哪些问题</a></li>
+<li><a href="#25qt%E5%A6%82%E4%BD%95%E4%BA%A4%E5%8F%89%E7%BC%96%E8%AF%91">25.qt如何交叉编译</a></li>
+<li><a href="#26qt%E6%8F%92%E4%BB%B6%E6%9C%BA%E5%88%B6">26.qt插件机制</a></li>
+<li><a href="#27qt%E6%8F%92%E4%BB%B6%E6%9C%BA%E5%88%B6%E5%92%8Cextern%E6%9C%89%E4%BB%80%E4%B9%88%E5%8C%BA%E5%88%AB">27.qt插件机制和extern有什么区别</a></li>
+<li><a href="#28qt%E6%8F%92%E4%BB%B6%E7%9A%84%E5%BA%95%E5%B1%82%E6%98%AF%E6%80%8E%E4%B9%88%E5%AE%9E%E7%8E%B0%E7%9A%84">28.qt插件的底层是怎么实现的</a></li>
+<li><a href="#29qt%E5%85%83%E5%AF%B9%E8%B1%A1%E6%9C%BA%E5%88%B6">29.qt元对象机制</a></li>
+<li><a href="#30qt%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E5%AF%B9stl%E8%BF%9B%E8%A1%8C%E5%86%8D%E6%AC%A1%E5%B0%81%E8%A3%85">30.qt为什么要对stl进行再次封装</a></li>
+<li><a href="#31qt%E7%9A%84%E6%B8%B2%E6%9F%93%E9%80%BB%E8%BE%91">31.qt的渲染逻辑</a></li>
+<li><a href="#32qt%E9%BB%98%E8%AE%A4%E6%98%AF%E4%BD%BF%E7%94%A8cpu%E8%BF%98%E6%98%AFgpu%E6%B8%B2%E6%9F%93%E5%91%A2">32.qt默认是使用cpu还是gpu渲染呢</a></li>
+<li><a href="#33qt%E5%A6%82%E4%BD%95%E6%8C%87%E5%AE%9A%E4%BD%BF%E7%94%A8-opengl-%E6%88%96%E8%80%85-directx-%E5%8A%A0%E9%80%9F">33.qt如何指定使用 OpenGL 或者 DirectX 加速</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://hensonguo.github.io/post/ju-zhen/">
+              <h3 class="post-title">
+                矩阵
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://hensonguo.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

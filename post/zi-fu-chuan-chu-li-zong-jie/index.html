@@ -1,0 +1,254 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>字符串处理总结 | Icode</title>
+<link rel="shortcut icon" href="https://hensonguo.github.io/favicon.ico?v=1704354032694">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://hensonguo.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="字符串处理总结 | Icode - Atom Feed" href="https://hensonguo.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="
+
+字符（单引号）：
+char ch = 'abcd'; //会出现警告，2-4个字符时，输出的是最后一个字符，超过4个字符时编译不过，认为常量中字符太多
+
+
+字符串（双引号）
+string str = &quot;abcde&quot;;..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://hensonguo.github.io">
+  <img class="avatar" src="https://hensonguo.github.io/images/avatar.png?v=1704354032694" alt="">
+  </a>
+  <h1 class="site-title">
+    Icode
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              字符串处理总结
+            </h2>
+            <div class="post-info">
+              <span>
+                2023-03-31
+              </span>
+              <span>
+                5 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <ol>
+<li>
+<p>字符（单引号）：<br>
+char ch = 'abcd'; //会出现警告，2-4个字符时，输出的是最后一个字符，超过4个字符时编译不过，认为常量中字符太多</p>
+</li>
+<li>
+<p>字符串（双引号）<br>
+string str = &quot;abcde&quot;;</p>
+</li>
+<li>
+<p>字符数组（c风格字符串，注意单双引号）<br>
+char hellow1[7] = { 'h', 'e', 'l', 'l', 'o', 'w', '\0' };  //null 字符串以'\0'终止<br>
+char hellow2[] = &quot;hellow&quot;;</p>
+</li>
+<li>
+<p>字符串指针（char*）<br>
+const char* 修饰的是指针，代表不能改变指针<br>
+char * const 修饰的是char，代表字符不能改变，但是指针可以变</p>
+</li>
+<li>
+<p>char<em>与char[]区别<br>
+char * a = &quot;string&quot;;<br>
+char b[]=&quot;string&quot;;<br>
+1）、区别是a是指针，b是char数组;<br>
+2）、char</em>是变量，值可以改变， char[]是常量，值不能改变！<br>
+3）、初始化操作有根本区别</p>
+</li>
+</ol>
+<pre><code class="language-c++">	char* a = &quot;Hello World&quot;;
+	char b[] = &quot;Hello World&quot;;
+	printf(&quot;%s, %d\n&quot;, &quot;Hello World&quot;, &quot;Hello World&quot;);
+	printf(&quot;%s, %d %d\n&quot;, a, a, &amp;a);
+	printf(&quot;%s, %d %d\n&quot;, b, b, &amp;b);
+</code></pre>
+<p>输出：</p>
+<pre><code>Hello World, 4017448
+Hello World, 4017448 15727816
+Hello World, 15127796 15127796
+</code></pre>
+<p>结果可见：尽管都对应了相同的字符串，但”Hello World”的地址 和 a对应的地址相同，与b指向的地址有较大差异；&amp;a 、&amp;b都是在同一内存区域，且&amp;b == b根据c内存区域划分知识，我们知道，局部变量都创建在栈区，而常量都创建在文字常量区，显然，a、b都是栈区的变量，但是a指向了常量（字符串常量），b则指向了变量（字符数组），指向了自己(&amp;b == b == &amp;b[0])。</p>
+<p><strong>char * a=”string1”;是实现了3个操作：</strong><br>
+1）、声明一个char*变量(也就是声明了一个指向char的指针变量);<br>
+2）、在内存中的文字常量区中开辟了一个空间存储字符串常量”string1”<br>
+3）、返回这个区域的地址，作为值，赋给这个字符指针变量a</p>
+<p><strong>char b[]=”string2”;则是实现了2个操作：</strong><br>
+1）、声明一个char 的数组，<br>
+2）、为该数组“赋值”，即将”string2”的每一个字符分别赋值给数组的每一个元素</p>
+<p><strong>实际上， char * a=”string1”; 的写法是不规范的！</strong><br>
+因为a指向了即字符常量，一旦strcpy(a,”string2”)就糟糕了，试图向只读的内存区域写入，程序会崩溃的！尽管VS下的编译器不会警告，但如果你使用了语法严谨的Linux下的C编译器GCC，或者在windows下使用MinGW编译器就会得到警告。<br>
+所以，我们还是应当按照”类型相同赋值”的原则来写代码：<br>
+const char * a=&quot;string1&quot;;</p>
+<p><strong>const char*与char[]的区别：</strong><br>
+const char * a=”string1”<br>
+char b[]=”string2”;<br>
+区别在于：<br>
+1）、a是const char 类型， b是char const类型（ 或者理解为 (const char)xx 和 char (const xx) ）<br>
+2）、a是一个指针变量，a的值（指向）是可以改变的，但a只能指向（字符串）常量，指向的区域的内容不可改变；<br>
+3）、b是一个指针常量，b的值（指向）不能变；但b指向的目标（数组b在内存中的区域）的内容是可变的<br>
+4）、作为函数的声明的参数的时候，char []是被当做char *来处理的！两种形参声明写法完全等效！</p>
+<ol start="6">
+<li>字符串数组<br>
+以下输出结果是相同的</li>
+</ol>
+<pre><code class="language-c++">	std::string a1[5] = { &quot;a&quot;, &quot;b&quot;, &quot;c&quot;, &quot;d&quot;, &quot;e&quot; };
+	char *a2[] = { &quot;a&quot;, &quot;b&quot;, &quot;c&quot;, &quot;d&quot;, &quot;e&quot; };
+
+	for (auto ch : a1)
+		std::cout &lt;&lt; ch;
+	for (auto ch : a2)
+		std::cout &lt;&lt; ch;
+</code></pre>
+<ol start="7">
+<li>字符与字符串的操作符处理<br>
+c语言中没有 字符串 加减 运算。<br>
+C语言中 有 单个字符 加减 运算。<br>
+字符串不能相减，但你可以用strcmp来做比较，其实该函数也是从字符串的首地址开始比较字符asci码。</li>
+</ol>
+<pre><code class="language-c++">	int a = '9' - '5';      //返回4
+	int b = &quot;9&quot; - &quot;5&quot;;   //返回-4，低字节减去高字节
+    string c;
+	c = 1 + '2'; //返回&quot;3&quot;
+    string d = 1 + '2';//C2440	“初始化”: 无法从“int”转换为“std::basic_string&lt;char,std::char_traits&lt;char&gt;,std::allocator&lt;char&gt;&gt;”
+</code></pre>
+
+              </div>
+              <div class="toc-container">
+                
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://hensonguo.github.io/post/pybind-shi-yong-zong-jie/">
+              <h3 class="post-title">
+                pybind使用总结
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://hensonguo.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

@@ -1,0 +1,414 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>STL知识总结 | Icode</title>
+<link rel="shortcut icon" href="https://hensonguo.github.io/favicon.ico?v=1704354032694">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://hensonguo.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="STL知识总结 | Icode - Atom Feed" href="https://hensonguo.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="
+ArrayList
+数组在内存中时连续存储的，所以其索引速度非常快，而且赋值和修改元素也比较简单。
+修改元素比较麻烦，容易导致内存浪费，容易导致数据溢出等等
+ArrayList就完美克服了这些缺点。
+优点：
+其大小是按照其存储数据进行动态..." />
+    <meta name="keywords" content="C++" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://hensonguo.github.io">
+  <img class="avatar" src="https://hensonguo.github.io/images/avatar.png?v=1704354032694" alt="">
+  </a>
+  <h1 class="site-title">
+    Icode
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              STL知识总结
+            </h2>
+            <div class="post-info">
+              <span>
+                2022-09-06
+              </span>
+              <span>
+                10 min read
+              </span>
+              
+                <a href="https://hensonguo.github.io/tag/blFelWlDF/" class="post-tag">
+                  # C++
+                </a>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <figure data-type="image" tabindex="1"><img src="https://hensonguo.github.io/post-images/1662465422764.jpg" alt="" loading="lazy"></figure>
+<h3 id="arraylist">ArrayList</h3>
+<p>数组在内存中时连续存储的，所以其索引速度非常快，而且赋值和修改元素也比较简单。<br>
+修改元素比较麻烦，容易导致内存浪费，容易导致数据溢出等等<br>
+ArrayList就完美克服了这些缺点。</p>
+<p>优点：<br>
+<strong>其大小是按照其存储数据进行动态扩充和收缩的<br>
+不用考虑内存浪费和指定长度</strong></p>
+<p>缺点:<br>
+在ArrayList中可以同时插入不同类型的数据，比如string，char，int等等<br>
+因为ArrayList把这些数据当做object来处理的，所以这样是允许的<br>
+但是有一个问题，如果我们用ArrayList来处理问题的时候，很可能发生类型不匹配的错误<br>
+所以说ArrayList是不安全的<br>
+即使我们保证插入数据的时候很小心，但是在使用的时候，我们需要他们都转化成为原来类型来处理<br>
+这里就有了<strong>拆装箱的操作<br>
+可想而知，这样会有巨大的内存消耗</strong></p>
+<h3 id="list">list</h3>
+<p>正因为ArrayList不安全的原因，所以c#也出现了泛型的概念，List正是ArrayList的泛型类</p>
+<pre><code class="language-c++">List&lt;int&gt; list = new List&lt;int&gt;();
+//新增数据
+ list.Add(123);
+//修改数据 
+list[0] = 345;
+//移除数据
+list.RemoveAt(0);
+</code></pre>
+<p>如果此时插入其他类型的数据，就会报错<br>
+这样避免了前面所说<strong>安全问题和拆装箱消耗内存的问题了</strong></p>
+<p>List容器底层是用双向循环链表实现的，内存不一定连续，相比双链表的结构的好处是构建List的容器的时候，<br>
+只需借助一个指针就可以轻松的表示List的首位元素</p>
+<h3 id="hashmap">hashmap</h3>
+<p><font color=red>map的底层也是使用数组来实现，数组中每一项都是单向链表（链表和数组的结合体）<br>
+当链表长度大于一定的阈值，链表转换为红黑树，减少链表的查询时间</font><br>
+<img src="https://hensonguo.github.io/post-images/1662454854313.jpg" alt="" loading="lazy"><br>
+<font color=red>在hashmap中使用数组加（链表或者红黑树）可以完美解决数组和链表的问题 使得查询 插入删除效率都比较高</font><br>
+对于同一个对象如果没有被修改，那么无论何时其哈希码都是相同的<br>
+对于两个对象 如果其内容不同 其哈希码也可能是相同的</p>
+<p>当哈希表插入一个数据的时候<br>
+分为两种情况：<br>
+1.数组中索引处为空，这种情况直接将元素放入即可<br>
+2.数组中索引处不是空，那么我们判断该位置的元素和当前元素是否相等<br>
+如果相等我们直接覆盖，如果不相等 我们使用链表或者红黑树的形式存储该元素</p>
+<h3 id="set">set</h3>
+<p>关于set的底层实现有两种说法，<br>
+第一种是c++的STL的set用的是红黑树<br>
+第二种是hash_set的hashtable<br>
+红黑树和哈希表最大的不同就是红黑树是有序结构，hashtable不是有序结构<br>
+如果只是判断set中的元素是否存在，hash显然更加适合，因为set的访问操作复杂度是log(N)，而使用hash底层实现hash_set近似O(1)</p>
+<h3 id="map">map</h3>
+<p>map是key:value键值对的组合，map类型通常被称为关联数组(associative array)。与之相对，set就是关键字的简单组合。</p>
+<pre><code class="language-c++">template &lt;
+    class Key,
+    class Type,
+    class Traits = less&lt;Key&gt;,
+    class Allocator=allocator&lt;pair &lt;const Key, Type&gt;&gt;&gt;
+class map;
+</code></pre>
+<p>Key 要存储在映射中的键数据类型。<br>
+Type 要存储在映射中的元素数据类型。<br>
+Traits 一种提供函数对象的类型，该函数对象可将两个元素值作为排序键进行比较，以确定其在映射中的相对顺序。 此参数为可选自变量，默认值是二元谓词 less。在 C++ 14 中可以通过指定没有类型参数的 std:: less &lt;&gt; 谓词来启用异类查找。<br>
+Allocato 一种表示存储的分配器对象的类型，该分配器对象封装有关映射的内存分配和解除分配的详细信息。 此参数为可选参数，默认值为 allocator&lt;pair&lt;const Key, Type&gt; &gt;。</p>
+<h3 id="vector">vector</h3>
+<p><font color=red>vector的底层实现很简单，就是一段连续的线性存储空间（可以理解为指针）</font></p>
+<pre><code class="language-c++">//_Alloc 表示内存分配器，此参数几乎不需要我们关心
+template &lt;class _Ty, class _Alloc = allocator&lt;_Ty&gt;&gt;
+class vector{
+    ...
+protected:
+    pointer _Myfirst;
+    pointer _Mylast;
+    pointer _Myend;
+};
+</code></pre>
+<p>Myfirst指向的是vector容器对象的起始字节位置<br>
+MyLast指向的是最后一个元素的末尾字节<br>
+myend指向整个vector所占内存的末尾字节<br>
+<img src="https://hensonguo.github.io/post-images/1662465044223.jpg" alt="" loading="lazy"></p>
+<p><font color=green>vector扩容</font><br>
+1.完全弃用现在的内存空间，重新申请新的 内存空间<br>
+2.将旧的内存空间中的数据，按照原有顺序移动到新的内存空间中<br>
+3.最后将旧的内存空间释放<br>
+这也就是为什么vector扩容之后，与其相关的指针，引用，迭代器等都会失效的原因</p>
+<p>由此可见vector的扩容是很好时的，为了降低再次分配内存的成本，每次扩容的时候，都会申请比用户需求更多的内存空间<br>
+这也就是vector容量的由来，以便之后使用</p>
+<h2 id="问题">问题</h2>
+<p><font color=red>vector和list区别</font><br>
+（1）、实现不同<br>
+vector底层是数组实现的，是一段连续的存储内存，元素被顺序存储。<br>
+list底层是双向链表实现的，内存不一定连续。<br>
+（2）、开销不同<br>
+vector内存不够时会重新申请一块足够大的连续内存，把原来的数据开呗到新的内存里面。<br>
+list不用考虑内存的连续，因此新增开销要小很多<br>
+（3）、访问效率<br>
+list只能通过指针访问元素，随机访问效率特别低<br>
+需要频繁随机存取元素时，vector更合适（但是如果要频繁移动待插入右边元素时，还是list）</p>
+<p><font color=red>符号匹配，判断是否合法：</font></p>
+<pre><code class="language-c++">//判断括号是否合法--C++
+#include &lt;iostream&gt;
+#include &lt;string&gt;
+#include &lt;stack&gt;
+using namespace std;
+
+int Match(char ch1,char ch2)
+{// 匹配函数
+    int t = 0;
+    if(ch1 == '(' &amp;&amp; ch2 == ')')    t = 1;
+    if(ch1 == '[' &amp;&amp; ch2 == ']')    t = 1;
+    if(ch1 == '{' &amp;&amp; ch2 == '}')    t = 1;
+    return t;
+}
+
+bool chkLegal(string A) 
+{// 检查函数
+	if(A.size() == 0)   return false;
+    stack&lt;char&gt; Stack;		// 定义一个栈容器
+    for(int i=0;i&lt;A.size();i++){
+        if(A[i]=='['||A[i]=='('||A[i]=='{')
+            Stack.push(A[i]);	// 左括号入栈
+        if(A[i]==']'||A[i]==')'||A[i]=='}')
+         {
+            if(Stack.empty())   return false;               // 如果栈空还有右括号，不匹配
+            if(!Match(Stack.top(), A[i]))  return  false;   // 如果没有对应匹配
+            Stack.pop();
+         }
+    }
+    if(Stack.empty())   return true;                        // 如果数量正确匹配
+    else    return false;
+}
+
+int main(int argc, char *argv[])
+{
+    string A = &quot;[a+b*(5-4)]&quot;;                   // 测试用例A，期望数出1
+    string B = &quot;[a+b*{5-4)]&quot;;                   // 测试用例B，期望数出0
+    string C = &quot;{[())]}&quot;;                       // 测试用例C，期望输出0
+    string D = &quot;{[a+b*(5-4)]&quot;;                  // 测试用例D，期望输出0
+    string E = &quot;&quot;;								// 测试用例D，期望输出0	
+    cout &lt;&lt; &quot;String A is: &quot; &lt;&lt; chkLegal(A) &lt;&lt; endl;
+    cout &lt;&lt; &quot;String B is: &quot; &lt;&lt; chkLegal(B) &lt;&lt; endl;
+    cout &lt;&lt; &quot;String C is: &quot; &lt;&lt; chkLegal(C) &lt;&lt; endl;
+    cout &lt;&lt; &quot;String D is: &quot; &lt;&lt; chkLegal(D) &lt;&lt; endl;
+    cout &lt;&lt; &quot;String E is: &quot; &lt;&lt; chkLegal(E) &lt;&lt; endl;
+    return 0;
+}
+</code></pre>
+<p><font color=red>链表和数组有什么区别</font><br>
+1） 存储形式：数组是一块连续的空间，声明时就要确定长度。链表是一块可不连续的动态空间，长度可变，每个结点要保存相邻结点指针。<br>
+（2） 数据查找：数组的线性查找速度快，查找操作直接使用偏移地址。链表需要按顺序检索结点，效率低。<br>
+（3） 数据插入或删除：链表可以快速插入和删除结点，而数组则可能需要大量数据移动。<br>
+（4） 越界问题：链表不存在越界问题，数组有越界问题。<br>
+<img src="https://hensonguo.github.io/post-images/1662455011598.jpg" alt="" loading="lazy"></p>
+<p><font color=red>静态链表及数组实现</font><br>
+概念：游标实现法<br>
+对于没有指针的编程语言，可以用数组替代指针，来描述链表。让数组的每个元素由data和cur两部分组成，其中cur相当于链表的next指针，这种用数组描述的链表叫做静态链表，这种描述方法叫做游标实现法。<br>
+特点：<br>
+这种储存结构仍需要预先分配一个较大的空间，但在作线性表的插入和删除操作是不需移动元素，仅需修改指针，故仍具有链式存储结构的主要有点。<br>
+优点<br>
+在插入和删除时候，只需要修改游标，不需要移动元素，从而改进了顺序存储结构中插入和删除操作需要移动大量元素的缺点。<br>
+缺点<br>
+没有解决连续存储分配带来的表长难以确定的问题；失去了顺序存储结构随机存取的特性。</p>
+<p><font color=red>链表反转</font><br>
+链表相关问题总是涉及大量指针的操作，链表的反转关键就是调整指针的方向。以下图为例，(a)表示原链表，(b)表示在进行反转的链表。<br>
+<img src="https://hensonguo.github.io/post-images/1662468121081.jpg" alt="" loading="lazy"></p>
+<pre><code class="language-c++">struct ListNode
+{// 定义链表节点
+	int       m_nValue;
+	ListNode* m_pNext;
+};
+
+ListNode* ReverseList(ListNode* pHead)
+{
+	ListNode* pReversedHead = nullptr;	// 反转后的头指针
+	ListNode* pNode = pHead;			// 从源链表的头结点开始
+	ListNode* pPrev = nullptr;
+	while (pNode != nullptr)
+	{
+		ListNode* pNext = pNode-&gt;m_pNext;
+
+		if (pNext == nullptr)
+			pReversedHead = pNode;
+
+		pNode-&gt;m_pNext = pPrev;
+
+		pPrev = pNode;		// 跟新pPre
+		pNode = pNext;		// 反转节点后移
+	}
+
+	return pReversedHead;
+}
+
+int main(int argc, char* argv[])
+{
+	ListNode* orderedNode = NULL;
+	ListNode* prevNode = NULL;
+	for (int i = 0; i &lt; 10; i++)
+	{
+		ListNode* tempNode = new ListNode();
+		tempNode-&gt;m_nValue = i;
+		if (orderedNode == NULL)
+			orderedNode = tempNode;
+
+		if (prevNode != NULL)
+			prevNode-&gt;m_pNext = tempNode;
+		prevNode = tempNode;
+	}
+
+	ListNode* kk = orderedNode;
+	for (int i = 0; i &lt; 10; i++)
+	{
+		cout &lt;&lt; kk-&gt;m_nValue &lt;&lt; endl;
+		kk = kk-&gt;m_pNext;
+	}
+
+	ListNode* revertedNode = ReverseList(orderedNode);
+	ListNode* tt = revertedNode;
+	for (int i = 0; i &lt; 10; i++)
+	{
+		cout &lt;&lt; tt-&gt;m_nValue &lt;&lt; endl;
+		tt = tt-&gt;m_pNext;
+	}
+	
+	return 0;
+}
+</code></pre>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li>
+<ul>
+<li><a href="#arraylist">ArrayList</a></li>
+<li><a href="#list">list</a></li>
+<li><a href="#hashmap">hashmap</a></li>
+<li><a href="#set">set</a></li>
+<li><a href="#map">map</a></li>
+<li><a href="#vector">vector</a></li>
+</ul>
+</li>
+<li><a href="#%E9%97%AE%E9%A2%98">问题</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://hensonguo.github.io/post/nei-cun-kong-jian/">
+              <h3 class="post-title">
+                内存详解
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://hensonguo.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

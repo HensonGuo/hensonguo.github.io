@@ -1,0 +1,567 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>mongodb使用总结 | Icode</title>
+<link rel="shortcut icon" href="https://hensonguo.github.io/favicon.ico?v=1704354032694">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://hensonguo.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="mongodb使用总结 | Icode - Atom Feed" href="https://hensonguo.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="1.mongodb安装
+mongodb官网网址：
+https://www.mongodb.com/download-center/community
+mongoshell安装：
+https://www.mongodb.com/try/dow..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://hensonguo.github.io">
+  <img class="avatar" src="https://hensonguo.github.io/images/avatar.png?v=1704354032694" alt="">
+  </a>
+  <h1 class="site-title">
+    Icode
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              mongodb使用总结
+            </h2>
+            <div class="post-info">
+              <span>
+                2023-07-26
+              </span>
+              <span>
+                13 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <h2 id="1mongodb安装">1.mongodb安装</h2>
+<p>mongodb官网网址：<br>
+<a href="https://www.mongodb.com/download-center/community">https://www.mongodb.com/download-center/community</a><br>
+mongoshell安装：<br>
+<a href="https://www.mongodb.com/try/download/shell">https://www.mongodb.com/try/download/shell</a><br>
+下载解压即可，譬如我们解压到xx\Program Files\MongoDB\Server\6.0下</p>
+<br>
+<h2 id="2pymongo-安装">2.pymongo 安装</h2>
+<p>pip install pymongo</p>
+<br>
+<h2 id="3启动">3.启动</h2>
+<h3 id="31-非auth服务">3.1 非auth服务</h3>
+<p>cmd窗口到bin目录下输入：</p>
+<pre><code>mongod --dbpath &quot;你安装的盘:mongodbdatadb&quot;  --logpath &quot;你安装的盘:mongodblogslog.txt&quot;  --install -serviceName &quot;MongoDB&quot;  
+</code></pre>
+<p>或者</p>
+<pre><code>mongod.exe --nojournal --dbpath .
+</code></pre>
+<p>打开浏览器访问 <a href="http://localhost:27017">http://localhost:27017</a><br>
+mongocompass：点击连接可以可视化操作数据库<br>
+<img src="https://hensonguo.github.io/post-images/1690461213454.jpg" alt="" loading="lazy"></p>
+<h3 id="32-auth服务">3.2 auth服务</h3>
+<h4 id="321-auth方式启动服务">3.2.1 auth方式启动服务</h4>
+<p>然后将服务进行卸载，并且以auth的方式启动。依次输入以下命令：<br>
+1、卸载原来安装的服务：sc delete MongoDB（或者删除之前的服务进程）<br>
+2、以auth的方式创建服务：<br>
+sc create MongoDB binpath=&quot;G:\SoftInstall\MongoDB\bin\mongod.exe --dbpath G:\SoftInstall\MongoDB\data --logpath G:\SoftInstall\MongoDB\log\log.log  --logappend --auth --service&quot;<br>
+直接创建服务可能会失败，可能存在原来的服务，如下先执行sc delete MongoDB删除旧的服务<br>
+<img src="https://hensonguo.github.io/post-images/1690512827268.jpg" alt="" loading="lazy"><br>
+执行完sc create MongoDB后可以在服务看到mongodb的服务已经被创建了<br>
+<img src="https://hensonguo.github.io/post-images/1690514126527.jpg" alt="" loading="lazy"><br>
+同时可以查看注册表服务的注册<br>
+(计算机\HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\MongoDB)<br>
+<img src="https://hensonguo.github.io/post-images/1690524572058.jpg" alt="" loading="lazy"><br>
+如果通过 sc create 创建的服务启动时报系统错误windows error 193，删除创建的服务，可以通过下面命令重新创建服务</p>
+<pre><code>mongod --install --serviceName &quot;MongoDB&quot; --dbpath &quot;E:\Program Files\MongoDB\Server\6.0\data\db&quot; --logpath &quot;E:\Program Files\MongoDB\Server\6.0\log\test.log&quot; --auth
+</code></pre>
+<p>3、启动服务：</p>
+<pre><code class="language-cmd">net start mongodb
+</code></pre>
+<p>这行命令将查找mongodb注册表中的imagepath进行启动</p>
+<p>4、停止服务：</p>
+<pre><code class="language-cmd">net stop MongoDB
+</code></pre>
+<br>
+<h4 id="322-创建账户">3.2.2 创建账户</h4>
+<p>上面以没有auth的方式注册并启动的服务，但是这样不安全，一般启动服务的时候都要以auth的方式启动，我们现在先新建一个管理员用户，为稍后以auth方式启动服务做准备。<br>
+启动mongo shell，找到对应的mongosh.exe打开，先输入mongod，再接下来依次输入命令：</p>
+<pre><code>use admin
+</code></pre>
+<p>继续执行（注意把对应的user和pwd改成你们自己想要的值）：</p>
+<pre><code>db.createUser({user:&quot;yjq&quot;,pwd:&quot;123456&quot;,roles:[{&quot;role&quot;:&quot;userAdmin&quot;,&quot;db&quot;:&quot;admin&quot;},{&quot;role&quot;:&quot;root&quot;,&quot;db&quot;:&quot;admin&quot;},{&quot;role&quot;:&quot;userAdminAnyDatabase&quot;,&quot;db&quot;:&quot;admin&quot;}]})
+</code></pre>
+<p>对帐号授权：</p>
+<pre><code>db.auth(&quot;yjq&quot;,&quot;123456&quot;)
+</code></pre>
+<p>到此为止一个简单的账号授权就结束了。<br>
+退出当前操作输入 exit<br>
+<img src="https://hensonguo.github.io/post-images/1690530488824.jpg" alt="" loading="lazy"></p>
+<br>
+<h2 id="4连接mongoclient">4.连接MongoClient</h2>
+<pre><code class="language-python">client = pymongo.MongoClient(&quot;mongodb://localhost:27017/&quot;)
+</code></pre>
+<br>
+<h2 id="5连接数据库">5.连接数据库</h2>
+<pre><code class="language-python">client = pymongo.MongoClient(&quot;mongodb://localhost:27017/&quot;)
+</code></pre>
+<br>
+<h2 id="6获取数据库">6.获取数据库</h2>
+<pre><code class="language-python">mydb = client[&quot;testDB&quot;]
+# 判断数据库是否存在
+dbList = client.list_database_names()
+if &quot;testDB&quot; in dbList:
+    print(&quot;数据库已存在！&quot;)
+</code></pre>
+<br>
+<h2 id="7创建集合类似表">7.创建集合(类似表)</h2>
+<pre><code class="language-python">teacher = mydb[&quot;teacher&quot;]
+# 判断集合是否存在
+collectlist = mydb.list_collection_names()
+if &quot;teacher&quot; in collectlist:
+    print(&quot;集合已存在！&quot;)
+</code></pre>
+<br>
+<h2 id="8插入数据">8.插入数据</h2>
+<pre><code class="language-python">##插入
+collect.insert(dic)
+collect.insert(dic1， dic2)
+
+# 官方推荐使用insert_one或insert_many
+# 插入一个insert_one()
+# 方法返回InsertOneResult对象, 该对象包含inserted_id属性, 它是插入文档的id值.
+x = collect.insert_one({&quot;num&quot;: 101, &quot;name&quot;: &quot;Zhang&quot;})
+print(x.inserted_id)
+# 插入多个
+mylist = [
+    {&quot;num&quot;: &quot;102&quot;, &quot;name&quot;: &quot;Wang&quot;},
+    {&quot;num&quot;: &quot;103&quot;, &quot;name&quot;: &quot;Li&quot;},
+    {&quot;num&quot;: &quot;104&quot;, &quot;name&quot;: &quot;Zhao&quot;},
+    {&quot;num&quot;: &quot;105&quot;, &quot;name&quot;: &quot;Gao&quot;}
+]
+x = collect.insert_many(mylist)
+print(x.inserted_ids)
+</code></pre>
+<br>
+<h2 id="9删除数据">9.删除数据</h2>
+<pre><code class="language-python">collect.remove(dic)
+
+# 删除一个
+ collect.delete_one({&quot;num&quot;: &quot;101&quot;})
+
+# 删除多个
+# 删除所有name字段中以W开头的文档.
+# 如果删除所有, 则传出一定空{}即可.
+x = collect.delete_many({&quot;name&quot;: {&quot;$regex&quot;: &quot;^W&quot;}})
+print(x.deleted_count, &quot;个文档已删除&quot;)
+</code></pre>
+<br>
+<h2 id="10更新数据">10.更新数据</h2>
+<pre><code class="language-python"># 更新一个数据
+# 使用$set对数据进行更新
+collect.update_one({&quot;num&quot;: &quot;103&quot;}, {&quot;$set&quot;: {&quot;num&quot;: &quot;10333&quot;}})
+# 更新多个数据
+collect.update_many({}, {&quot;$set&quot;: {&quot;num&quot;: &quot;6666&quot;}})
+# 更新指定条件数据
+# 条件num大于9，num2
+condition = {'num': {'$gt':9}}
+collect.update_many(condition, {&quot;$inc&quot;: {&quot;num&quot;: 2}})
+</code></pre>
+<br>
+<h2 id="11查询数据">11.查询数据</h2>
+<pre><code class="language-python">#多条查询
+my_set.find(dic) 
+#单条查询
+my_set.find_one(dic)
+</code></pre>
+<br>
+<h2 id="12聚合arrgregate">12.聚合arrgregate</h2>
+<pre><code>my_set.aggregate([{'$group': {'_id': '$imgTag'}}])
+</code></pre>
+<p>聚合主要用于计算数据，类似sql中的sum()、avg()，当处理完毕后，进行下一次处理。<br>
+常用管道：</p>
+<ul>
+<li>$group：将集合中的文档分组，可用于统计结果</li>
+<li>$match：用于过滤数据，只输出符合条件的文档</li>
+<li>$project：修改输入文档的结构。可以用来重命名、增加或删除域，也可以用于创建计算结果以及嵌套文档</li>
+<li>$sort：将输入文档排序后输出</li>
+<li>$limit：用来限制聚合管道返回的文档数</li>
+<li>$skip：再聚合管道中跳过指定数量的文档，并返回余下的文档</li>
+<li>$unwind：将文档中的某一数组类型字段拆分成多条，每条包含数组中的一个值</li>
+<li>$geoNear：输出接近某一地理位置的有序文档</li>
+</ul>
+<p>处理文档输入并输出</p>
+<pre><code>表达式:'$列名'
+</code></pre>
+<p>常用表达式:</p>
+<ul>
+<li>$sum：计算综合，同count表示计数</li>
+<li>$avg：计算平均值</li>
+<li>$min：计算最小值</li>
+<li>$max：计算最大值</li>
+<li>$push：在结果文档中插入一个数组中，数组内容为选中字段</li>
+<li>$first：根据资源文档的排序获取第一个文档数据</li>
+<li>$last：根据资源文档的排序获取最后一个文档数据</li>
+</ul>
+<pre><code class="language-python">from pymongo import MongoClient
+
+# Connect with the portnumber and host
+client = MongoClient(&quot;mongodb://localhost:27017/&quot;)
+
+# Access database 
+mydatabase = client['database']
+
+# Access collection of the database 
+mycollection = mydatabase['myTable']
+writer_profiles = [
+    {&quot;_id&quot;: 1, &quot;user&quot;: &quot;Amit&quot;, &quot;title&quot;: &quot;Python&quot;, &quot;comments&quot;: 5},
+    {&quot;_id&quot;: 2, &quot;user&quot;: &quot;Drew&quot;, &quot;title&quot;: &quot;JavaScript&quot;, &quot;comments&quot;: 15},
+    {&quot;_id&quot;: 3, &quot;user&quot;: &quot;Amit&quot;, &quot;title&quot;: &quot;C++&quot;, &quot;comments&quot;: 6},
+    {&quot;_id&quot;: 4, &quot;user&quot;: &quot;Drew&quot;, &quot;title&quot;: &quot;MongoDB&quot;, &quot;comments&quot;: 2},
+    {&quot;_id&quot;: 5, &quot;user&quot;: &quot;Cody&quot;, &quot;title&quot;: &quot;Perl&quot;, &quot;comments&quot;: 9}]
+
+# mycollection.insert_many(writer_profiles)
+agg_result = mycollection.aggregate(
+    [{
+        &quot;$group&quot;:
+            {&quot;_id&quot;: &quot;$user&quot;,
+             &quot;num_tutorial&quot;: {&quot;$sum&quot;: 1}
+             }}
+    ])
+for i in agg_result:
+    print(i)
+</code></pre>
+<p>输出：</p>
+<pre><code>{'_id': 'Amit', 'num_tutorial': 2}
+{'_id': 'Cody', 'num_tutorial': 1}
+{'_id': 'Drew', 'num_tutorial': 2}
+</code></pre>
+<br>
+<h2 id="13常见操作符">13.常见操作符</h2>
+<p>常用符号：</p>
+<ul>
+<li>$set：更新</li>
+<li>$setOnInsert：更新（可以认为是设置数据后，额外需要补充的数据）</li>
+</ul>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>s</mi><mi>e</mi><mi>t</mi><mi>O</mi><mi>n</mi><mi>I</mi><mi>n</mi><mi>s</mi><mi>e</mi><mi>r</mi><mi>t</mi><mi mathvariant="normal">指</mi><mi mathvariant="normal">令</mi><mi mathvariant="normal">往</mi><mi mathvariant="normal">往</mi><mi mathvariant="normal">同</mi><mi>u</mi><mi>p</mi><mi>s</mi><mi>e</mi><mi>r</mi><mi>t</mi><mi mathvariant="normal">、</mi></mrow><annotation encoding="application/x-tex">setOnInsert指令往往同upsert、</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8777699999999999em;vertical-align:-0.19444em;"></span><span class="mord mathdefault">s</span><span class="mord mathdefault">e</span><span class="mord mathdefault">t</span><span class="mord mathdefault" style="margin-right:0.02778em;">O</span><span class="mord mathdefault">n</span><span class="mord mathdefault" style="margin-right:0.07847em;">I</span><span class="mord mathdefault">n</span><span class="mord mathdefault">s</span><span class="mord mathdefault">e</span><span class="mord mathdefault" style="margin-right:0.02778em;">r</span><span class="mord mathdefault">t</span><span class="mord cjk_fallback">指</span><span class="mord cjk_fallback">令</span><span class="mord cjk_fallback">往</span><span class="mord cjk_fallback">往</span><span class="mord cjk_fallback">同</span><span class="mord mathdefault">u</span><span class="mord mathdefault">p</span><span class="mord mathdefault">s</span><span class="mord mathdefault">e</span><span class="mord mathdefault" style="margin-right:0.02778em;">r</span><span class="mord mathdefault">t</span><span class="mord cjk_fallback">、</span></span></span></span>set指令配合使用。如果upsert设为true。当满足查询条件的记录存在，则不执行<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>s</mi><mi>e</mi><mi>t</mi><mi>O</mi><mi>n</mi><mi>I</mi><mi>n</mi><mi>s</mi><mi>e</mi><mi>r</mi><mi>t</mi><mi mathvariant="normal">中</mi><mi mathvariant="normal">的</mi><mi mathvariant="normal">操</mi><mi mathvariant="normal">作</mi><mi mathvariant="normal">，</mi><mi mathvariant="normal">当</mi><mi mathvariant="normal">满</mi><mi mathvariant="normal">足</mi><mi mathvariant="normal">条</mi><mi mathvariant="normal">件</mi><mi mathvariant="normal">的</mi><mi mathvariant="normal">记</mi><mi mathvariant="normal">录</mi><mi mathvariant="normal">不</mi><mi mathvariant="normal">存</mi><mi mathvariant="normal">在</mi><mi mathvariant="normal">则</mi><mi mathvariant="normal">执</mi><mi mathvariant="normal">行</mi></mrow><annotation encoding="application/x-tex">setOnInsert中的操作，当满足条件的记录不存在则执行</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.68333em;vertical-align:0em;"></span><span class="mord mathdefault">s</span><span class="mord mathdefault">e</span><span class="mord mathdefault">t</span><span class="mord mathdefault" style="margin-right:0.02778em;">O</span><span class="mord mathdefault">n</span><span class="mord mathdefault" style="margin-right:0.07847em;">I</span><span class="mord mathdefault">n</span><span class="mord mathdefault">s</span><span class="mord mathdefault">e</span><span class="mord mathdefault" style="margin-right:0.02778em;">r</span><span class="mord mathdefault">t</span><span class="mord cjk_fallback">中</span><span class="mord cjk_fallback">的</span><span class="mord cjk_fallback">操</span><span class="mord cjk_fallback">作</span><span class="mord cjk_fallback">，</span><span class="mord cjk_fallback">当</span><span class="mord cjk_fallback">满</span><span class="mord cjk_fallback">足</span><span class="mord cjk_fallback">条</span><span class="mord cjk_fallback">件</span><span class="mord cjk_fallback">的</span><span class="mord cjk_fallback">记</span><span class="mord cjk_fallback">录</span><span class="mord cjk_fallback">不</span><span class="mord cjk_fallback">存</span><span class="mord cjk_fallback">在</span><span class="mord cjk_fallback">则</span><span class="mord cjk_fallback">执</span><span class="mord cjk_fallback">行</span></span></span></span>setOnInsert操作。与<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>s</mi><mi>e</mi><mi>t</mi><mi mathvariant="normal">指</mi><mi mathvariant="normal">令</mi><mi mathvariant="normal">配</mi><mi mathvariant="normal">合</mi><mi mathvariant="normal">使</mi><mi mathvariant="normal">用</mi><mi mathvariant="normal">，</mi><mi mathvariant="normal">可</mi><mi mathvariant="normal">以</mi><mi mathvariant="normal">作</mi><mi mathvariant="normal">为</mi></mrow><annotation encoding="application/x-tex">set指令配合使用，可以作为</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.61508em;vertical-align:0em;"></span><span class="mord mathdefault">s</span><span class="mord mathdefault">e</span><span class="mord mathdefault">t</span><span class="mord cjk_fallback">指</span><span class="mord cjk_fallback">令</span><span class="mord cjk_fallback">配</span><span class="mord cjk_fallback">合</span><span class="mord cjk_fallback">使</span><span class="mord cjk_fallback">用</span><span class="mord cjk_fallback">，</span><span class="mord cjk_fallback">可</span><span class="mord cjk_fallback">以</span><span class="mord cjk_fallback">作</span><span class="mord cjk_fallback">为</span></span></span></span>set指令的补充。当满足查询条件的记录存在，则执行 <span class="katex"><span class="katex-mathml"><math><semantics><mrow><mi>s</mi><mi>e</mi><mi>t</mi><mi mathvariant="normal">操</mi><mi mathvariant="normal">作</mi><mi mathvariant="normal">，</mi><mi mathvariant="normal">当</mi><mi mathvariant="normal">满</mi><mi mathvariant="normal">足</mi><mi mathvariant="normal">查</mi><mi mathvariant="normal">询</mi><mi mathvariant="normal">条</mi><mi mathvariant="normal">件</mi><mi mathvariant="normal">的</mi><mi mathvariant="normal">记</mi><mi mathvariant="normal">录</mi><mi mathvariant="normal">不</mi><mi mathvariant="normal">存</mi><mi mathvariant="normal">在</mi><mi mathvariant="normal">，</mi><mi mathvariant="normal">则</mi><mi mathvariant="normal">新</mi><mi mathvariant="normal">增</mi><mi mathvariant="normal">一</mi><mi mathvariant="normal">条</mi><mi mathvariant="normal">记</mi><mi mathvariant="normal">录</mi><mi mathvariant="normal">，</mi><mi mathvariant="normal">其</mi><mi mathvariant="normal">中</mi><mi mathvariant="normal">包</mi><mi mathvariant="normal">含</mi></mrow><annotation encoding="application/x-tex">set操作，当满足查询条件的记录不存在，则新增一条记录，其中包含</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.61508em;vertical-align:0em;"></span><span class="mord mathdefault">s</span><span class="mord mathdefault">e</span><span class="mord mathdefault">t</span><span class="mord cjk_fallback">操</span><span class="mord cjk_fallback">作</span><span class="mord cjk_fallback">，</span><span class="mord cjk_fallback">当</span><span class="mord cjk_fallback">满</span><span class="mord cjk_fallback">足</span><span class="mord cjk_fallback">查</span><span class="mord cjk_fallback">询</span><span class="mord cjk_fallback">条</span><span class="mord cjk_fallback">件</span><span class="mord cjk_fallback">的</span><span class="mord cjk_fallback">记</span><span class="mord cjk_fallback">录</span><span class="mord cjk_fallback">不</span><span class="mord cjk_fallback">存</span><span class="mord cjk_fallback">在</span><span class="mord cjk_fallback">，</span><span class="mord cjk_fallback">则</span><span class="mord cjk_fallback">新</span><span class="mord cjk_fallback">增</span><span class="mord cjk_fallback">一</span><span class="mord cjk_fallback">条</span><span class="mord cjk_fallback">记</span><span class="mord cjk_fallback">录</span><span class="mord cjk_fallback">，</span><span class="mord cjk_fallback">其</span><span class="mord cjk_fallback">中</span><span class="mord cjk_fallback">包</span><span class="mord cjk_fallback">含</span></span></span></span>set指令设置的属性以及$setOnInsert 指令设置的属性。</p>
+<pre><code class="language-python">db.getCollection('tt').update(
+   {&quot;_id&quot; : ObjectId(&quot;5dc2cd255ee0a3a2c2c4c384&quot;)},
+   {
+       &quot;$setOnInsert&quot;: { &quot;pon&quot; : &quot;a&quot; },
+       &quot;$set&quot;: { &quot;a&quot; : &quot;e&quot; }
+   },
+   { upsert: true }
+)
+</code></pre>
+<p>当满足查询条件{&quot;_id&quot; : ObjectId(&quot;5dc2cd255ee0a3a2c2c4c384&quot;)}的记录存在，则只更新或新增其{ &quot;a&quot; : &quot;e&quot; }属性。如果不存在，将创建一条包含自动生成主键的记录：</p>
+<pre><code>{ &quot;_id&quot; : ObjectId(&quot;5dc2cd255ee0a3a2c2c4c384&quot;), &quot;a&quot; : &quot;e&quot;, &quot;pon&quot; : &quot;a&quot; }
+</code></pre>
+<p>比较符号：</p>
+<ul>
+<li>$gt：大于</li>
+<li>$lt：小于</li>
+<li>$lte：小于等于</li>
+<li>$gt：大于等于</li>
+<li>$ne：不等于</li>
+<li>$in：在范围内</li>
+<li><span class='katex-error' title='ParseError: KaTeX parse error: Expected &#039;}&#039;, got &#039;EOF&#039; at end of input: …不在范围内 {&#039;age&#039;:{&#039;'>nin：不在范围内 {&#039;age&#039;:{&#039;</span>nin':[20, 30]}}</li>
+<li>$not</li>
+<li>$or</li>
+</ul>
+<p>功能符号：</p>
+<ul>
+<li><span class='katex-error' title='ParseError: KaTeX parse error: Expected &#039;}&#039;, got &#039;EOF&#039; at end of input: …x：正则  {&#039;age&#039;:{&#039;'>regex：正则  {&#039;age&#039;:{&#039;</span>regex':'^M.*'}}</li>
+<li><span class='katex-error' title='ParseError: KaTeX parse error: Expected &#039;}&#039;, got &#039;EOF&#039; at end of input: …是否存在  {&#039;age&#039;:{&#039;'>exist：属性是否存在  {&#039;age&#039;:{&#039;</span>exist':True}}</li>
+<li><span class='katex-error' title='ParseError: KaTeX parse error: Expected &#039;}&#039;, got &#039;EOF&#039; at end of input: …：类型判断 {&#039;age&#039;:{&#039;'>type：类型判断 {&#039;age&#039;:{&#039;</span>type':'int'}}</li>
+<li><span class='katex-error' title='ParseError: KaTeX parse error: Expected &#039;}&#039;, got &#039;EOF&#039; at end of input: …数字模操作 {&#039;age&#039;:{&#039;'>mode：数字模操作 {&#039;age&#039;:{&#039;</span>mode':[5,0]}，年龄模5余0</li>
+<li><span class='katex-error' title='ParseError: KaTeX parse error: Expected &#039;}&#039;, got &#039;EOF&#039; at end of input: text：文本查询 {&#039;'>text：文本查询 {&#039;</span>text':{'$search':'Mike'}}，text类型的属性中包含Mike字符串</li>
+<li><span class='katex-error' title='ParseError: KaTeX parse error: Expected &#039;}&#039;, got &#039;EOF&#039; at end of input: where：高级查询条件{&#039;'>where：高级查询条件{&#039;</span>where':{'obj.fans_count == ob.follows_count'}}，粉丝数等于关注数</li>
+</ul>
+<p>参考：<a href="https://www.mongodb.com/docs/v6.0/reference/operator/">https://www.mongodb.com/docs/v6.0/reference/operator/</a></p>
+<p>中文文档：<a href="https://docs.mongoing.com/">https://docs.mongoing.com/</a></p>
+<br>
+<h2 id="14账号管理">14.账号管理</h2>
+<pre><code class="language-python">登录mongodb的客户端（点击mongosh.exe，输入mongod），使用如下命令
+​
+1、创建超级管理员
+use  admin
+db.createUser({ user:'root', pwd:'123456', roles:[{role:'root',db:'admin'}]})
+​
+2、修改 Mongodb 数据库配置文件，enabled开启
+security:
+  authorization: enabled
+  
+3、重启 mongodb 服务
+​
+​
+4、创建普通账号
+use dade
+db.createUser( { user: &quot;phpadmin&quot;, pwd: &quot;123456&quot;, roles: [ { role: &quot;dbOwner&quot;, db: &quot;php&quot; } ] } )
+​
+​
+5、查看当前库下的用户
+show users;
+​
+6、删除用户
+db.dropUser(&quot;dade&quot;)
+​
+7、修改密码
+db.updateUser( &quot;admin&quot;,{pwd:&quot;password&quot;}); #修改用户密码
+db.auth(&quot;admin&quot;,&quot;password&quot;); #密码认证
+</code></pre>
+<br>
+<h2 id="15示例代码">15.示例代码：</h2>
+<pre><code class="language-python">import pymongo
+
+mydb = None  # 数据库
+teacher = None  # 集合(表)
+
+def initDb():
+    client = pymongo.MongoClient(&quot;mongodb://localhost:27017/&quot;)
+    # 创建数据库teacher
+    global mydb
+    mydb = client[&quot;testDB&quot;]
+    # 判断数据库是否存在
+    dbList = client.list_database_names()
+    if &quot;testDB&quot; in dbList:
+        print(&quot;数据库已存在！&quot;)
+    # 创建集合(类似表)
+    # 注意: 在MongoDB中, 集合只有在内容插入后才会创建. 就是说,创建集合(数据表)后要再插入一个文档(记录), 集合才会真正创建.
+    global teacher
+    teacher = mydb[&quot;teacher&quot;]
+    # 判断集合是否存在
+    collist = mydb.list_collection_names()
+    if &quot;teacher&quot; in collist:
+        print(&quot;集合已存在！&quot;)
+
+
+def addRecord(collect):
+    # insert_one()方法返回InsertOneResult对象, 该对象包含inserted_id属性, 它是插入文档的id值.
+    x = collect.insert_one({&quot;num&quot;: 101, &quot;name&quot;: &quot;Zhang&quot;})
+    print(x.inserted_id)
+
+
+def addRecords(collect):
+    mylist = [
+        {&quot;num&quot;: &quot;102&quot;, &quot;name&quot;: &quot;Wang&quot;},
+        {&quot;num&quot;: &quot;103&quot;, &quot;name&quot;: &quot;Li&quot;},
+        {&quot;num&quot;: &quot;104&quot;, &quot;name&quot;: &quot;Zhao&quot;},
+        {&quot;num&quot;: &quot;105&quot;, &quot;name&quot;: &quot;Gao&quot;},
+        {&quot;num&quot;: 10, &quot;name&quot;: &quot;Gao&quot;}
+    ]
+    x = collect.insert_many(mylist)
+    print(x.inserted_ids)
+
+
+def delRecord(collect):
+    collect.delete_one({&quot;num&quot;: &quot;102&quot;})
+    # 输出剩余记录
+    for items in collect.find():
+        print(items)
+
+
+def delRecords(collect):
+    # 删除所有name字段中以F开头的文档.
+    # 如果删除所有, 则传出一定空{}即可.
+    x = collect.delete_many({&quot;name&quot;: {&quot;$regex&quot;: &quot;^L&quot;}})
+    print(x.deleted_count, &quot;个文档已删除&quot;)
+
+
+def modRecord(collect):
+    collect.update_one({&quot;num&quot;: &quot;103&quot;}, {&quot;$set&quot;: {&quot;num&quot;: &quot;10333&quot;}})
+    # 输出修改后的集合
+    for x in collect.find():
+        print(x)
+
+def modRecords(collect):
+    collect.update_many({}, {&quot;$set&quot;: {&quot;num&quot;: &quot;6666&quot;}})
+    # 输出修改后的集合
+    for x in collect.find():
+        print(x)
+
+def modRecordsByCondition(collect):
+    # 条件num大于9，num2
+    condition = {'num': {'$gt':9}}
+    collect.update_many(condition, {&quot;$inc&quot;: {&quot;num&quot;: 2}})
+    for x in collect.find():
+        print(x)
+
+
+def selRecord(collect):
+    for item in collect.find():
+        print(item)
+
+
+initDb()
+
+# addRecord(teacher)  # 插入单条记录
+# addRecords(teacher)  # 插入多条记录
+
+# delRecord(teacher) # 删除指定记录
+# delRecords(teacher)  # 删除多个记录
+
+# modRecord(teacher) # 修改指定记录
+# modRecords(teacher) # 修改多个记录
+modRecordsByCondition(teacher) #修改指定条件的记录
+
+# selRecord(teacher)  # 查询所有记录
+</code></pre>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#1mongodb%E5%AE%89%E8%A3%85">1.mongodb安装</a></li>
+<li><a href="#2pymongo-%E5%AE%89%E8%A3%85">2.pymongo 安装</a></li>
+<li><a href="#3%E5%90%AF%E5%8A%A8">3.启动</a>
+<ul>
+<li><a href="#31-%E9%9D%9Eauth%E6%9C%8D%E5%8A%A1">3.1 非auth服务</a></li>
+<li><a href="#32-auth%E6%9C%8D%E5%8A%A1">3.2 auth服务</a>
+<ul>
+<li><a href="#321-auth%E6%96%B9%E5%BC%8F%E5%90%AF%E5%8A%A8%E6%9C%8D%E5%8A%A1">3.2.1 auth方式启动服务</a></li>
+<li><a href="#322-%E5%88%9B%E5%BB%BA%E8%B4%A6%E6%88%B7">3.2.2 创建账户</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#4%E8%BF%9E%E6%8E%A5mongoclient">4.连接MongoClient</a></li>
+<li><a href="#5%E8%BF%9E%E6%8E%A5%E6%95%B0%E6%8D%AE%E5%BA%93">5.连接数据库</a></li>
+<li><a href="#6%E8%8E%B7%E5%8F%96%E6%95%B0%E6%8D%AE%E5%BA%93">6.获取数据库</a></li>
+<li><a href="#7%E5%88%9B%E5%BB%BA%E9%9B%86%E5%90%88%E7%B1%BB%E4%BC%BC%E8%A1%A8">7.创建集合(类似表)</a></li>
+<li><a href="#8%E6%8F%92%E5%85%A5%E6%95%B0%E6%8D%AE">8.插入数据</a></li>
+<li><a href="#9%E5%88%A0%E9%99%A4%E6%95%B0%E6%8D%AE">9.删除数据</a></li>
+<li><a href="#10%E6%9B%B4%E6%96%B0%E6%95%B0%E6%8D%AE">10.更新数据</a></li>
+<li><a href="#11%E6%9F%A5%E8%AF%A2%E6%95%B0%E6%8D%AE">11.查询数据</a></li>
+<li><a href="#12%E8%81%9A%E5%90%88arrgregate">12.聚合arrgregate</a></li>
+<li><a href="#13%E5%B8%B8%E8%A7%81%E6%93%8D%E4%BD%9C%E7%AC%A6">13.常见操作符</a></li>
+<li><a href="#14%E8%B4%A6%E5%8F%B7%E7%AE%A1%E7%90%86">14.账号管理</a></li>
+<li><a href="#15%E7%A4%BA%E4%BE%8B%E4%BB%A3%E7%A0%81">15.示例代码：</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://hensonguo.github.io/post/dart-kuai-su-ru-men/">
+              <h3 class="post-title">
+                dart快速入门
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://hensonguo.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

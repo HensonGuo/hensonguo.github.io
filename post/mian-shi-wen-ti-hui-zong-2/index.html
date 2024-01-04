@@ -1,0 +1,270 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>面试问题汇总2 | Icode</title>
+<link rel="shortcut icon" href="https://hensonguo.github.io/favicon.ico?v=1704354032694">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://hensonguo.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="面试问题汇总2 | Icode - Atom Feed" href="https://hensonguo.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="1. epoll和select/poll的区别
+1.支持一个进程打开大数目的socket描述符(FD)
+select 最不能忍受的是一个进程所打开的FD是有一定限制的，由FD_SETSIZE设置，默认值是2048。对于那些需要支持的上万连接..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://hensonguo.github.io">
+  <img class="avatar" src="https://hensonguo.github.io/images/avatar.png?v=1704354032694" alt="">
+  </a>
+  <h1 class="site-title">
+    Icode
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              面试问题汇总2
+            </h2>
+            <div class="post-info">
+              <span>
+                2022-09-07
+              </span>
+              <span>
+                11 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <h3 id="1-epoll和selectpoll的区别">1. epoll和select/poll的区别</h3>
+<p>1.支持一个进程打开大数目的socket描述符(FD)</p>
+<p>select 最不能忍受的是一个进程所打开的FD是有一定限制的，由FD_SETSIZE设置，默认值是2048。对于那些需要支持的上万连接数目的IM服务器来说显 然太少了。这时候你一是可以选择修改这个宏然后重新编译内核，不过资料也同时指出这样会带来网络效率的下降，二是可以选择多进程的解决方案(传统的 Apache方案)，不过虽然linux上面创建进程的代价比较小，但仍旧是不可忽视的，加上进程间数据同步远比不上线程间同步的高效，所以也不是一种完 美的方案。不过 epoll则没有这个限制，它所支持的FD上限是最大可以打开文件的数目，这个数字一般远大于2048,举个例子,在1GB内存的机器上大约是10万左 右，具体数目可以cat /proc/sys/fs/file-max察看,一般来说这个数目和系统内存关系很大。</p>
+<p>2.IO效率不随FD数目增加而线性下降</p>
+<p>传 统的select/poll另一个致命弱点就是当你拥有一个很大的socket集合，不过由于网络延时，任一时间只有部分的socket是&quot;活跃&quot;的，但 是select/poll每次调用都会线性扫描全部的集合，导致效率呈现线性下降。但是epoll不存在这个问题，它只会对&quot;活跃&quot;的socket进行操 作---这是因为在内核实现中epoll是根据每个fd上面的callback函数实现的。那么，只有&quot;活跃&quot;的socket才会主动的去调用 callback函数，其他idle状态socket则不会，在这点上，epoll实现了一个&quot;伪&quot;AIO，因为这时候推动力在os内核。在一些 benchmark中，如果所有的socket基本上都是活跃的---比如一个高速LAN环境，epoll并不比select/poll有什么效率，相 反，如果过多使用epoll_ctl,效率相比还有稍微的下降。但是一旦使用idle connections模拟WAN环境,epoll的效率就远在select/poll之上了。</p>
+<p>3.使用mmap加速内核与用户空间的消息传递。</p>
+<p>这 点实际上涉及到epoll的具体实现了。无论是select,poll还是epoll都需要内核把FD消息通知给用户空间，如何避免不必要的内存拷贝就很 重要，在这点上，epoll是通过内核于用户空间mmap同一块内存实现的。而如果你想我一样从2.5内核就关注epoll的话，一定不会忘记手工 mmap这一步的。</p>
+<p>4.内核微调</p>
+<p>这一点其实不算epoll的优点了，而是整个linux平台的优点。也许 你可以怀疑linux平台，但是你无法回避linux平台赋予你微调内核的能力。比如，内核TCP/IP协议栈使用内存池管理sk_buff结构，那么可 以在运行时期动态调整这个内存pool(skb_head_pool)的大小--- 通过echo XXXX&gt;/proc/sys/net/core/hot_list_length完成。再比如listen函数的第2个参数(TCP完成3次握手 的数据包队列长度)，也可以根据你平台内存大小动态调整。更甚至在一个数据包面数目巨大但同时每个数据包本身大小却很小的特殊系统上尝试最新的NAPI网 卡驱动架构。</p>
+<h3 id="2可重入函数线程安全">2.可重入函数，线程安全</h3>
+<p>线程安全：一个函数被称为线程安全的（thread-safe），当且仅当被多个并发进程反复调用时，它会一直产生正确的结果。如果一个函数不是线程安全的，我们就说它是线程不安全的（thread-unsafe）。我们定义四类（有相交的）线程不安全函数。</p>
+<p>可重入函数：可重入函数是线程安全函数的一种，其特点在于它们被多个线程调用时，不会引用任何共享数据。</p>
+<h3 id="3内存管理">3.内存管理</h3>
+<p>CPU三类总线<br>
+地址总线的宽度决定了CPU的寻址能力<br>
+数据总线的宽度决定了CPU与其他器件进行数据传送时的一次数据传送量<br>
+控制总线的宽度决定了CPU对系统中其他器件的控制能力<br>
+将各类存储器看作一个逻辑存储器<br>
+<img src="https://hensonguo.github.io/post-images/1662554388643.jpg" alt="" loading="lazy"></p>
+<p>对通用计算机而言，存储层次至少应该具有三个层级：最高层为CPU寄存器，中间为主存，最底层是辅存。在较高档的计算机中们还可以根据具体的功能细分为寄存器、高速缓存、主存储器、磁盘缓存、固定磁盘、可移动存储介质等6层。<br>
+<img src="https://hensonguo.github.io/post-images/1662554430029.jpg" alt="" loading="lazy"><br>
+内存分配策略包括连续分配、分页、分段、段页式。</p>
+<h3 id="4-可变参数函数的定义及实现">4. 可变参数函数的定义及实现</h3>
+<p>1)首先在函数里定义一个va_list型的变量,这里是arg_ptr,这个变量是指向参数的指针.</p>
+<p>2)然后用va_start宏初始化变量arg_ptr,这个宏的第二个参数是第一个可变参数的前一个参数,是一个固定的参数.</p>
+<p>3)然后用va_arg返回可变的参数,并赋值给整数j. va_arg的第二个参数是你要返回的参数的类型,这里是int型.</p>
+<p>4)最后用va_end宏结束可变参数的获取.然后你就可以在函数里使用第二个参数了.如果函数有多个可变参数的,依次调用va_arg获取各个参数.</p>
+<p>printf 函数的实现</p>
+<p>C中的定义：</p>
+<pre><code>int printf(
+   const char *format [,
+   argument]...
+);
+</code></pre>
+<pre><code>int printf(char *fmt, ...)
+{
+     int n;
+     va_list args;
+     va_start(args, fmt);
+     n = vsprintf(sprint_buf, fmt, args);
+     va_end(args);
+     return n;
+//va_start(arg,format),初始化参数指针arg，将函数参数format右边第一个参数地址赋值给arg
+//format必须是一个参数的指针，所以，此种类型函数至少要有一个普通的参数, 
+//从而提供给va_start ,这样va_start才能找到可变参数在栈上的位置。 
+//va_arg(arg,char),获得arg指向参数的值，同时使arg指向下一个参数,char用来指名当前参数型
+//va_end 在有些实现中可能会把arg改成无效值，这里，是把arg指针指向了 NULL,避免出现野指针 
+}
+</code></pre>
+<h3 id="5malloc一次性最大能申请多大内存空间失败了怎么办">5.malloc一次性最大能申请多大内存空间？失败了怎么办</h3>
+<p>malloc是libc的一个函数，并不是系统调用。因此并不是内存空间的终极管理者。最大能够申请多大空间，并不是malloc一个人能说了算的。</p>
+<p>malloc是从系统获取内存分页，然后将这些分页组织为不同大小的“块”。当用户程序申请内存的时候，如果大小没有超过“块”的大小，则malloc在内部匹配尺寸最为接近的，不小于申请的尺寸的块，记录分配信息之后，返回地址。这样做的目的是加快分配的速度，减少系统调用。</p>
+<p>如果申请的尺寸很大，则malloc会直接向系统申请多个分页，将其map到用户程序的虚拟地址空间当中的一个连续的区间（这个同样是系统调用），然后返回地址。</p>
+<p>分页的管理，是由操作系统完成的。现代操作系统大多支持虚拟内存，也就是不仅仅使用RAM，还使用磁盘上的交换文件作为内存空间。操作系统将这些空间按照一定大小切分成页，在一个被称为是页表的结构当中进行维护。操作系统级别的内存管理，都是以页为单位的。页的实际存储位置由操作系统管理。当多个应用程序同时执行时，操作系统会将不活动的页从RAM当中移动到磁盘文件当中。当应用程序重新尝试访问该页的时候，再从磁盘文件读入到RAM当中，这个称为页交换。</p>
+<p>所以，在当代操作系统当中，malloc可以分配的空间的最大大小，首先当然受机器的bit数，也就是可以直接寻址的空间大小制约；在这个基础上进一步受操作系统的策略制约；然后受实际可用资源量的制约；再者还受malloc本身算法的制约；最后还受应用程序申请方式和次数的制约。</p>
+<p>失败怎么办？<br>
+一般C语音代码，再malloc之后，都要立刻判断指针是否为NULL，如果未NULL，就是申请失败了<br>
+1.内存不足，用free命令查看还剩多少内存，是否存在内存泄漏<br>
+2.内存越界，检查下是否有内存越界</p>
+<h3 id="6-信号量和互斥量">6、信号量和互斥量</h3>
+<p>信号量：用于多线程同步，一个信号完成了一个动作就通过信号量告诉别的线程，别的线程再进行某些动作<br>
+互斥量：用于多线程互斥，常用于多线程访问同一个资源，其中一线程占用时，其他线程无法访问，等待结束后其他线程才可以访问</p>
+<p>信号量本质上是一个非负的证书计数器，只有当信号量的值大于0时，才能使用公共资源，否则说明没有可用资源。信号量时可以公有的，也可以是私有的，公有信号量在进程内存中分配，并进行初始化。公有信号量可能供多个进程使用，具体取决于信号的分配和初始化的方式。私有信号量只能被本进程中的线程使用。</p>
+<p>同步：同步是在互斥的基础上通过其他的机制实现对资源的有序访问。</p>
+<h3 id="7-strcpy和memcpy的区别">7、strcpy和memcpy的区别</h3>
+<p>函数返回一个指向dest的指针。<br>
+1.source和destin所指内存区域不能重叠，函数返回指向destin的指针。 　　<br>
+2.与strcpy相比，memcpy并不是遇到'\0'就结束，而是一定会拷贝完n个字节。 　　<br>
+3.如果目标数组destin本身已有数据，执行memcpy（）后，将覆盖原有数据（最多覆盖n）。如果要追加数据，则每次执行memcpy后，要将目标数组地址增加到你要追加数据的地址。</p>
+<h3 id="8-僵尸进程">8、僵尸进程</h3>
+<p>子进程比父进程先结束，而父进程又没有回收子进程，释放子进程占用的资源，此时子进程将成为一个僵尸进程。如果父进程先退出 ，子进程被init接管，子进程退出后init会回收其占用的相关资源。</p>
+<p><font color=red>如何避免僵尸进程</font><br>
+（1）父进程通过wait和waitpid等函数等待子进程结束，这会导致父进程挂起。<br>
+（2）如果父进程很忙，那么可以用signal函数为SIGCHLD安装handler，因为子进程结束后， 父进程会收到该信号，可以在handler中调用wait回收。<br>
+（3）如果父进程不关心子进程什么时候结束，那么可以用signal（SIGCHLD,SIG_IGN） 通知内核，自己对子进程的结束不感兴趣，那么子进程结束后，内核会回收， 并不再给父进程发送信号。<br>
+（4）还有一些技巧，就是fork两次，父进程fork一个子进程，然后继续工作，子进程fork一个孙进程后退出，那么孙进程被init接管，孙进程结束后，init会回收。不过子进程的回收 还要自己做。</p>
+<h3 id="9-const-char-pchar-constp和char-const-p的区别">9、const char <em>p，char const</em>p和char* const p的区别</h3>
+<pre><code>const char *p;//char *p是一个指针，指向char类型的，被const修饰，表示指向的内容是无法改变的
+              //但是，p可以改变
+ 
+char const *p;//由于没有const *的指针类型，所以const修饰char *p，和const char *p的效果一样
+ 
+char* const p;//const直接修饰p，表示p无法修改，但是指针指向的内容可以修改
+
+</code></pre>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li>
+<ul>
+<li><a href="#1-epoll%E5%92%8Cselectpoll%E7%9A%84%E5%8C%BA%E5%88%AB">1. epoll和select/poll的区别</a></li>
+<li><a href="#2%E5%8F%AF%E9%87%8D%E5%85%A5%E5%87%BD%E6%95%B0%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8">2.可重入函数，线程安全</a></li>
+<li><a href="#3%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86">3.内存管理</a></li>
+<li><a href="#4-%E5%8F%AF%E5%8F%98%E5%8F%82%E6%95%B0%E5%87%BD%E6%95%B0%E7%9A%84%E5%AE%9A%E4%B9%89%E5%8F%8A%E5%AE%9E%E7%8E%B0">4. 可变参数函数的定义及实现</a></li>
+<li><a href="#5malloc%E4%B8%80%E6%AC%A1%E6%80%A7%E6%9C%80%E5%A4%A7%E8%83%BD%E7%94%B3%E8%AF%B7%E5%A4%9A%E5%A4%A7%E5%86%85%E5%AD%98%E7%A9%BA%E9%97%B4%E5%A4%B1%E8%B4%A5%E4%BA%86%E6%80%8E%E4%B9%88%E5%8A%9E">5.malloc一次性最大能申请多大内存空间？失败了怎么办</a></li>
+<li><a href="#6-%E4%BF%A1%E5%8F%B7%E9%87%8F%E5%92%8C%E4%BA%92%E6%96%A5%E9%87%8F">6、信号量和互斥量</a></li>
+<li><a href="#7-strcpy%E5%92%8Cmemcpy%E7%9A%84%E5%8C%BA%E5%88%AB">7、strcpy和memcpy的区别</a></li>
+<li><a href="#8-%E5%83%B5%E5%B0%B8%E8%BF%9B%E7%A8%8B">8、僵尸进程</a></li>
+<li><a href="#9-const-char-pchar-constp%E5%92%8Cchar-const-p%E7%9A%84%E5%8C%BA%E5%88%AB">9、const char <em>p，char const</em>p和char* const p的区别</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://hensonguo.github.io/post/xian-cheng-tong-bu-yu-si-suo/">
+              <h3 class="post-title">
+                线程同步与死锁
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://hensonguo.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

@@ -1,0 +1,472 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>windows核心编程-堆栈 | Icode</title>
+<link rel="shortcut icon" href="https://hensonguo.github.io/favicon.ico?v=1704354032694">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://hensonguo.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="windows核心编程-堆栈 | Icode - Atom Feed" href="https://hensonguo.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="\qquad对内存进行操作的第三个机制是使用堆栈。堆栈可以用来分配许多较小的数据块。例如，若要对链接表和链接树进行管理，最好的方法是使用堆栈。
+\qquad优点：可以不考虑分配粒度和页面边界之类的问题，集中精力处理手头的任务。
+\qquad..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://hensonguo.github.io">
+  <img class="avatar" src="https://hensonguo.github.io/images/avatar.png?v=1704354032694" alt="">
+  </a>
+  <h1 class="site-title">
+    Icode
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              windows核心编程-堆栈
+            </h2>
+            <div class="post-info">
+              <span>
+                2023-07-05
+              </span>
+              <span>
+                16 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span>对内存进行操作的第三个机制是使用堆栈。<strong>堆栈可以用来分配许多较小的数据块。例如，若要对链接表和链接树进行管理，最好的方法是使用堆栈。</strong><br>
+<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span><strong>优点：可以不考虑分配粒度和页面边界之类的问题</strong>，集中精力处理手头的任务。<br>
+<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span><strong>缺点：分配和释放内存块的速度比其他机制要慢，并且无法直接控制物理存储器的提交和回收。</strong></p>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span>从内部来讲，堆栈是保留的地址空间的一个区域。开始时，保留区域中的大多数页面没有被提交物理存储器。当从堆栈中进行越来越多的内存分配时，堆栈管理器将把更多的物理存储器提交给堆栈。物理存储器总是从系统的页文件中分配的，当释放堆栈中的内存块时，堆栈管理器将收回这些物理存储器。</p>
+<br/>
+<h2 id="进程的默认堆栈">进程的默认堆栈</h2>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span>当进程初始化时，系统在进程的地址空间中创建一个堆栈。该堆栈称为进程的默认堆栈。按照默认设置，该堆栈的地址空间区域的大小是 1 MB。但是，系统可以扩大进程的默认堆栈，使它大于其默认值。</p>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span>许多Windows函数要求进程使用其默认堆栈。例如， Windows 2000的核心函数均使用Unicode字符和字符串执行它们的全部操作。如果调用 Windows函数的ANSI版本，那么该ANSI版本必须将ANSI字符串转换成Unicode字符串，然后调用同一个函数的 Unicode版本。为了进行字符串的转换，ANSI函数必须分配一个内存块，以便放置 Unicode版本的字符串。该内存块是从你的进程的默认堆栈中分配的。 <strong>Windows的其他许多函数需要使用一些临时内存块，这些内存块是从进程的默认堆栈中分配的。</strong></p>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span>由于进程的默认堆栈可供许多 Windows函数使用，你的应用程序有许多线程同时调用各种Windows函数，因此对**默认堆栈的访问是顺序进行的。换句话说，系统必须保证在规定的时间内，每次只有一个线程能够分配和释放默认堆栈中的内存块。**如果两个线程试图同时分配默认堆栈中的内存块，那么只有个线程能够分配内存块，另一个线程必须等待第一个线程的内存块分配之后，才能分配它的内存块。一旦第一个线程的内存块分配完，堆栈函数将允许第二个线程分配内存块。这种顺序访问方法对速度有一定的影响。如果你的应用程序只有一个线程，并且你想要以最快的速度访问堆栈，那么应该创建你自己的独立的堆栈，不要使用进程的默认堆栈。不幸的是，你无法告诉 Windows函数不要使用默认堆栈，因此，它们对堆栈的访问总是顺序进行的。</p>
+<ul>
+<li>单个进程可以同时拥有若干个堆栈。这些堆栈可以在进程的寿命期中创建和撤消。</li>
+<li>但是，默认堆栈是在进程开始执行之前创建的，并且在进程终止运行时自动被撤消。<strong>不能撤消进程的默认堆栈。</strong></li>
+<li>每个堆栈均用它自己的堆栈句柄来标识，用于分配和释放堆栈中的内存块的所有堆栈函数都需要这个堆栈句柄作为其参数。<br>
+可以通过调用GetProcessHeap函数获取你的进程默认堆栈的句柄：</li>
+</ul>
+<pre><code>HANDLE GetProcessHeap();
+</code></pre>
+<br/>
+<h2 id="辅助堆栈">辅助堆栈</h2>
+<p>除了进程的默认堆栈外，可以在进程的地址空间中创建一些辅助堆栈。由于下列原因，你可能想要在自己的应用程序中创建一些辅助堆栈：<br>
+• 保护组件。<br>
+• 更加有效地进行内存管理。<br>
+• 进行本地访问。<br>
+• 减少线程同步的开销。<br>
+• 迅速释放。</p>
+<br>
+<h3 id="1创建辅助堆栈">1）创建辅助堆栈</h3>
+<pre><code>HANDLE HeapCreate(
+    DWORD fdwOptions,
+    SIZE_T dwInitia1Size.
+    SIZE_T dwMaximumSize
+); .
+</code></pre>
+<p>fdwOptions：修改如何在堆栈上执行各种操作，你可以设定 0、HEAP_NO_SERIALIZE、HEAP_GENERATE_EXCEPTIONS 或者是这两个标志的组合。</p>
+<p>dwInitialSize：用于指明最初提交给堆栈的字节数。如果必要的话，HeapCreate 函数会将这个值转整为CPU页面大小的倍数。</p>
+<p>dwMaximumSize：用于指明堆栈能够扩展到的最大值（即系统能够为堆栈保留的地址空间的最大数量）。</p>
+<p>按照默认设置，堆栈将顺序访问它自己，这样，多个线程就能够分配和释放堆栈中的内存 块而不至于破坏堆栈。</p>
+<p>当试图从堆栈分配一个内存块时， HeapAlloc函数（下面将要介绍）必须执行下列操作：</p>
+<ol>
+<li>遍历分配的和释放的内存块的链接表。</li>
+<li>寻找一个空闲内存块的地址。</li>
+<li>通过将空闲内存块标记为“已分配”分配新内存块。</li>
+<li>将新内存块添加给内存块链接表。</li>
+</ol>
+<br>
+<h3 id="2简述标志作用">2）简述标志作用</h3>
+<p>HEAP_NO_SERIALIZE标志<br>
+应该避免使用 HEAP_NO_SERIALIZE标志：</p>
+<p>假定有两个线程试图同时从同一个堆栈中分配内存块。线程 1执行上面的第一步和第二步，获得了空闲内存块的地址。但是，在该线程可以执行第三步之前，它的运行被线程 2抢占，线程 2得到一个机会来执行上面的第一步和第二步。由于线程 1尚未执行第三步，因此线程2发现了同一个空闲内存块的地址。</p>
+<p>由于这两个线程都发现了堆栈中它们认为是空闲的内存块，因此线程 1更新了链接表，给新内存块做上了“已分配”的标记。然后线程 2也更新了链接表，给同一个内存块做上了“已分配”标记。到现在为止，两个线程都没有发现问题，但是两个线程得到的是完全相同的内存块的地址。</p>
+<p>总结就是，**由于线程之间的抢占机制，可能导致不同的线程申请了同一块内存块，引发出一些问题。**可能出现的问题是：</p>
+<pre><code>内存块的链接表已经被破坏。在试图分配或释放内存块之前，这个问题不会被发现。
+两个线程共享同一个内存块。线程1和线程2会将信息写入同一个内存块。当线程1查看该
+内存块的内容时，它将无法识别线程2提供的数据。
+一个线程可能继续使用该内存块并且将它释放，导致另一个线程改写未分配的内存。这
+将破坏该堆栈。
+</code></pre>
+<p>解决以上问题的方法是：</p>
+<pre><code>单个线程独占对堆栈和它的链接表的访问权，直到该线程执行了对堆栈的全部必要的操作。
+不使用 HEAP_NO_SERIALIZE标志，就能够达到这个目的。
+</code></pre>
+<p>安全地使用 HEAP_NO_SERIALIZE标志的条件：</p>
+<pre><code>你的进程只使用一个线程。
+你的进程使用多个线程，但是只有单个线程访问该堆栈。
+你的进程使用多个线程，但是它设法使用其他形式的互斥机制，如关键代码段、互斥对
+象和信标（第8、9章中介绍），以便设法自己访问堆栈。
+</code></pre>
+<p>HEAP_GENERATE_EXCEPTIONS 标志。<br>
+会在分配或重新分配堆栈中的内存块的尝试失败时，导致系统引发一个异常条件。<br>
+所谓异常条件，只不过是系统使用的另一种方法，以便将已经出现错误的情况通知你的应用程序。有时在设计应用程序时让它查看异常条件比查看返回值要更加容易些。</p>
+<br/>
+<h3 id="3从堆栈中分配内存块">3）从堆栈中分配内存块</h3>
+<pre><code>PVOID HeapAlloc(
+    HANDLE hHeap,
+    DWORD fdwF1ags,
+    SIZE_T dwBytes 
+);
+</code></pre>
+<p>hHeap：用于标识分配的内存块来自的堆栈的句柄。<br>
+dwByte：参数用于设定从堆栈中分配的内存块的字节数。<br>
+fdwFlags：用于设定影响分配的各个标志。目前支持的标志只有3个，即 HEAP_ZERO_MEMORY、HEAP_GENERATE_EXCEPTIONS和HEAP _NO_SERIALIZE。</p>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span> 1.HEAP_ZERO_MEMORY标志的作用应该是非常清楚的。该标志使得 HeapAlloc在返回前用 0来填写内存块的内容。</p>
+<p><span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span> 2.HEAP_GENERATE_EXCEPTIONS标志 用于在堆栈中没有足够的内存来满足需求时使 HeapAlloc函数引发一个软件异常条件。 当用HeapCreate函数创建堆栈时，可以设定HEAP_GENERATE_EXCEPTIONS标志，它告诉堆栈，当不能分配内存块时，就应该引发一个异常条件。<br>
+<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span> 如果在调用HeapCreate函数时设定了这个标志，那么当调用HeapAlloc函数时，就不需要设定该标志。另外，你可能想要不使用该标志来创建堆栈。在这种情况下，为HeapAlloc函数设定该标志只会影响对HeapAlloc函数的一次调用，并不是每次调用都会受到影响。<br>
+<span class="katex"><span class="katex-mathml"><math><semantics><mrow><mspace width="2em"/></mrow><annotation encoding="application/x-tex">\qquad</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0em;vertical-align:0em;"></span><span class="mspace" style="margin-right:2em;"></span></span></span></span> 如果HeapAlloc运行失败，引发一个异常条件，那么这个异常条件将是表 18-1中的两个异常条件之一。<br>
+<img src="https://hensonguo.github.io/post-images/1688562243249.jpg" alt="" loading="lazy"></p>
+<p>如果内存块已经成功地分配， HeapAlloc返回内存块的地址。如果内存不能分配并且没有设定HEAP_GENERATE_EXCEPTIONS标志，那么HeapAlloc函数返回NULL。</p>
+<br>
+<h3 id="4改变内存块的大小">4）改变内存块的大小</h3>
+<p>场景：<br>
+• 有些应用程序开始时分配的内存块比较大，然后，当所有数据放入内存块后，再缩小内存块的大小。<br>
+• 有些应用程序开始时分配的内存块比较小，后来需要将更多的数据拷贝到内存块中去时，再设法扩大它的大小。<br>
+如果要改变内存块的大小，可以调用HeapReAlloc函数：</p>
+<pre><code>PVOID HeapReAlloc(
+    HANDLE hHeap,
+    DWORD fdwF1ags,
+    PVOID pvMem,
+    SIZE_T dwBytes 
+);
+</code></pre>
+<p>hHeap参数：用于指明包含你要改变其大小的内存块的堆栈。<br>
+fdwFlags参数：用于设定改变内存块大小时HeapReAlloc函数应该使用的标志。可以使用的标志只有下面4个，即</p>
+<pre><code>HEAP_GENERATE_EXC EPTIONS
+HEAP_NO_SERIALIZE
+HEAP_ZERO_MEMORY
+HEAP_REALLOC_IN_PLACE_ONLY。
+</code></pre>
+<p>前面两个标志在用于HeapAlloc时，其作用相同。HEAP_ZERO_MEMORY标志只有在你扩大内存块时才使用。在这种情况下，内存块中增加的字节将被置 0。如果内存块已经被缩小，那么该标志不起作用。HEAP_REALLOC_IN_PLACE_ONLY标志告诉HeapReAlloc函数，它不能移动堆栈中的内存块。如果内存块在增大，HeapReAlloc函数可能试图移动内存块。如果HeapReAlloc能够扩大内存块而不移动它，那么它将会这样做并且返回内存块的原始地址。另外，如果 HeapReAlloc必须移动内存块的内容，则返回新的较大内存块的地址。如果内存块被缩小， HeapReAlloc将返回内存块的原始地址。如果内存块是链接表或二进制树的组成部分，那么可以设定HEAP_REALLOC_IN_PLACE_ONLY标志。在这种情况下，链接表或二进制树中的其他节点可能拥有该节点的指针，改变堆栈中的节点位置会破坏链接表的完整性。</p>
+<p>pvMem：用于设定你要改变其大小的内存块的地址<br>
+dwBytes：内存块的新的大小（以字节为计量单位）</p>
+<br>
+<h3 id="5了解内存块的大小">5）了解内存块的大小</h3>
+<p>当内存块分配后，可以调用HeapSize函数来检索内存块的实际大小：</p>
+<pre><code>SIZE_T Heapsize(
+    HANDLE hHeap,
+    DWORD fdwFlags,
+    LPCV01D pvMem
+);
+</code></pre>
+<p>hHeap：用于标识堆栈，参数pvMem用于指明内存块的地址。参数 fdwFlags既可以是0，<br>
+也可以是HEAP_NO_SERIALIZE。</p>
+<br>
+<h3 id="6释放内存块">6）释放内存块</h3>
+<p>当不再需要内存块时，可以调用HeapFree函数将它释放：</p>
+<pre><code>B00L HeapFree(
+   HANDLE hHeap,
+   DWORD fdwF1ags,
+   PVOID pvMem
+);
+</code></pre>
+<p>HeapFree函数用于释放内存块，如果它运行成功，便返回TRUE。参数fdwF lags既可以是0，也可以是HEAP_NO_SERIALIZE。调用这个函数可使堆栈管理器收回某些物理存储器，但是这没有保证。</p>
+<br>
+<h3 id="6撤消堆栈">6）撤消堆栈</h3>
+<p>如果应用程序不再需要它创建的堆栈，可以通过调用 HeapDestroy 函数将它撤消：</p>
+<pre><code>BO0L HeapDestroy (HANDLE hHeap);
+</code></pre>
+<p>调用HeapDestroy函数可以释放堆栈中包含的所有内存块，也可以将堆栈占用的物理存储器和保留的地址空间区域重新返回给系统。如果该函数运行成功，HeapDestroy返回TRUE。如果在进程终止运行之前没有显式撤消堆栈，那么系统将为你将它撤消。但是，只有当进程终止运行时，堆栈才能被撤消。如果线程创建了一个堆栈，当线程终止运行时，该堆栈将不会被撤消。在进程完全终止运行之前，系统不允许进程的默认堆栈被撤消。如果将进程的默认堆栈的句柄传递给HeapDestroy 函数，系统将忽略对该函数的调用。</p>
+<br>
+<h3 id="6用c程序来使用堆栈">6）用C++程序来使用堆栈</h3>
+<pre><code>cSomeC1ass* pSomeC1ass = new CSomeC1ass;
+delete pSomeC1ass;
+</code></pre>
+<p>重载new和delete操作符，就能够很容易地利用堆栈函数。<br>
+CSomeClass类定义为如下的形式：</p>
+<pre><code class="language-c++">c1ass CSomeClass {
+private:
+   static HANDLE s_hHeap;
+   static UINT s_uNumAllocsInHeap;
+   //other private data and member functions
+pub1ic:
+   void* operator new(size_t size);
+   void  operator de1ete(void* p);
+   //other public data and . member functions
+}
+
+HANDLE CSomeClass::s_.hHeap = NULL;
+UINT CSomeC1ass::s__uNumA11ocs InHeap = 0;
+void* CSomeClass::operator new ( size_t size) 
+{
+   if (s_hHeap == NULL) 
+   {
+   	//Heap does not exist; create it.
+   	s_hHeap = HeapCreate( HEAP_NO_SERIALIZE，0，0);
+   	if( s_hHeap == NULL)
+   		return (NULL);
+   }
+   
+   //The heap exists for CSomeC1ass objects.
+   void* p = HeapA11oc( shHeap. 0，size);
+   if (p != NULL)
+   {
+   	//Memory was a1located successfu1ly; incrementll the count of 	CSomeC1ass objects in the heap.
+   	s_uNumA11ocsInHeap++;
+   }
+   
+   //Return the address of the a1located cSomeC1ass object.
+   return(p);
+}
+
+
+void CSomeClass::operator delete (void* p)
+{
+   if ( HeapFree( s_hHeap. 0. p)) 
+   {
+   	//Object was de1eted successfu11y.
+   	s_uNumA11ocsInHeap--;
+   }
+   
+   if (s_uNumA11ocsInHeap ==0 )
+   {
+   	//If there are no more objects in the heap.ll destroy the heap.
+   	if (HeapDestroy ( s_hHeap)) 
+   	{
+   		//Set the heap handle to NULL so that the new operatorll wi11 know to create a new heap if a new csomeC1assll object is created.
+   		s_hHeap = NULL;
+   	}
+   }
+}
+</code></pre>
+<br>
+<h2 id="其他堆栈函数">其他堆栈函数</h2>
+<h3 id="1-获取现有堆栈的句柄">1） 获取现有堆栈的句柄</h3>
+<p>由于进程的地址空间中可以存在多个堆栈，因此可以使用 GetProcessHeaps函数来获取现有堆栈的句柄：</p>
+<pre><code>DWORD GetProcessHeaps(
+    DWORD dwNumHeaps,
+    PHANDLE pHeaps 
+);
+</code></pre>
+<p>若要调用GetProcessHeaps函数，必须首先分配一个HANDLE数组，然后调用下面的函数：</p>
+<pre><code class="language-c++">HANDLE hHeaps[25];
+DWORD dwHeaps = GetProcessHeaps(25,hHeaps);
+if (dwHeaps &gt; 25)
+{
+	//More heaps are in this process than we expected.
+}e1se {
+	//hHeaps[0] through hHeap[dwHeaps - 1]
+	//identify the existing heaps.
+}
+</code></pre>
+<br>
+<h3 id="2-验证堆栈的完整性">2） 验证堆栈的完整性</h3>
+<p>HeapValidate函数用于验证堆栈的完整性</p>
+<pre><code>B00L HeapValidate(
+   HANDLE hHeap,
+   DWORD fdwF1ags,
+   LPCVOID pvMem
+);
+</code></pre>
+<br>
+<h3 id="3-合并地址中的空闲内存块">3） 合并地址中的空闲内存块</h3>
+<p>合并地址中的空闲内存块并收回不包含已经分配的地址内存块的存储器页面 函数：</p>
+<pre><code>UINT HeapCompact(
+    HANDLE hHeap,
+    DWORD fdwF1ags 
+);
+</code></pre>
+<p>通常情况下，可以为参数fdwF1ags传递0，但是也可以传递HEAP_NO_SERIALIZE。</p>
+<br>
+<h3 id="4-用于堆栈线程同步">4） 用于堆栈线程同步</h3>
+<pre><code>BOOL HeapLock(HANDLE hHeap);
+B00L HeapUn1ock( HANDLE hHeap);
+</code></pre>
+<p>如果其他任何线程调用堆栈函数（设定相同的堆栈句柄），系统将暂停调用线程的运行，并且在堆栈被HeapUn1ock函数解锁之前不允许它醒来。</p>
+<br>
+<h3 id="5-遍历堆栈的内容">5） 遍历堆栈的内容</h3>
+<pre><code>B0OL Heapwalk(
+    HANDLE hHeap,
+    PPROCESS_HEAP_ENTRY pHeapEntry 
+);
+</code></pre>
+<p>该函数只用于调试目的。它使你能够遍历堆栈的内容。可以多次调用该函数。<br>
+每次调用该函数时将传递必须分配和初始化的PROCESS_HEAP_ENTRY结构的地址：</p>
+<pre><code class="language-c++">typedef struct _PROCESS_HEAP_ENTRY
+{
+	PVOID lpData;
+	DWORD cbData;
+	BYTE cbOverhead;
+	BYTE iRegionIndex;
+	WORD wF1ags;
+	union{
+		struct {
+			HANDLE hMem;
+			DWORD dwReserved[ 3 ];
+		}B1ock;
+		
+		struct {
+				DMORD dwCommittedsize;
+				DwORD dwUnCommittedSize;
+				LPVOID lpFirstB1ock;
+				LPVOID 1pLastB1ock;
+		}Resion;	
+	};
+   }
+}PROCESS_HEAP_ENTRY，*LPPROCESS_HEAP_ENTRY，*PPROCESS_HEAP_ENTRY;
+</code></pre>
+<p>当开始枚举堆栈中的内存块时，必须将成员 lpData设置为NULL。这将告诉Heapwalk对该结构中的成员进行初始化。当成功地调用 Heapwalk后，可以查看该结构的成员。<br>
+若要进入堆栈的下一个内存块，只需要再次调用Heapwalk，传递相同的堆栈句柄和在上次调用该函数时传递的PROCESS_HEAP_ENTRY结构的地址。当Heapwalk返回FALSE时，堆栈中就没有更多的内存块了。关于该结构中的成员的说明，请参见 Platform SDK文档。<br>
+在循环调用Heapwalk的时候，必须使用HeapLock和HeapLock函数，这样，当遍历堆栈时，其他线程将无法分配和释放堆栈中的内存块。</p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#%E8%BF%9B%E7%A8%8B%E7%9A%84%E9%BB%98%E8%AE%A4%E5%A0%86%E6%A0%88">进程的默认堆栈</a></li>
+<li><a href="#%E8%BE%85%E5%8A%A9%E5%A0%86%E6%A0%88">辅助堆栈</a>
+<ul>
+<li><a href="#1%E5%88%9B%E5%BB%BA%E8%BE%85%E5%8A%A9%E5%A0%86%E6%A0%88">1）创建辅助堆栈</a></li>
+<li><a href="#2%E7%AE%80%E8%BF%B0%E6%A0%87%E5%BF%97%E4%BD%9C%E7%94%A8">2）简述标志作用</a></li>
+<li><a href="#3%E4%BB%8E%E5%A0%86%E6%A0%88%E4%B8%AD%E5%88%86%E9%85%8D%E5%86%85%E5%AD%98%E5%9D%97">3）从堆栈中分配内存块</a></li>
+<li><a href="#4%E6%94%B9%E5%8F%98%E5%86%85%E5%AD%98%E5%9D%97%E7%9A%84%E5%A4%A7%E5%B0%8F">4）改变内存块的大小</a></li>
+<li><a href="#5%E4%BA%86%E8%A7%A3%E5%86%85%E5%AD%98%E5%9D%97%E7%9A%84%E5%A4%A7%E5%B0%8F">5）了解内存块的大小</a></li>
+<li><a href="#6%E9%87%8A%E6%94%BE%E5%86%85%E5%AD%98%E5%9D%97">6）释放内存块</a></li>
+<li><a href="#6%E6%92%A4%E6%B6%88%E5%A0%86%E6%A0%88">6）撤消堆栈</a></li>
+<li><a href="#6%E7%94%A8c%E7%A8%8B%E5%BA%8F%E6%9D%A5%E4%BD%BF%E7%94%A8%E5%A0%86%E6%A0%88">6）用C++程序来使用堆栈</a></li>
+</ul>
+</li>
+<li><a href="#%E5%85%B6%E4%BB%96%E5%A0%86%E6%A0%88%E5%87%BD%E6%95%B0">其他堆栈函数</a>
+<ul>
+<li><a href="#1-%E8%8E%B7%E5%8F%96%E7%8E%B0%E6%9C%89%E5%A0%86%E6%A0%88%E7%9A%84%E5%8F%A5%E6%9F%84">1） 获取现有堆栈的句柄</a></li>
+<li><a href="#2-%E9%AA%8C%E8%AF%81%E5%A0%86%E6%A0%88%E7%9A%84%E5%AE%8C%E6%95%B4%E6%80%A7">2） 验证堆栈的完整性</a></li>
+<li><a href="#3-%E5%90%88%E5%B9%B6%E5%9C%B0%E5%9D%80%E4%B8%AD%E7%9A%84%E7%A9%BA%E9%97%B2%E5%86%85%E5%AD%98%E5%9D%97">3） 合并地址中的空闲内存块</a></li>
+<li><a href="#4-%E7%94%A8%E4%BA%8E%E5%A0%86%E6%A0%88%E7%BA%BF%E7%A8%8B%E5%90%8C%E6%AD%A5">4） 用于堆栈线程同步</a></li>
+<li><a href="#5-%E9%81%8D%E5%8E%86%E5%A0%86%E6%A0%88%E7%9A%84%E5%86%85%E5%AE%B9">5） 遍历堆栈的内容</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://hensonguo.github.io/post/windows-he-xin-bian-cheng-nei-cun-ying-she-wen-jian/">
+              <h3 class="post-title">
+                windows核心编程-内存映射文件
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://hensonguo.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

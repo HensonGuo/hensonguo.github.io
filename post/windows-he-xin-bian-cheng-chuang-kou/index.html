@@ -1,0 +1,618 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>windows核心编程-窗口 | Icode</title>
+<link rel="shortcut icon" href="https://hensonguo.github.io/favicon.ico?v=1704354032694">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://hensonguo.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="windows核心编程-窗口 | Icode - Atom Feed" href="https://hensonguo.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="窗口消息
+对但是要注意的是 窗口 和 挂钩(hook) 这两种用户对象，它们分别由建立窗口和安装挂钩的线程所拥有。如果一个线程建立一个窗口或安装一个挂钩，然后线程结束，操作系统会自动删除窗口或卸载挂钩。这种线程拥有关系的概念对窗口有重要的意..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://hensonguo.github.io">
+  <img class="avatar" src="https://hensonguo.github.io/images/avatar.png?v=1704354032694" alt="">
+  </a>
+  <h1 class="site-title">
+    Icode
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              windows核心编程-窗口
+            </h2>
+            <div class="post-info">
+              <span>
+                2023-09-21
+              </span>
+              <span>
+                29 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <h2 id="窗口消息">窗口消息</h2>
+<p>对但是要注意的是 窗口 和 挂钩(hook) 这两种用户对象，它们分别由建立窗口和安装挂钩的线程所拥有。如果一个线程建立一个窗口或安装一个挂钩，然后线程结束，操作系统会自动删除窗口或卸载挂钩。这种线程拥有关系的概念对窗口有重要的意义：<strong>建立窗口的线程必须是为窗口处理所有消息的线程。</strong></p>
+<p>每个线程，如果它建立了一个窗口，都会由系统为它分配一个消息队列。这个队列用于窗口消息的派送(dispatch).为了使窗口接收这些消息，线程必须有它自己的消息循环。</p>
+<br>
+<h2 id="线程的消息队列">线程的消息队列</h2>
+<p>系统分配一个THREADINFO结构，并将这个数据结构与线程联系起来。这个THREADINFO结构包含一组成员变量，利用这组成员，线程可以认为它是在自己独占的环境中运行。</p>
+<p>THREADINFO是一个内部的，未公开的数据结构，用来指定线程的 登记消息队列(Posted)、发送消息队列(Send)、应答消息队列(Reply)、虚拟输入队列、唤醒标志(WakeFlags)、以及用来描述线程局部输入状态的若干变量。<br>
+<img src="http://www.tkxiong.com/wp-content/uploads/2016/09/THREADINFO.jpg" alt="" loading="lazy"><br>
+↑上图描述了线程的THREADINFO的基本样子。这张图是的THREADINFO结构是窗口消息系统的基础。</p>
+<br>
+<h2 id="将消息发送到线程的消息队列中">将消息发送到线程的消息队列中</h2>
+<p>当线程有了与之联系的THREADINFO结构时，它就有了自己的消息队列集合。<br>
+如果一个进程建立了三个线程，并且这些线程都调用了CreateWindow，则有三个消息队列集合。</p>
+<p><font color=red>登记消息：</font><br>
+如果要将消息放置在线程的登记消息队列中，这要通过调用PostMessage函数来完成：</p>
+<pre><code class="language-c++">BOOL PostMessage(
+	HWND hWnd,
+	UINT Msg,
+	WPARAM wParam,
+	LPARAM lParam);
+</code></pre>
+<ol>
+<li>当一个线程第一次调用这个函数时，系统要确定是哪一个线程建立了hwnd参数标识的窗口。然后<strong>系统分配一块内存，将这个消息参数存储在这块内存中，并将这块内存增加到相应线程的登记消息队列中。</strong></li>
+<li>并且这个参数还<strong>设置唤醒标志位的 QS_POSTMESSAGE 唤醒位。</strong></li>
+<li>函数PostMessage在<strong>登记了消息之后立即返回</strong>，调用该函数的线程不知道登记的消息是否被指定的窗口过程所处理。甚至发送的消息有可能根本没有被处理：比如建立特定窗口的线程还没有处理完消息队列中的消息，就已经结束了，就会发生这种事情。</li>
+</ol>
+<p>还可以通过PostThreadMessage将消息放置在线程的登记消息队列中：</p>
+<pre><code class="language-c++">BOOL PostThreadMessage(
+	DWORD idThread,
+	UINT Msg,
+	WPARAM wParam,
+	LPARAM lParam);
+</code></pre>
+<p>PostThreadMessage 函数有四个参数，第一个参数标记了函数所期望的线程，即将消息发送到哪个线程的消息队列中去。当消息被设置到队列中时，MSG(消息数据结构)的hwnd成员会被设置为NULL。</p>
+<p>对线程编写主消息循环以便在GetMessage或PeekMessage取出一个消息时，主消息循环代码检查hwnd是否为NULL，并检查MSG(消息数据结构)的msg成员来执行特殊的处理。如果线程确定了该消息不被指派给一个窗口，则不会调用DispatchMessage函数，消息循环继续取下一个消息。</p>
+<p>同PostMessage函数一样，PostThreadMessage在向线程的队列登记了消息之后就立即返回。调用该函数的线程不知道消息是否被处理。</p>
+<p><font color=red>获取窗口线程：</font><br>
+通过 GetWindowThreadProcessId 来确定是哪个线程建立了一个窗口。</p>
+<pre><code class="language-c++">DWORD GetWindowThreadProcessId(
+	HWND hWnd,
+	LPDWORD lpdwProcessId);
+</code></pre>
+<p>这个函数返回线程的ID，这个线程建立了hwnd参数所标识的窗口。线程ID在全系统范围内是唯一的。还可以通过对lpdwProcessId参数传递一个DWORD地址来获取该线程的进程ID – 这个进程ID也是唯一的哦，如果不需要进程ID的话，传递NULL即可。</p>
+<p><font color=red>终止线程的消息循环：</font></p>
+<pre><code class="language-c++">VOID PostQuitMessage(int nExitCode);
+</code></pre>
+<p>为了终止线程的消息循环，可以调用这个函数。调用这个函数就类似于调用：</p>
+<pre><code class="language-c++">PostThreadMessage(GetCurrentThreadId(), WM_QUIT, nExitCode, 0);
+</code></pre>
+<br>
+<h2 id="向窗口发送消息">向窗口发送消息</h2>
+<p>使用SendMessage可以将消息发送给一个窗口：</p>
+<pre><code class="language-c++">LRESULT SendMessage(
+	HWND hWnd,
+	UINT Msg,
+	WPARAM wParam,
+	LPARAM lParam);
+</code></pre>
+<p>窗口过程将处理这个消息，而且只有消息被处理之后，SendMessage才能返回到调用程序。由于具有这种同步的特性，比之PostMessage或PostThreadMessage，SendMessage用地更频繁。</p>
+<p>那么，SendMessage是如何工作的呢？有两种情况：</p>
+<ol>
+<li>调用SendMessage的线程向该线程所建立的一个窗口发送一个消息：</li>
+</ol>
+<p>在这种情况下它只是<font color=red>调用指定窗口的窗口过程函数</font>，将其作为一个子例程。<font color=red>当窗口过程函数完成对消息的处理时，它向SendMessage返回一个值，SendMessage再将这个值返回给调用它的线程。</font></p>
+<ol start="2">
+<li>
+<p>调用SendMessage的线程向其他线程所建立的一个窗口发送消息：</p>
+<p>此时工作就稍微复杂一些。Windows要求了<strong>建立窗口的线程处理窗口的消息，所以当一个线程调用SendMessage向另一个线程建立的窗口发送一个消息，也就是向其他线程发送消息后，发送线程要挂起而由另外一个线程处理消息。</strong></p>
+</li>
+</ol>
+<p>所以系统会执行下面的动作：</p>
+<p>(1) 首先，<font color=red>发送的消息要追加到接收线程的发送消息队列，同时还为这个线程(接收线程)设定QS_SENDMESSAGE标志。</font></p>
+<p>(2)其次，如果<font color=red>接收消息的线程已经在执行代码并且没有等待消息(GetMessage、PeekMessage、WaitMessage)，发送的消息不会被即时处理，系统不能中断线程来立即处理消息</font>。要等它处理完才可以继续处理下一个消息。</p>
+<p>当接收进程在等待消息的时候，系统首先会检查<font color=red>QS_SENDMESSAGE 标志是否被设置</font>了，如果是，系统扫描发送消息队列的列表，并<font color=red>找到第一个发送的消息</font>(可能有多个发送来的消息，因为可能存在多个线程同时向一个线程发送消息的情况 – 注意：系统只是把消息追加到线程的发送消息队列中)并<font color=red>调用适当的窗口过程来处理消息。</font></p>
+<p>如果在发送消息队列中再没有消息了，则 QS_SENDMESSAGE 唤醒标志被关闭。</p>
+<p>(3) 当接收线程处理消息的时候，调用SendMessage函数发送消息的线程被设置为空闲(Idle)状态，等待一个消息出现在它的应答消息队列中。<strong>在发送的消息处理之后，窗口过程的返回值被登记到发送线程的应答消息队列中，唤醒发送线程，取出包含在应答消息队列中的返回值，这个返回值就是调用SendMessage的返回值。然后发送线程就可以继续运行了。</strong></p>
+<p><strong>存在的问题是：发送消息之后，线程就挂起了，那么当处理发送消息的线程含有错误的时候，会导致进入死循环。那么对于调用SendMessage的线程会发生什么事呢</strong>？它会恢复执行吗？是不是一个程序中的BUG会导致另一个程序挂起呢？的确是有这种可能！</p>
+<p>利用四个函数：SendMessageTimeout、 SendMessageCallback、SendNotifyMessage、ReplyMessage，可以编写保护型代码防止出现这种情况。我们一个个来看。</p>
+<p>第一个函数是，SendMessageTimeout：</p>
+<pre><code class="language-c++">LRESULT SendMessageTimeout(
+	HWND hWnd,
+	UINT Msg,
+	WPARAM wParam,
+	LPARAM lParam,
+	UINT fuFlags,
+	UINT uTimeout,
+	PDWORD_PTR lpdwResult);
+</code></pre>
+<p>相比SendMessage函数它多了三个参数：</p>
+<p>第五个参数：fuFlags参数，给它传递的值可以是 如下：(空格是为了方便阅读 – 实际使用是没有的)</p>
+<ul>
+<li>SMTO_NORMAL标志在&lt;Winuser.h&gt;中定义成0，如果不想指定任何其他标志及组合，就使用这个标志。</li>
+<li>SMTO_ABORT IF HUNG – 查看接收消息线程是否处于挂起状态，如果是，立即返回。</li>
+<li>SMTO_NO TIME OUT IF NOT HUNG – 标志使函数在接收消息的线程没有挂起时不考虑等待时间限定值。</li>
+<li>SMTO_BLOCK – 标志使调用线程在 SendMessageTimeout 返回之前，不再处理任何其他发送来的消息。</li>
+</ul>
+<p>前面提到过了，线程在等待发送的消息返回结果时可以被中断，以便处理另一个发送来的消息。如果我们在这个参数里面用BLOCK标志的话，就意味着我们不让系统同意这样的中断。要注意！使用这个标志可能会导致死锁情况的发生，而且会一直等待到时间期满为止。</p>
+<p>第六个参数和第七个参数：uTimeout 参数指定了等待应答消息时间的毫秒数。如果函数执行成功，返回TRUE，消息的结果复制到一个缓冲区中，该缓冲区的地址由最后一个参数lpdwResult指定。</p>
+<p>最后要注意的两个问题是：</p>
+<ol>
+<li>
+<p>返回值问题。</p>
+<ul>
+<li>
+<p>如果给窗口传递一个无效的窗口句柄或者是等待超时，都会返回FALSE，唯一区别它们的办法是调用GetLastError函数。</p>
+</li>
+<li>
+<p>如果是由于等待超时而失败，GetLastError得到的值为0(ERROR_SUCCESS)<br>
+如果对参数传递了一个无效的句柄，GetLastError为1400( ERROR_INVALID_WINDOW_HANDLE)</p>
+</li>
+</ul>
+</li>
+<li>
+<p>同线程的窗口发送消息。</p>
+<p>如果调用SendMessageTimeout向调用线程所建立的窗口发送一个消息，系统只是调用这个窗口的窗口过程，并将返回值赋给pdwResult。因为所有的处理都必须发生在一个线程里，调用SendMessageTimeout函数之后的代码要等待消息被处理完之后才能执行。</p>
+</li>
+</ol>
+<p>第二个函数是，SendMessageCallback：</p>
+<pre><code class="language-c++">BOOL SendMessageCallback(
+	HWND hWnd,
+	UINT Msg,
+	WPARAM wParam,
+	LPARAM lParam,
+	SENDASYNCPROC lpResultCallBack,
+	ULONG_PTR dwData);
+</code></pre>
+<p>lpResultCallBack 是一个函数指针，指向的函数就是被系统调用，用来通知发送线程消息已经被接收线程处理的 – 函数。函数原型如下：</p>
+<pre><code class="language-c++">VOID CALLBACK ResultCallBack (
+	HWND hWnd,
+	UINT Msg,
+	ULONG_PTR dwData,
+	LRESULT lResult);
+</code></pre>
+<p>因为SendMessageCallback在执行线程间发送时会立即返回，所以在接收线程完成对消息的处理时不是立即调用这个回调函数。而是由接收线程先将一个消息登记到发送线程的应答消息队列。</p>
+<p>发送线程在下一次调用GetMessage、PeekMessage、WaitMessage或 某个SendMessage* 函数时，消息从应答消息队列中取出，并执行ResultCallBack函数。</p>
+<p>SendMessageCallback函数还有一个好处：<font color=red>消息广播！</font><br>
+Windows提供了一种广播消息方法，用这种方法你可以向系统中所有现存的重叠窗口广播一个消息。这可以通过调用SendMessage函数，在参数hWnd传递 HWND_BROADCAST(定义值为-1)。问题是，SendMessage只能返回一个结果，这样的话我们就没法获得全部的结果。但是如果我们使用SendMessageCallback函数，就可以向每一个重叠窗口广播消息，并查看每一个返回结果。简直棒！这样我们需要做的就是对每一个返回结果调用ResultCallBack函数。</p>
+<p>第三个函数是，SendNotifyMessage：</p>
+<pre><code class="language-c++">BOOL SendNotifyMessage(
+	HWND hWnd,
+	UINT Msg,
+	WPARAM wParam,
+	LPARAM lParam);
+</code></pre>
+<p>该函数将一个消息置于接收线程的发送消息队列中，并立即返回到调用线程。立即返回这一点和PostMessage是一样的，但是SendNotifyMessage函数在两个方面与之不同：</p>
+<ol>
+<li>消息优先级问题：向另外的线程建立的窗口发送消息时，发送的消息 比 登记消息队列的消息有更高的优先级。即：由<font color=red>SendNotifyMessage函数存放在队列中的消息总是在PostMessage函数登记到消息队列中的消息之前取出。</font></li>
+<li><font color=red>向同一个线程创建的窗口发送消息时</font>：SendNotifyMessage同SendMessage函数完全一样。 <font color=red>SendNotifyMessage在消息处理完之后才能返回。</font></li>
+</ol>
+<p>第四个用于线程发送消息的函数是 – ReplyMessage：</p>
+<pre><code class="language-c++">BOOL ReplyMessage(LRESULT lResult);
+</code></pre>
+<ol>
+<li>接收线程可以在窗口过程还没处理完消息的情况下，<strong>提前</strong>向通过SendMessage发送消息的线程的应答消息队列添加一个应答消息，这会<strong>唤醒发送线程</strong>。</li>
+<li>接收线程把lResult作为消息处理结果传递给发送线程。<strong>当调用ReplyMessage后，发送线程被提前唤醒。当接收线程真正从窗口过程中返回时，系统将忽略这个返回值，即不再向发送线程回复本应在窗口过程正常结束才发送的应答消息。</strong></li>
+<li><strong>ReplyMessage必须在接收消息的窗口过程中被调用</strong>，而不能由某个调用Send<em>的线程调用，因为他是用来回复调用SendMessage的线程。前面讨论过的3个SendMessage</em>函数会立即返回。<strong>而SendMessage函数的返回，可以由窗口过程的实现者通过调用ReplyMessage来控制。</strong></li>
+<li>**如果消息不是通过SendMessage发送的，或者消息由同一个线程发送，ReplyMessage不起作用。**这也是返回值指出的，如果在处理线程间的消息发送时调用了ReplyMessage返回TRUE。处理线程内的消息发送时调用ReplyMessage会返回FALSE。<br>
+可以调用InSendMessage(Ex)来确定是线程间的消息发送还是线程内的发送消息。如果是线程间发送的会返回TRUE，线程内Send或Post的会返回FALSE。</li>
+</ol>
+<p>示例：</p>
+<pre><code class="language-c++">//WM_USER+5是由其他线程发送过来的消息。
+//如果是其他进程发送过来的消息，那个进程里要先调用RegisterWindowMessage注册为全局的消息类型
+case WM_USER + 5:
+	......//处理些其他事情
+	if (InSendMessage())    //是否是线程间发送的消息，只有线程间的才能Reply
+	{
+	//该消息己经处理了差不多了，SendMessage的线程可以被唤醒了，
+	//因为后面我还要做些其他事情，比如弹出对话框（DialogBox），你就不要傻等下去了。
+	//注意：在哪里调用ReplyMessage就可以在哪里通知系统去唤醒SendMessage线程 
+	ReplyMessage(TRUE); 
+	}
+	DialogBox(hInst, &quot;MyDialogBox&quot;, hwndMain, (DLGPROC) MyDlgProc);
+break;
+</code></pre>
+<p>就是相当于一个提前返回的效果。</p>
+<br>
+<h2 id="唤醒线程">唤醒线程</h2>
+<p>当一个线程调用GetMessage或WaitMessage打算获取一个消息的时候，恰好又没有这个线程或者这个线程建立的窗口的时候，系统可以挂起这个线程，这样就不再给它分配CPU时间。</p>
+<p>当有一个消息登记(Post)或发送(Send)到这个线程，系统要设置一个唤醒标志，指出要给这个线程分配CPU时间，以便处理消息。</p>
+<p>正常情况下，如果用户不按键或者移动鼠标，就没有消息发送给窗口。这意味着系统中大多数线程没有被配给CPU时间。</p>
+<br>
+<h3 id="队列状态标识">队列状态标识</h3>
+<p>当一个线程正在运行的时候，是可以通过调用 GetQueueStatus 函数来查询队列的状态的：</p>
+<pre><code class="language-c++">DWORD GetQueueStatus(UINT fuFlags);
+</code></pre>
+<p>参数fuFlags是一个标志或一组由OR连接起来的标志，可以用来测试特定的唤醒位。</p>
+<p>以下是各个唤醒位的取值和含义：</p>
+<table>
+<tbody>
+<tr>
+<td>标志</td>
+<td>取值 – 及其对应的消息</td>
+</tr>
+<tr>
+<td>QS_KEY</td>
+<td>&nbsp;0x0001 –&nbsp;WM_KEYUP、WM_KEYDOWN、WM_SYSKEYUP、WM_SYSKEYDOWN</td>
+</tr>
+<tr>
+<td>QS_MOUSEMOVE</td>
+<td>&nbsp;0x0002 –&nbsp;WM_MOUSEMOVE –&nbsp;只要队列中存在一个未处理的WM_MOUSEMOVE消息，这个标志被设置，当最后一条WM_MOUSEMOV消息被从队列删除时，标志被关闭</td>
+</tr>
+<tr>
+<td>QS_MOUSEBUTTON</td>
+<td>&nbsp;0x0004 –&nbsp;WM_(L/M/R)BUTTON(DOWN/UP/DBCLICK) – 鼠标消息</td>
+</tr>
+<tr>
+<td>QS_MOUSE</td>
+<td>(QS_MOUSEMOVE | QS_MOUSEBUTTON)</td>
+</tr>
+<tr>
+<td>QS_INPUT</td>
+<td>(QS_MOUSE | QS_KEY | QS_RAWINPUT)</td>
+</tr>
+<tr>
+<td>QS_PAINT</td>
+<td>&nbsp;0x0020 – WM_PAINT –&nbsp;该线程创建的窗口中，只要窗口存在无效区时，该位被设置。只有当线程建立的所有窗口都有效时，这个标志才关闭</td>
+</tr>
+<tr>
+<td>QS_TIMER</td>
+<td>&nbsp;0x0010 – WM_TIMER –&nbsp;当定时器报时，QS_TIMER被设置，当GetMessage返回WM_TIMER消息后，该标志被关闭</td>
+</tr>
+<tr>
+<td>QS_HOTKEY</td>
+<td>&nbsp;0x0080 – WM_HOTKEY</td>
+</tr>
+<tr>
+<td>QS_POSTMESSAGE</td>
+<td>&nbsp;0x0008 – 登记的消息 –&nbsp;如果队列在期望的消息过滤范围内没有post的消息，该标志被关闭。只要Posted-Message(登记消息)队列中有一条消息，该标志就被设置。</td>
+</tr>
+<tr>
+<td>QS_ALLPOSTMESSAGE</td>
+<td>&nbsp;0x0100 – 登记的消息 –&nbsp;如果Posted-Message(登记消息)队列中完全没有消息，这个标志被清除。</td>
+</tr>
+<tr>
+<td>QS_ALLEVENTS</td>
+<td>&nbsp;(QS_INPUT | QS_POSTMESSAGE | QS_TIMER | QS_PAINT | QS_HOTKEY)</td>
+</tr>
+<tr>
+<td>QS_QUIT</td>
+<td>&nbsp;已调用PostQuitMessage，则该标志被设置，但系统并不向线程添加WM_QUIT消息。 – 这个标志没有公开，它在系统内部使用。</td>
+</tr>
+<tr>
+<td>QS_SENDMESSAGE</td>
+<td>&nbsp;0x0040 – 由另一个线程发送的消息 –&nbsp;即Send-Message(发送消息)队列中有消息时被设置，没有时被清除。</td>
+</tr>
+<tr>
+<td>QS_ALLINPUT</td>
+<td>&nbsp;(QS_INPUT | QS_POSTMESSAGE | QS_TIMER | QS_PAINT | QS_HOTKEY | QS_SENDMESSAGE) – 同 QS_ALLEVENTS | QS_SENDMESSAGE</td>
+</tr>
+</tbody>
+</table>
+当函数返回的时候，线程队列中当前消息的类型在返回值的高字中(一个字是两个字节哦)。
+<p>而在低字中指出已经添加到队列中，并且在上一次对函数GetQueueStatus、GetMessage 或 PeekMessage调用以来还没有处理的消息的类型。</p>
+<br>
+<h3 id="从线程的队列中提取消息的算法">从线程的队列中提取消息的算法</h3>
+<ol>
+<li>
+<p>如果QS_SENDMESSAGE 被设置，系统向相应的窗口过程发送消息。GetMessage 或 PeekMessage函数在内部进行这种处理，并且在窗口过程处理完消息之后不返回线程，这些函数要等待其他消息的处理 —— 可以是任何的消息，包括本线程或其他线程Send或Post过来的消息。</p>
+</li>
+<li>
+<p>系统查看posted-message(登记消息)队列，如果posted-message队列有消息，Get/PeekMessage会填充MSG结构体，然后函数返回。在线程的消息循环中通常会调用DispatchMessage，将这个消息<strong>分派到相应的窗口过程中去处理。</strong></p>
+</li>
+<li>
+<p>如果 QS_QUIT标志被设置了，Get/Peek Message返回一个 WM_QUIT 消息（在消息的wParam参数中指出了退出代码），并关闭QS_QUIT标志。</p>
+</li>
+<li>
+<p>如果有消息在线程的虚拟输入队列，Get/Peek Message会返回硬件输入消息（如键盘或鼠标消息）。</p>
+</li>
+<li>
+<p>如果QS_PAINT 标志被设置， Get/Peek Message会返回一个WM_PAINT消息给相应窗口。</p>
+</li>
+<li>
+<p>如果QS_TIMER 标志被设置，Get/Peek Message会返回一个WM_TIMER消息。</p>
+</li>
+</ol>
+<figure data-type="image" tabindex="1"><img src="http://www.tkxiong.com/wp-content/uploads/2016/09/GetMessageFromQueue.png" alt="" loading="lazy"></figure>
+<ol>
+<li>
+<p>为什么 “posted-message”队列在“虚拟Input-Queue”队列之前被检查？</p>
+<ol>
+<li>
+<p>由于某个硬件事件可能引起其他的软件事件，所以系统要等用户读取下一个硬件事件之前，先处理这些软件事件。</p>
+</li>
+<li>
+<p>比如，调用TranslateMessage函数。这个函数会检查是否有一个WM_KEYDOWN（或WM_SYSKEYDOW硬件消息）从“Input-Queue”(虚拟输入)队列中被取出。如果有，系统会检查虚键信息能否转化为等价的字符，当可以转换时TranslateMessage会调用PostMessage将一个WM_CHAR（或WM_SYSCHAR）的软件消息投递到“posted-message”队列。下次调用GetMessage时，系统首先会检查“posted-message”队列，将这个WM_CHAR（或WM_SYSCHAR）消息取出。直到这个队列为空，再去检查“input-queue”队列。所以才会生成WM_KEYDOWN → WM_CHAR → WM_KEYUP这样的消息序列。</p>
+</li>
+</ol>
+</li>
+<li>
+<p>为什么QS_QUIT的检测在检查“post-message”队列之后。原因如下：<br>
+使用QS_QUIT标志可以让线程在结束消息循环前，处理完所有“posted-message”队列中的消息，比如下面代码：</p>
+</li>
+</ol>
+<pre><code class="language-c++">case WM_CLOSE:
+   PostQuitMessage(0);//虽然比后面的PostMessage更早调用，但不会更早退出！
+   PostMessage(hwnd,WM_USER,0,0);// 会先取出“posted-message”队列中的
+                                 //WM_USER，队列空时再检查QS_QUIT标志。
+   Break;
+</code></pre>
+<ol start="3">
+<li>
+<p>为什么PostQuitMessage只设置QS_QUIT而不将WM_QUIT消息投递到“posted-message”队列？</p>
+<p>调用PostQuitMessage类似于（但不同于）调用PostThreadMessage(,WM_QUIT,…)。后者会将消息添加到“posted-message”(登记消息)队列的尾端，并使消息在系统检查“input-queue”(虚拟输入队列)前被处理。但PostQuitMessage只会设置QS_QUIT标志位，而不会将WM_QUIT消息放入“posted-queue”队列。原因如下：</p>
+<ol>
+<li>因为当低内存时，post一个消息到“posted-message”可能会失败，如果一个程序想退出，即使是低内存时也应该被允许，但postQuitMessage函数调用不会失败（其返回值为void），因为它只改变QS_QUIT标志。</li>
+<li>使用标志可以使线程在线程消息循环结束前完成对其他登记消息的处理。</li>
+<li>尽管<strong>PostQuitMessage不会向消息队列投递WM_QUIT消息</strong>，但当系统检测到QS_QUIT标志被设置时，会先填充MSG结构体,将uMsg字段设为WM_QUIT，然后设置GetMessage的返回值为FALSE。由于系统内部自动填充了这个带有WM_QUIT信息的MSG结构体，让人感觉GetMessage好象从posted-message队列取出了一条WM_QUIT消息。但实际上这条消息并不是从“posted-message”队列中取出的，而是系统伪造的一个MSG结构体。</li>
+</ol>
+</li>
+<li>
+<p><strong>WM_PAINT优先级低于键盘消息，WM_TIMER的优先级比WM_PAINT更低（防止用定器时在短时间内重复的WM_PAINT）。</strong></p>
+</li>
+<li>
+<p><strong>Get/PeekMessage只检查唤醒标志和调用线程的消息队列。这意味不能从其他线程的消息队列中取得消息，包括同一进程内的其他线程的消息。</strong></p>
+</li>
+</ol>
+<br>
+<h3 id="利用内核对象或队列状态标志唤醒线程">利用内核对象或队列状态标志唤醒线程</h3>
+<p>当内核对象触发或某种消息到达时唤醒线程，既可以兼顾让线程运行一个长时间的操作时，又可以响应界面操作，<font color=red>防止界面出现一种“假死”的现象</font>。例如：一个线程可能启动一个长时间运行的操作，并可以让用户取消这个操作。这个线程 需要知道何时操作结束(这是一个与UI无关的任务)，或用户是否按了cancel按钮(与UI有关的任务)来结束操作。</p>
+<p>一个线程可以调用MsgWaitForMultipleObjects或 MsgWaitForMultipleObjectsEx函数，使线程等待它的消息。函数原型如下：</p>
+<pre><code class="language-c++">DWORD MsgWaitForMultipleObjects(
+	DWORD nCount,
+	CONST HANDLE *pHandles,
+	BOOL fWaitAll,
+	DWORD dwMilliseconds,
+	DWORD dwWakeMask);
+	
+DWORD MsgWaitForMultipleObjectsEx(
+	DWORD nCount,
+	CONST HANDLE *pHandles,
+	DWORD dwMilliseconds,
+	DWORD dwWakeMask,
+	DWORD dwFlags);
+</code></pre>
+<p>这两个函数类似于WaitFroMultipleObjects函数，不同之处在于：当一个内核对象变成触发状态(有信号状态 – signaled) 或 当一个窗口消息需要派送到调用线程建立的窗口时，这两个函数用于线程调度。</p>
+<br>
+<h2 id="通过消息发送数据">通过消息发送数据</h2>
+<p>如何利用窗口消息在进程之间传递数据<br>
+主要还是三个消息吧：<strong>WM_SETTEXT、WM_GETTEXT、WM_COPYDATA</strong><br>
+例如我们用 WM_SETTEXT消息使用lParam参数作为指向一个以零结尾的字符串指针，这个字符串为窗口规定了新的文本标题串。考虑下面的调用：</p>
+<pre><code class="language-c++">SendMessage(FindWindow(NULL,&quot;Calculator&quot;),WM_SETTEXT,0,(LPARAM)&quot;A Test Caption&quot;);
+</code></pre>
+<p>新标题的字符串包含在调用进程的地址空间里。所以这个在调用进程空间的字符串地址将传递给lParam参数。当Calculator窗口的窗口过程收到这个消息时，它要查看lParam参数，并要读取这个以零结尾的字符串，使其成为新的标题。</p>
+<p>但是存在这么一个问题哈：还记不记进程地址空间的概念，lParam中的地址指向的是<strong>调用进程的地址空间，而不一定是Calculator窗口的进程地址空间</strong>。这会发送内存存取违规这种严重的问题！</p>
+<p>但是，当我们执行这段代码的时候，看到的却是执行成功？因为系统真正的处理方式如下：</p>
+<ol>
+<li>当调用SendMessage时，函数会检查是否要发送WM_SETTEXT消息。如果是，就将以零结尾的字符串从调用进程的地址空间放入到一个内存映射文件（可在进程间共享）。</li>
+<li>然后再发送消息到共他进程的线程。</li>
+<li>当接收线程己准备好处理WM_SETTEXT消息时，它在自己的地址空间中找到上述内存映射文件（该文件包含要发送的文本），并让lParam指向那个文本，然后消息被分派到指定的窗口过程去进行处理。</li>
+<li>处理完消息之后，内存映射文件被删除。</li>
+</ol>
+<p>是不是很棒！通过内存映射文件解决了进程地址空间并不是同一个空间的问题。问题是，这样是不是太麻烦了一点？所幸的是大多数消息并不要求这种类型的处理。仅当这种消息是程序在进程间发送的消息，特别是消息的wParam或lParam参数表示一个指向数据结构的指针的时候，才会做这样的处理。</p>
+<p>然后还有另外两个消息对不对，我们先来看看WM_GETTEXT消息：假定一个程序包含下面的代码：</p>
+<pre><code class="language-c++">char szBuffer[200];
+SendMessage(FindWindow(NULL,&quot;Calculator&quot;,WM_GETTEXT,sizeof(szBuff),(LPARAM)szBuff);
+</code></pre>
+<p>WM_GETTEXT消息请求Calculator窗口的窗口过程用该窗口的标题填充szBuffer所指定的缓冲区。当一个进程向另一个进程的窗口发送这个消息的时候，实际上我们又碰到了前面的进程地址空间的问题。</p>
+<p>所以，SendMessage时，系统检测到WM_GETTEXT消息时，实际上会发送两个消息。</p>
+<ol>
+<li>首先系统向那个窗口发送WM_GETTEXTLENGTH消息，以获得文本的长度。</li>
+<li>系统利用这个长度创建一个内存映射文件，用于在两个进程间共享。然后再发送消息来填充它。</li>
+<li>然后转到调用SendMessage的进程，从内存映射文件中复制文本到指定的缓冲区（由lParam参数指定）</li>
+<li>最后SendMessage函数返回。</li>
+</ol>
+<p>如果我们用自己定义的 WM_USER+X 消息，并从一个进程的窗口向另一个进程的窗口发送类似的消息，那会怎么样？系统并不知道要用内存映射文件共享数据并在发送消息的时候改变指针，那该怎么办呢？</p>
+<p>为此系统特定定义了一个特殊的窗口消息，就是这里的 WM_COPYDATA 来解决问题：</p>
+<pre><code class="language-c++">COPYDATASTRUCT cds;
+SendMessage(hwndReceiver, WM_COPYDATA, (WPARAM)hwndSender, (lParam)&amp;cds);
+</code></pre>
+<p>COPYDATASTRUCT 是一个结构体，定义如下：</p>
+<pre><code class="language-c++">typedef struct tagCOPYDATASTRUCT {
+	ULONG_PTR dwData;
+	DWORD cbData;
+	PVOID lpData;
+} COPYDATASTRUCT,*PCOPYDATASTRUCT;
+</code></pre>
+<p>当一个进程要向另一个进程发送一些数据时，必须先初始化COPYDATASTRUCT结构。</p>
+<p>dwData是一个备用数据项，可以存放任何值。</p>
+<p>cbData数据成员规定了发送的<strong>字节数</strong></p>
+<p>lpData数据成员指向了发送的第一个字节，这个地址在发送<strong>进程地址</strong>空间中</p>
+<p>所以系统对WM_COPYDATA消息的处理方式如下：</p>
+<ol>
+<li>当SendMessage看到要发送一个WM_COPYDATA消息时，会建立一个内存映像文件，大小是cbData字节。</li>
+<li>从发送进程的地址空间中将数据复制到这个内存映像文件。</li>
+<li>然后向目标窗口发送消息</li>
+<li>接收线程在处理这个消息时，lParam参数己指定接收进程地址空间中的一个COPYDATASTRUCT结构体。这个结构的lpData成员指向了接收进程地址空间中的共享内存映像文件的视图。</li>
+</ol>
+<p>关于WM_COPYDATA这个消息，还要注意以下三点：</p>
+<ol>
+<li>只能发送(Send)这个消息，不能登记(Post)这个消息。不能登记这个消息是 因为接收窗口的窗口过程处理完之后，必须释放掉内存映射文件。如果登记这个消息，我们就不知道什么时候处理完毕，就没办法释放。</li>
+<li>系统从另外的进程的地址空间中复制数据要花费一些时间。所以不应该让发送程序中运行的其他线程修改这个内存块，直到SendMessage调用返回。</li>
+<li>WM_COPYDATA消息，可以实现16位到32位之间的通信，也能实现32位到64位之间的通信。但Win98以下没有WM_COPYDATA消息和COPYDATASTRUCT结构本的定义，要自己增加定义。<br>
+我想现在应该用不到第三条了，我就忽视它好了。</li>
+</ol>
+<br>
+<h2 id="windows如何处理ansiunicode字符和字符串">Windows如何处理ANSI／Unicode字符和字符串</h2>
+<p>当你注册一个新的窗口类时，必须将负责为这个类处理消息的窗口过程的地址告诉系统。对某些消息（如WMSETTEXT），消息的lParam参数指向一个字符串。在此之前，为了派送消息，使它被正确地处理，系统需要知道窗口过程要求该字符串是ANSI字符串还是Unicode字符串。</p>
+<p><strong>告诉系统一个窗口过程是要求ANSI字符串还是Unicode字符串，实际上取决于注册窗口类时所使用的函数。如果构造WNDCLASS结构，并调用RegisterClassA，系统就认为窗口过程要求所有的字符串和字符都属于ANSI。而用RegisterClassW注册窗口类，则系统就向窗口过程派送Unicode字符串和字符。宏RegisterClass对RegisterClassA和RegisterClassW都做了扩展，究竟代表哪一个要看在编译源模块时是否定义了UNICODE。</strong></p>
+<p>如果有了一个窗口句柄，就可以确定窗口过程所要求的字符和字符串类型。这可以通过调用下面的函数实现：</p>
+<pre><code class="language-c++">BOOL IsWindowUnicode(HWND hwnd);
+</code></pre>
+<p>如果你建立一个ANSI串，并向一个窗口过程要求Unicode串的窗口发送WM_SETTEXT消息，则系统在发送消息之前，为你自动地转换字符串。很少需要调用IsWindowUnicode函数。</p>
+<p>如果你对窗口过程派生子类，系统也会为你执行自动的转换。假定一个编辑控制框的窗口过程要求字符和字符串是Unicode，这可以调用:</p>
+<pre><code class="language-c++">LONG_PTR SetWindowLongPrtA(
+    LWND hwnd, 
+    int nIndex,
+    LONG_PTR dwNewLong
+);
+
+LONG_PTR SetWindowLongPrtW(
+    LWND hwnd, 
+    int nIndex,
+    LONG_PTR dwNewLong
+);
+</code></pre>
+<p>并将nIndex参数设置成GCLPWNDPROC，dwNewLong参数设置成子类过程的地址。如果这个子类过程要求ANSI字符和字符串会出现什么情况？这可能引起严重的问题。系统决定怎样转换字符串和字符，要取决于究竟是用上面两个函数中的哪一个来建立子类。<strong>如果是调用SetWindowLongPrtA，就是告诉系统新的窗口过程（即子类过程）要接收ANSI字符和字符串。实际上，如果在调用SetWindowLongPrtA之后调用IsWindowUnicode函数，将返回FALSE，表示这个子类的编辑窗口过程不再要求Unicode字符和字符串。</strong></p>
+<p>但现在又有一个新的问题：<font color=red>如何能够保证原来的窗口过程得到正确的字符和字符串类型？</font>系统需要有两条信息，才能正确地转换字符和字符串。第一条信息就是字符和字符串当前所具有的形式。这可以通过调用CallWindowProcA或CallWindowProcW来告诉系统：</p>
+<pre><code class="language-c++">RESULT CallWindowProcA(
+    WNDPRROC wndprcPrev,
+    LWND hwnd, 
+    UINT uMsg,
+    WPARAM wParam，
+    LPRAMA lParam,
+);
+
+RESULT CallWindowProcW(
+    WNDPRROC wndprcPrev,
+    LWND hwnd, 
+    UINT uMsg,
+    WPARAM wParam，
+    LPRAMA lParam,
+);
+</code></pre>
+<p>如果子类过程要把ANSI字符串传递给原来的窗口过程，子类过程必须调用CallWindowProcA。如果子类过程要把Unicode字符串传递给原来的窗口过程，则子类过程必须调用CallWindowProcW。</p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#%E7%AA%97%E5%8F%A3%E6%B6%88%E6%81%AF">窗口消息</a></li>
+<li><a href="#%E7%BA%BF%E7%A8%8B%E7%9A%84%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97">线程的消息队列</a></li>
+<li><a href="#%E5%B0%86%E6%B6%88%E6%81%AF%E5%8F%91%E9%80%81%E5%88%B0%E7%BA%BF%E7%A8%8B%E7%9A%84%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E4%B8%AD">将消息发送到线程的消息队列中</a></li>
+<li><a href="#%E5%90%91%E7%AA%97%E5%8F%A3%E5%8F%91%E9%80%81%E6%B6%88%E6%81%AF">向窗口发送消息</a></li>
+<li><a href="#%E5%94%A4%E9%86%92%E7%BA%BF%E7%A8%8B">唤醒线程</a>
+<ul>
+<li><a href="#%E9%98%9F%E5%88%97%E7%8A%B6%E6%80%81%E6%A0%87%E8%AF%86">队列状态标识</a></li>
+<li><a href="#%E4%BB%8E%E7%BA%BF%E7%A8%8B%E7%9A%84%E9%98%9F%E5%88%97%E4%B8%AD%E6%8F%90%E5%8F%96%E6%B6%88%E6%81%AF%E7%9A%84%E7%AE%97%E6%B3%95">从线程的队列中提取消息的算法</a></li>
+<li><a href="#%E5%88%A9%E7%94%A8%E5%86%85%E6%A0%B8%E5%AF%B9%E8%B1%A1%E6%88%96%E9%98%9F%E5%88%97%E7%8A%B6%E6%80%81%E6%A0%87%E5%BF%97%E5%94%A4%E9%86%92%E7%BA%BF%E7%A8%8B">利用内核对象或队列状态标志唤醒线程</a></li>
+</ul>
+</li>
+<li><a href="#%E9%80%9A%E8%BF%87%E6%B6%88%E6%81%AF%E5%8F%91%E9%80%81%E6%95%B0%E6%8D%AE">通过消息发送数据</a></li>
+<li><a href="#windows%E5%A6%82%E4%BD%95%E5%A4%84%E7%90%86ansiunicode%E5%AD%97%E7%AC%A6%E5%92%8C%E5%AD%97%E7%AC%A6%E4%B8%B2">Windows如何处理ANSI／Unicode字符和字符串</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://hensonguo.github.io/post/kua-yu-wen-ti-chu-li/">
+              <h3 class="post-title">
+                跨域问题处理
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://hensonguo.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

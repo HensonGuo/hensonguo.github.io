@@ -1,0 +1,840 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>dart快速入门 | Icode</title>
+<link rel="shortcut icon" href="https://hensonguo.github.io/favicon.ico?v=1704354032694">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://hensonguo.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="dart快速入门 | Icode - Atom Feed" href="https://hensonguo.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="1. 变量
+一切变量皆是对象，每个对象都是类的实例。int、double、函数、 null 等都是对象，所有对象都继承自 Object 类。
+
+1.1静态类型语言常用的方式，显式指定变量类型
+变量是一个引用，未初始化的变量值是Null如下
+..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://hensonguo.github.io">
+  <img class="avatar" src="https://hensonguo.github.io/images/avatar.png?v=1704354032694" alt="">
+  </a>
+  <h1 class="site-title">
+    Icode
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              dart快速入门
+            </h2>
+            <div class="post-info">
+              <span>
+                2023-07-14
+              </span>
+              <span>
+                18 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <h2 id="1-变量">1. 变量</h2>
+<p>一切变量皆是对象，每个对象都是类的实例。int、double、函数、 null 等都是对象，所有对象都继承自 Object 类。</p>
+<br>
+<h3 id="11静态类型语言常用的方式显式指定变量类型">1.1静态类型语言常用的方式，显式指定变量类型</h3>
+<p>变量是一个引用，未初始化的变量值是Null如下</p>
+<pre><code class="language-dart">String name =&quot;黄药师&quot;;
+int age =10;
+print('$name''----$age'); //输出:黄药师----10
+</code></pre>
+<br>
+<h3 id="12-动态语言的常用方式不指定类型由vm自动推断">1.2 动态语言的常用方式，不指定类型，由vm自动推断</h3>
+<pre><code class="language-dart">String name =&quot;黄药师&quot;;
+name  =10; //报错
+print('$name');
+
+int age1 =10;
+age1  =10.0; //报错
+print('$age1');
+
+num age2 =10;
+age2  =10.0; //合法
+print('$age2');
+</code></pre>
+<br>
+<h3 id="13-var官方风格指南建议使用var">1.3 var（官方风格指南建议使用var）</h3>
+<p>var：在声明变量在赋值的那一刻，就已经决定了它是什么类型。</p>
+<pre><code class="language-dart">import 'dart:core';
+
+void main() {
+  //age 已经确定为num类型并为其赋值18岁，如果你赋值字符串，那么就会报错
+ var age =18;
+ age  ='18';
+ print('$age');
+}
+
+void main() {
+  //age 已经确定为num类型并但是没有为其赋值，如果你赋值字符串那么是正确
+ var age;
+ age  =18;
+ age ='18';
+ print('$age');
+}
+</code></pre>
+<br>
+<h2 id="2-object">2. Object</h2>
+<p>一切变量皆是对象，每个对象都是类的实例。int、double、函数、 null 等都是对象，所有对象都继承自 Object 类</p>
+<pre><code class="language-dart">Object age ='18';
+age  =18;
+print('$age');
+</code></pre>
+<br>
+<h2 id="3-dynamic">3. dynamic</h2>
+<p>dynamic不是在编译时确定类型的，而是在运行时</p>
+<pre><code class="language-dart">dynamic name ='黄药师';
+print(name.runtimeType); //输入：String
+name =18;
+print(name.runtimeType); //输入：int
+</code></pre>
+<p><strong>对于局部变量，按照dart官方建议使用var来声明变量</strong></p>
+<br>
+<h2 id="4final与const">4.final与const</h2>
+<p>final有两种使用场景</p>
+<ul>
+<li>类中的变量声明，必须在声明时赋值。</li>
+<li>类中的成员变量声明，可以在声明时候赋值，也可以通过构造函数赋值</li>
+</ul>
+<p>const是编译期常量。这里关键点区分什么是编译时常量，说白了就是其定义的值必须是一个字面常量值<br>
+<a href="https://juejin.cn/post/6844903897123799054#heading-5">Dart中static final const 区别</a></p>
+<br>
+<h2 id="5-操作符">5. 操作符</h2>
+<h3 id="51-类型判断操作符">5.1 类型判断操作符</h3>
+<p>as类型转换is如果对象是指定的类型返回 True，is！如果对象是指定的类型返回 False<br>
+注意点：as 操作符把对象转换为特定的类型，但是如果无法完成转换则会抛出一个异常</p>
+<pre><code class="language-dart">var name = &quot;黄药师&quot;;
+if (name is String) {
+    //判断条件为 true
+    print(&quot;name is String&quot;);
+}
+var age = 1;
+if (age is! String) {
+    //判断条件为 true
+    print(&quot;age is String&quot;);
+}
+//说明：由于age 是int 类型 不是一个String类型，所以活报如下错误
+//'int' is not a subtype of type 'String' in type cast
+String newResult = age as String;
+</code></pre>
+<br>
+<h3 id="52-赋值操作符">5.2 赋值操作符</h3>
+<pre><code class="language-dart">String name;
+name ??= &quot;黄药师&quot;;
+// 如果 name 是 null，则把等于号右边的值 赋值给 name；
+// 如果不是 null，则 name 的值保持不变
+print(&quot;$name&quot;); //输出：黄药师
+</code></pre>
+<br>
+<h3 id="53-三目运算符">5.3 三目运算符</h3>
+<pre><code class="language-dart">printAge2(int age) {
+  return age == 10 ? age : 0; //输出：10
+}
+</code></pre>
+<br>
+<h3 id="54-三目运算符">5.4 三目运算符</h3>
+<p>级联操作符 (..) 可以在同一个对象上 连续调用多个函数以及访问成员变量。 使用级联操作符可以避免创建 临时变量， 并且写出来的代码看起来 更加流畅：</p>
+<pre><code class="language-dart">var  list = List();
+print(&quot;${list..add(&quot;黄药师&quot;)..add(&quot;郭靖&quot;)}&quot;); //输出：黄药师,郭靖
+</code></pre>
+<br>
+<h3 id="55-安全操作符">5.5 安全操作符</h3>
+<p>Dart提供了 ?.（!.）操作符。左边的操作对象 如果 为 null 则返回 null</p>
+<pre><code class="language-dart">String name;
+//没有添加&quot;?&quot;空指针
+print(name.length); // The getter 'length' was called on null.
+//添加&quot;？&quot;
+print(name?.length); //输出null
+</code></pre>
+<br>
+<h2 id="6内置类型">6.内置类型</h2>
+<h3 id="61-num">6.1 num</h3>
+<p>dart的num类型有量两种分别是int 和double两种，这两种都是num的子类。</p>
+<pre><code class="language-dart">var age = 18;
+print(age.runtimeType); //输出 int
+
+var price = 8.0;
+print(price.runtimeType); //输出：double
+</code></pre>
+<p>同时num也支持一些数据类型的转换：</p>
+<pre><code class="language-dart">var age = '18';
+print(age.runtimeType); //输出：String 类型
+
+int parseAge = int.parse(age);
+print(parseAge.runtimeType); //输出：int 类型
+</code></pre>
+<br>
+<h3 id="62-string">6.2 string</h3>
+<p>Dart字符串是UTF-16编码的字符序列，可以使用单引号或者双引号来创建字符串，单引号和双引号可以嵌套使用，否则需要使用\进行转义。字符串中也可以引用变量与表达式，同时可以实现字符串拼接功能</p>
+<pre><code class="language-dart">var newName1 = &quot;my name is $name&quot;;
+var nameName2 = &quot;my name is ${User().name}&quot;;
+</code></pre>
+<p>提供一个 r 前缀可以创建一个 “原始 raw” 字符串，说白了就是不需要转义（如果添加上转义字符那么将会失效）如下：</p>
+<pre><code class="language-dart">//r:不需要转义
+print(r&quot;换行符: \n&quot;); //输出：换行符：\n
+print(&quot;换行符: \\n&quot;); //输出：换行符：\n
+</code></pre>
+<br>
+<h3 id="63-bool">6.3 bool</h3>
+<p>两个对象是布尔类型：分别是true和false</p>
+<br>
+<h3 id="64-list">6.4 list</h3>
+<pre><code class="language-dart">var names = List();
+print(names1.length); //输出：0;
+var names1 = List(2);
+var names2 = List&lt;Object&gt;();
+var names3 = ['黄药师',12,11.0];
+var names4 = const[1,2,3];
+///报错：Cannot add to an unmodifiable list
+names4.add(4);
+
+//排序
+List&lt;User&gt; myList = [User('黄药师', 23), User('欧阳锋', 61), User('杨过', 48)];
+myList.sort((a, b) =&gt; (b.age).compareTo(a.age));
+
+//集合循环
+myList.forEach((v) {
+    print('${v.name}${v.age}'); //输出：欧阳锋61，杨过48，黄药师23
+});
+
+//查找符合条件
+var result = myList.where((v) =&gt; v.age == 23);
+result.forEach((v){
+    //isEmpty属性，返回列表是否为空
+    print('${v.name}${v.age}');
+});
+//isEmpty属性，返回列表是否为空
+print(myList.isEmpty);
+
+//isNotEmpty属性，返回列表是否有元素
+print(myList.isNotEmpty);
+
+//获取List中的第一个元素
+print(&quot;获取List中第一个元素${names1.first}&quot;);
+
+class User {
+  var age =10;
+  var name =&quot;黄药师&quot;;
+}
+</code></pre>
+<p>添加元素删除元素：</p>
+<pre><code class="language-dart">import 'dart:core';
+
+void main() {
+  var names1 = ['杨过', '小龙女', '黄蓉'];
+  names1.add('丘处机');//添加数据
+  names1.remove('杨过');//删除数据
+  print(names1.length); //输出：3;
+  names1.removeLast(); //删除最后一个元素
+  names1.removeAt(names1.length - 1);//删除指定位置元素
+  names1.removeRange(0, 1); //删除指定位区域元素
+  //下面这个方法是将列表List中的toString只有的字符串的长度等于3的元素全部删除
+  names1.removeWhere((item) =&gt;item.toString().length==3);
+
+  var names2 = List(2);
+  ///当执行add 时候会报错：Cannot add to a fixed-length list
+  ///（固定长度的list是不能通过add添加数据）
+  ///names2.add(1);
+
+  //固定长度的list使用一下方式可以设置数据
+  names2[0] = '黄药师';
+  names2[1] = '欧阳锋';
+  names2.forEach((v) {
+    print('$v'); //输出：黄药师 欧阳锋
+  });
+
+  var names3 = ['杨过', '小龙女', '黄蓉'];
+  var names4 = ['1', '2', '3'];
+  //添加全部元素
+  names3.addAll(names4);
+  names3.forEach((v) {
+    print('$v'); //输出：杨过 小龙女 黄蓉 1 2 3
+  });
+}
+</code></pre>
+<br>
+<h3 id="65-list-map集合">6.5 list Map（集合）</h3>
+<pre><code class="language-dart">var names = {'name1': '黄药师', 'name2': '杨过', 'name3': '老顽童'};
+var names1 = Map();
+names1['name1'] = '黄蓉';
+names1['name2'] = '黄药师';
+var names2 = &lt;String, String&gt;{'name': '黄药师'};
+var names3 = const {'name': '黄药师', 'age': 60};
+
+//循环
+names1.forEach((k, v) {
+    print(v); //输出：黄蓉，黄药师。郭靖
+});
+//查询删除
+var names4 = {'name1': '黄药师', 'name2': '杨过', 'name3': '老顽童'};
+names4.removeWhere((k, v) =&gt; k == 'name1');
+//根据指定key 进行删除
+names4.remove('name1');
+//找找是否包含指定key
+names4.containsKey('name2');
+//找找是否包含指定value
+names4.containsValue('老顽童');
+//添加一个Map对象
+names4.addAll({'name': '丘处机'});
+</code></pre>
+<br>
+<h2 id="7分支与循环">7.分支与循环</h2>
+<p>分支有if-else if-else 和switch两种<br>
+循环支持 for、while 以及 do-while 三种<br>
+Dart 还有一些特有的系统循环函数</p>
+<pre><code class="language-dart">for (var it in list) {
+}
+for (var key in map.keys) {
+}
+list.forEach((v){});
+map.forEach((k, v){});
+</code></pre>
+<br>
+<h2 id="8方法对象">8.方法对象</h2>
+<p>Dart 是一个真正的面向对象语言，方法也是对象并且具有一种 类型 Function。 这意味着，方法可以赋值给变量，也可以当做其他方法的参数，同时也可以把方法当做参数调用另外一个方法</p>
+<pre><code class="language-dart">void setListener(Function listener){
+    listener(&quot;Success&quot;);
+}
+//或者
+void setListener(void listener(String result)){
+    listener(&quot;Success&quot;);
+}
+
+//两种方式，第一种调用者根本不确定 回调函数的返回值、参数是些什么
+//第二中则需要写这么一大段 太麻烦了。
+
+//第三种：类型定义 将返回值为voide，参数为一个String的方法定义为一个类型。
+typedef  void Listener(String result)；
+void setListener(Listener listener){
+  listener(&quot;Success&quot;);
+}
+</code></pre>
+<br>
+<h2 id="9可选命名参数">9.可选命名参数</h2>
+<p>什么叫可选命名函数，其实说白了就是把方法的参数放到 {} 中就变成了可选命名参数。</p>
+<pre><code class="language-dart">import 'dart:core';
+
+void main() {
+  int add({int i, int j}) {
+    if (i == null || j == null) {
+      return 0;
+    }
+    return i + j;
+  }
+
+  //全参调用
+  print(&quot;--1--${add(i: 10, j: 20)}&quot;); //输出：30
+  //不传参数（调用也是正确的）
+  print(&quot;--2--${add()}&quot;); //输出：0
+  //选择传递参数
+  print(&quot;--3--${add(j: 20)}&quot;); //输出：0
+  //与位置无关
+  print(&quot;--4--${add(j: 20, i: 10)}&quot;); //输出：30
+}
+</code></pre>
+<br>
+<h2 id="10可选位置参数">10.可选位置参数</h2>
+<p>什么叫可选命名函数，其实说白了就是把方法的参数放到 {} 中就变成了可选命名参数。</p>
+<pre><code class="language-dart">void main() {
+  int add([int i, int j]) {
+    if (i == null || j == null) {
+      return 0;
+    }
+    return i + j;
+  }
+
+  //全参调用
+  print(&quot;--1--${add(10, 20)}&quot;); //输出：30
+  //不传参数（调用也是正确的）
+  print(&quot;--2--${add()}&quot;); //输出：0
+  //选择传递参数
+  print(&quot;--3--${add(10)}&quot;); //输出：0
+}
+</code></pre>
+<br>
+<h2 id="11默认参数">11.默认参数</h2>
+<p>在定义方法的时候，可选参数可以使用 = 来定义可选参数的默认值。</p>
+<pre><code>int sum([int age1 = 1, int age2 = 2])  {}
+</code></pre>
+<br>
+<h2 id="12匿名函数">12.匿名函数</h2>
+<p>创建一个没有名字的方法，称之为 <strong>匿名函数，或Lambda表达式 或Closure闭包</strong>。你可以将匿名方法赋值给一个变量然后使用它，比如将该变量添加到集合或从中删除。</p>
+<pre><code>([Type] param1, …) { 
+  codeBlock; 
+}; 
+</code></pre>
+<p>匿名方法看起来与命名方法类似，在括号之间可以定义参数，参数之间用逗号分割。 后面大括号中的内容则为函数体：下面代码定义了只有一个参数 item 且没有参数类型的匿名方法。List 中的每个元素都会调用这个函数，打印元素位置和值的字符串：</p>
+<pre><code class="language-dart">import 'dart:core';
+
+void main() {
+  var list = ['黄药师', '杨过', '老顽童'];
+  list.forEach((item) {
+    print('${list.indexOf(item)}: $item'); //输出：0: 黄药师 1: 杨过 2: 老顽童
+  });
+
+  // 如果函数体内只有一行语句，你可以使用箭头语法：
+  list.forEach(
+          (item) =&gt; print('${list.indexOf(item)}: $item')); //输出：0: 黄药师 1: 杨过 2: 老顽童
+}
+</code></pre>
+<br>
+<h2 id="12类">12.类</h2>
+<p>使用class关键字声明一个dart类,后面跟类名,并且由一对花括号包围的类体 所有类都有同一个基类Object，dart的继承机制使用了Mixin;</p>
+<p>其实每个实例变量都会自动生成一个 getter 方法（隐含的）。 非final 实例变量还会自动生成一个 setter 方法。</p>
+<pre><code class="language-dart">class User {
+  var name;
+  var age;
+  User(this.name, this.age);
+}
+
+void main(){
+  var user =User(&quot;黄药师&quot;,50);
+  var _name = user.name;
+  var _age = user.age;
+  print(&quot;-----$_name$_age&quot;); //输出：黄药师 50
+}
+</code></pre>
+<br>
+<h2 id="13类-构造函数">13.类--构造函数</h2>
+<p>Dart构造函数有种实现方式：</p>
+<ul>
+<li>默认构造方法</li>
+<li>命名构造方法Class.name(var param)</li>
+<li>调用父类构造方法</li>
+<li>不可变对象,定义编译时常量对象,构造函数前加const</li>
+<li>工厂构造函数:factory</li>
+</ul>
+<p><strong>命名构造函数</strong><br>
+Dart 并不支持构造函数的重载，而采用了命名构造函数为一个类实现多个构造函数：</p>
+<pre><code class="language-dart">class User {
+  var name;
+  var age;
+
+  User(this.name, this.age); //默认构造函数
+  //User(this.name); ///错误，因为不准许重载
+  User.age(this.age) {
+    name = &quot;欧阳锋&quot;;
+  }
+}
+
+void main() {
+  var user = User.age(50);
+  print(&quot;----${user.name}${user.age}&quot;); //输出：欧阳锋 50
+}
+</code></pre>
+<p><strong>重定向构造函数</strong><br>
+有时候一个构造函数会调动类中的其他构造函数(在Java中就是 this(...))。 一个重定向构造函数是没有代码的，在构造函数声明后，使用 冒号调用其他构造函数。</p>
+<pre><code class="language-dart">class User {
+  var name;
+  var age;
+
+  User(this.name, this.age); //默认构造函数
+
+  User.user(name, age) : this(name, age);
+}
+
+void main() {
+  var user = User.user(&quot;黄药师&quot;, 50);
+  print(&quot;----${user.name}${user.age}&quot;); //输出：黄药师50
+}
+</code></pre>
+<p><strong>常量构造函数</strong><br>
+如果你的类提供一个状态不变的对象，你可以把这些对象 定义为编译时常量。要实现这个功能，需要定义一个 const 构造函数， 并且声明所有类的变量为 final。</p>
+<pre><code class="language-dart">class User {
+  final String name;
+  final int age;
+
+  const User(this.name, this.age); //默认构造函数
+
+}
+
+void main() {
+  var user = User(&quot;黄药师&quot;, 50);
+  print(&quot;----${user.name}${user.age}&quot;); //输出：黄药师50
+}
+</code></pre>
+<p><strong>工厂构造函数</strong><br>
+当实现一个使用factory 关键词修饰的构造函数时，<strong>这个构造函数不必创建类的新实例</strong>。例如，<strong>一个工厂构造函数 可能从缓存中获取一个实例并返回，或者 返回一个子类型的实例。（工厂构造函数无法访问 this）</strong></p>
+<pre><code class="language-dart">//工厂构造方法   如果一个构造方法并不总是返回一个新的对象，这个时候可以使用factory来定义这个构造方法。
+class Logger {
+  final String name;
+  bool mute = false;
+
+  static final Map&lt;String, Logger&gt; _cache = &lt;String, Logger&gt;{};
+
+  factory Logger(String name) {
+    if (_cache.containsKey(name)) {
+      return _cache[name];
+    } else {
+      final logger = new Logger._internal(name);
+      _cache[name] = logger;
+      return logger;
+    }
+  }
+
+  Logger._internal(this.name);
+
+  void log(String msg) {
+    if (!mute) {
+      print(msg);
+    }
+  }
+}
+
+//调用
+void main() {
+  //工厂
+  var logger = new Logger('UI');
+  logger.log('Button clicked');
+}
+</code></pre>
+<p>借助工厂构造函数能够实现单例:（实用场景：flutter 网络请求Dio应用）</p>
+<pre><code class="language-dart">//使用工厂构造实现单例
+class DioUtil {
+  static final DioUtil _instance = DioUtil._init();
+  static Dio _dio;
+
+  factory DioUtil() {
+    return _instance;
+  }
+
+  DioUtil._init() {
+    _dio = new Dio();
+  }
+}
+</code></pre>
+<br>
+<h2 id="14抽象类-抽象方法-还有继承">14.抽象类、抽象方法、还有继承</h2>
+<p>实例方法、Getter 方法以及 Setter 方法都可以是抽象的，定义一个接口方法而不去做具体的实现让实现它的类去实现该方法，抽象方法只能存在于抽象类中，抽象类的定义跟Java的抽象类类似</p>
+<pre><code class="language-dart">abstract class User {
+  void say(); //定义一个抽象方法
+}
+class Person extends User{
+  @override
+  void say() {
+    // 提供一个实现，所以在这里该方法不再是抽象的……
+  }
+}
+</code></pre>
+<p>抽象类不能被实例化，除非定义工厂方法并返回子类。</p>
+<pre><code class="language-dart">abstract class User {
+  String name;
+  //默认构造方法
+  User(this.name);
+  //工厂方法返回Child实例
+  factory User.test(String name){
+    return new Child(name);
+  }
+  void printName();
+}
+// extends 继承抽象类
+class Child extends User{
+  Child(String name) : super(name);
+
+  @override
+  void printName() {
+    print(name);
+  }
+}
+
+void main() {
+  var p = User.test(&quot;黄药师&quot;);
+  print(p.runtimeType); //输出实际类型 Child
+  p.printName();//输出实际类型 黄药师
+}
+</code></pre>
+<br>
+<h2 id="15接口">15.接口</h2>
+<p>Dart 没有像 Java 用单独的关键字 interface 来定义接口，普通用 class 声明的类就可以是接口，可以通过关键字 implements来实现一个或多个接口并实现每个接口定义的 API：</p>
+<pre><code class="language-dart">// Person 类的隐式接口中包含 greet() 方法。
+class User {
+  // _name 变量同样包含在接口中，但它只是库内可见的。
+  final _name;
+
+  // 构造函数不在接口中。
+  User(this._name);
+
+  // greet() 方法在接口中。
+  String greet(String who) =&gt; '你好，$who。我是$_name。';
+}
+
+// Person 接口的一个实现。
+class Impostor implements User {
+  get _name =&gt; '';
+
+  String greet(String who) =&gt; '你好$who。你知道我是谁吗？';
+}
+
+String greetBob(User person) =&gt; person.greet('黄药师');
+
+void main() {
+  print(greetBob(User('欧阳锋'))); //输出：你好，黄药师。我是欧阳锋。
+  print(greetBob(Impostor())); //输出：你好黄药师。你知道我是谁吗？
+}
+</code></pre>
+<p>这时疑问来了，接口跟继承有什么区别，不就是多继承吗？ <strong>接口的实现则意味着，子类获取到的仅仅是接口的成员变量符号和方法符号，需要重新实现成员变量，以及方法的声明和初始化，否则编译器会报错。而继承可以选择不重新实现，这是最大的区别。</strong></p>
+<p>可能小伙伴觉得有点绕：那我们总结一下。其实就两句话：</p>
+<ul>
+<li>单继承，多实现。</li>
+<li>继承可以有选择的重写父类方法并且可以使用super，实现强制重新定义接口所有成员。</li>
+</ul>
+<br>
+<h2 id="16可调用的类">16.可调用的类</h2>
+<p>如果 Dart 类实现了 call() 函数则 可以当做方法来调用。</p>
+<pre><code class="language-dart">class User {
+  call(String name, int age) =&gt; '$name $age!';
+}
+
+main() {
+  var c = new User();
+  var out = c(&quot;黄药师&quot;,50);
+  print(out); //输出：黄药师 50!
+}
+</code></pre>
+<br>
+<h2 id="17混合mixins">17.混合Mixins</h2>
+<p>简单的理解，就是用来复用多个类之间的代码，减少耦合。我们直接来看一个例子。</p>
+<pre><code class="language-dart">mixin Swimming {
+    void swim() {
+        println('swimming')
+    }
+}
+
+/// Bird
+abstract class Bird {
+    void shout() {
+        println('游泳');
+    }
+}
+
+/// Duck
+class Duck extends Bird with Swimming {
+    void doDuckThings() {
+        shout();
+        swim();
+        println('跳跃!')
+    }
+}
+
+/// Fish
+abstract class Fish {
+
+}
+
+/// GoldFish
+class GoldFish extends Fish with Swimming {
+    void doGoldFishThings() {
+        swim();
+        pringln('zzz...');
+    }
+}
+</code></pre>
+<p><strong>mixins弥补了接口和继承的不足，继承只能单继承，而接口无法复用实现，mixins却可以多混入并且能利用到混入类</strong>。</p>
+<p>我们在来看一个例子做比较：</p>
+<pre><code class="language-dart">abstract class Swimming{
+  void swimming(){
+    print(&quot;游泳&quot;);
+  }
+}
+
+abstract class Jump{
+  void jump(){
+    print(&quot;跳跃&quot;);
+  }
+}
+
+//只能单继承，如果需要Jump，只能以implements的形式
+class HuangYaoShi extends Swimming implements Jump{
+  //实现接口
+  void jump(){
+    print(&quot;跳跃&quot;);
+  }
+}
+
+//但是实际上，我们经常不需要重新实现Jump方法，复用Jump所实现的jump方法就可以了
+//这时使用混合能够更加方便
+class HuangYaoShi with Swimming, Jump {}
+</code></pre>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#1-%E5%8F%98%E9%87%8F">1. 变量</a>
+<ul>
+<li><a href="#11%E9%9D%99%E6%80%81%E7%B1%BB%E5%9E%8B%E8%AF%AD%E8%A8%80%E5%B8%B8%E7%94%A8%E7%9A%84%E6%96%B9%E5%BC%8F%E6%98%BE%E5%BC%8F%E6%8C%87%E5%AE%9A%E5%8F%98%E9%87%8F%E7%B1%BB%E5%9E%8B">1.1静态类型语言常用的方式，显式指定变量类型</a></li>
+<li><a href="#12-%E5%8A%A8%E6%80%81%E8%AF%AD%E8%A8%80%E7%9A%84%E5%B8%B8%E7%94%A8%E6%96%B9%E5%BC%8F%E4%B8%8D%E6%8C%87%E5%AE%9A%E7%B1%BB%E5%9E%8B%E7%94%B1vm%E8%87%AA%E5%8A%A8%E6%8E%A8%E6%96%AD">1.2 动态语言的常用方式，不指定类型，由vm自动推断</a></li>
+<li><a href="#13-var%E5%AE%98%E6%96%B9%E9%A3%8E%E6%A0%BC%E6%8C%87%E5%8D%97%E5%BB%BA%E8%AE%AE%E4%BD%BF%E7%94%A8var">1.3 var（官方风格指南建议使用var）</a></li>
+</ul>
+</li>
+<li><a href="#2-object">2. Object</a></li>
+<li><a href="#3-dynamic">3. dynamic</a></li>
+<li><a href="#4final%E4%B8%8Econst">4.final与const</a></li>
+<li><a href="#5-%E6%93%8D%E4%BD%9C%E7%AC%A6">5. 操作符</a>
+<ul>
+<li><a href="#51-%E7%B1%BB%E5%9E%8B%E5%88%A4%E6%96%AD%E6%93%8D%E4%BD%9C%E7%AC%A6">5.1 类型判断操作符</a></li>
+<li><a href="#52-%E8%B5%8B%E5%80%BC%E6%93%8D%E4%BD%9C%E7%AC%A6">5.2 赋值操作符</a></li>
+<li><a href="#53-%E4%B8%89%E7%9B%AE%E8%BF%90%E7%AE%97%E7%AC%A6">5.3 三目运算符</a></li>
+<li><a href="#54-%E4%B8%89%E7%9B%AE%E8%BF%90%E7%AE%97%E7%AC%A6">5.4 三目运算符</a></li>
+<li><a href="#55-%E5%AE%89%E5%85%A8%E6%93%8D%E4%BD%9C%E7%AC%A6">5.5 安全操作符</a></li>
+</ul>
+</li>
+<li><a href="#6%E5%86%85%E7%BD%AE%E7%B1%BB%E5%9E%8B">6.内置类型</a>
+<ul>
+<li><a href="#61-num">6.1 num</a></li>
+<li><a href="#62-string">6.2 string</a></li>
+<li><a href="#63-bool">6.3 bool</a></li>
+<li><a href="#64-list">6.4 list</a></li>
+<li><a href="#65-list-map%E9%9B%86%E5%90%88">6.5 list Map（集合）</a></li>
+</ul>
+</li>
+<li><a href="#7%E5%88%86%E6%94%AF%E4%B8%8E%E5%BE%AA%E7%8E%AF">7.分支与循环</a></li>
+<li><a href="#8%E6%96%B9%E6%B3%95%E5%AF%B9%E8%B1%A1">8.方法对象</a></li>
+<li><a href="#9%E5%8F%AF%E9%80%89%E5%91%BD%E5%90%8D%E5%8F%82%E6%95%B0">9.可选命名参数</a></li>
+<li><a href="#10%E5%8F%AF%E9%80%89%E4%BD%8D%E7%BD%AE%E5%8F%82%E6%95%B0">10.可选位置参数</a></li>
+<li><a href="#11%E9%BB%98%E8%AE%A4%E5%8F%82%E6%95%B0">11.默认参数</a></li>
+<li><a href="#12%E5%8C%BF%E5%90%8D%E5%87%BD%E6%95%B0">12.匿名函数</a></li>
+<li><a href="#12%E7%B1%BB">12.类</a></li>
+<li><a href="#13%E7%B1%BB-%E6%9E%84%E9%80%A0%E5%87%BD%E6%95%B0">13.类--构造函数</a></li>
+<li><a href="#14%E6%8A%BD%E8%B1%A1%E7%B1%BB-%E6%8A%BD%E8%B1%A1%E6%96%B9%E6%B3%95-%E8%BF%98%E6%9C%89%E7%BB%A7%E6%89%BF">14.抽象类、抽象方法、还有继承</a></li>
+<li><a href="#15%E6%8E%A5%E5%8F%A3">15.接口</a></li>
+<li><a href="#16%E5%8F%AF%E8%B0%83%E7%94%A8%E7%9A%84%E7%B1%BB">16.可调用的类</a></li>
+<li><a href="#17%E6%B7%B7%E5%90%88mixins">17.混合Mixins</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://hensonguo.github.io/post/flutter-zong-jie/">
+              <h3 class="post-title">
+                flutter总结
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://hensonguo.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>
