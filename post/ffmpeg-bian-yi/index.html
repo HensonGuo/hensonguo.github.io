@@ -1,0 +1,390 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>FFMPEG编译 | Icode</title>
+<link rel="shortcut icon" href="https://hensonguo.github.io/favicon.ico?v=1783954340610">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://hensonguo.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="FFMPEG编译 | Icode - Atom Feed" href="https://hensonguo.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="1. 安装MSYS2
+MSYS2（Minimal SYStem 2）它提供了一个类似于Linux的shell环境。是一个集成了大量的GNU工具链、工具和库的开源软件包集合。可以在Windows系统中编译和运行许多Linux应用程序和工具。
+..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://hensonguo.github.io">
+  <img class="avatar" src="https://hensonguo.github.io/images/avatar.png?v=1783954340610" alt="">
+  </a>
+  <h1 class="site-title">
+    Icode
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              FFMPEG编译
+            </h2>
+            <div class="post-info">
+              <span>
+                2024-05-08
+              </span>
+              <span>
+                10 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <h2 id="1-安装msys2">1. 安装MSYS2</h2>
+<p>MSYS2（Minimal SYStem 2）它提供了一个类似于Linux的shell环境。是一个集成了大量的GNU工具链、工具和库的开源软件包集合。可以在Windows系统中编译和运行许多Linux应用程序和工具。</p>
+<p>下面是一些 MSYS2 的特点和功能：</p>
+<ol>
+<li>Linux 终端环境：MSYS2 提供了一个基于 MinGW-w64 的 Shell 环境，类似于 Linux 终端，使用户可以在 Windows 上执行常见的 UNIX 命令和 Shell 脚本。</li>
+<li>包管理器 Pacman：MSYS2 集成了 Pacman 包管理器，类似于 Arch Linux 中的 Pacman。通过 Pacman，用户可以方便地安装、升级和删除软件包，管理系统的软件依赖关系。</li>
+<li>MinGW-w64 工具链：MSYS2 包含了 MinGW-w64 工具链，提供了一组用于 Windows 的 GCC 编译器、binutils、Make 等工具，使开发人员可以在 Windows 上进行 C/C++ 软件开发。</li>
+<li>完整的开发环境：MSYS2 的软件包仓库中包含了各种开发工具、库文件和构建工具，例如编译器、调试器、版本控制工具（如 Git）、文本编辑器（如 Vim、Emacs）等，提供了一个完整的开发环境。</li>
+<li>更新和维护：MSYS2 提供了方便的软件包更新和系统维护机制，使用户能够轻松地保持软件包和系统的最新状态。</li>
+</ol>
+<p>MSYS2安装完后，进入目录查看类似linux的仿真环境，譬如有home/user目录，运行之后可以通过cd进入目录</p>
+<pre><code>cd /home/user
+</code></pre>
+<p>同样ls，ps，等linux命令都可以使用。</p>
+<p>下载地址：https://www.msys2.org/ 或 https://repo.msys2.org/distrib/</p>
+<p>安装好后需要将下载库的地址更换为国内源，否则下载速度可能会极慢，甚至失败。配置文件位于：</p>
+<pre><code>MSYS2\etc\pacman.d中
+</code></pre>
+<p>分别将mirrorlist.mingw32、mirrorlist.mingw64、mirrorlist.msys 三个配置文件的第一个Server的地址更换为清华大学的镜像，这里贴出我修改好的mirrorlist.mingw64</p>
+<pre><code class="language-config">##
+## 64-bit Mingw-w64 repository mirrorlist
+##
+
+## Primary
+## msys2.org
+Server = https://mirrors.tuna.tsinghua.edu.cn/msys2/mingw/x86_64/
+Server = http://mirrors.ustc.edu.cn/msys2/mingw/x86_64/
+Server = https://sourceforge.net/projects/msys2/files/REPOS/MINGW/x86_64/
+Server = https://www2.futureware.at/~nickoe/msys2-mirror/mingw/x86_64/
+Server = https://mirror.yandex.ru/mirrors/msys2/mingw/x86_64/
+Server = http://mirror.bit.edu.cn/msys2/mingw/x86_64/
+Server = https://mirror.selfnet.de/msys2/mingw/x86_64/
+Server = https://mirrors.sjtug.sjtu.edu.cn/msys2/mingw/x86_64/
+Server = https://msys2.nyc3.digitaloceanspaces.com/mingw/x86_64/
+Server = https://mirror.jmu.edu/pub/msys2/mingw/x86_64/
+Server = https://ftp.cc.uoc.gr/mirrors/msys2/mingw/x86_64/
+Server = https://ftp.acc.umu.se/mirror/msys2.org/mingw/x86_64/
+Server = https://mirrors.piconets.webwerks.in/msys2-mirror/mingw/x86_64/
+Server = https://quantum-mirror.hu/mirrors/pub/msys2/mingw/x86_64/
+Server = https://mirrors.dotsrc.org/msys2/mingw/x86_64/ 
+Server = https://mirror.ufro.cl/msys2/mingw/x86_64/
+Server = https://mirror.clarkson.edu/msys2/mingw/x86_64/
+Server = https://ftp.nluug.nl/pub/os/windows/msys2/builds/mingw/x86_64/
+Server = https://download.nus.edu.sg/mirror/msys2/mingw/x86_64/
+Server = https://ftp.osuosl.org/pub/msys2/mingw/x86_64/
+</code></pre>
+<p>之后直接通过 pacman -Syu 一键安装和升级所有的库。</p>
+<br>
+<h2 id="2-搭建编译环境">2. 搭建编译环境</h2>
+<p>window10 环境下 ffmpeg的编译方式主要有以下2种：</p>
+<ol>
+<li>MSYS2 + MinGW</li>
+<li>MSYS2 + MSVC</li>
+</ol>
+<p>由于 window 的原生 CMD 命令行无法执行shell脚本，也没有 make 之类的命令，所以需要装 MSYS2 软件。MinGW 跟 MSVC 是两个不同的编译器：</p>
+<pre><code class="language-c++">/*linux api pthread_create()*/
+#include &lt;stdio.h&gt;
+#include &lt;pthread.h&gt;
+void* PrintHello(void* data)
+{
+    printf(&quot;Hello from new thread\n&quot;);
+    pthread_exit(NULL);
+}
+int main(int argc, char* argv[])
+{
+ 
+   pthread_t  thread_id;
+   pthread_create(&amp;thread_id, NULL, PrintHello, NULL);
+   pthread_exit(NULL);
+}
+</code></pre>
+<p>上面的代码使用了一个 linux 里面 pthread_create() 线程函数，在window 环境是没有这个线程函数的，如果用 MSVC 编译器编译，会报错。但是如果用 MinGW 编译器 就可以在window环境 编译 pthread_create() 的代码。</p>
+<p>ffmpeg 的源代码是 linux ，window 等多平台通用的，ffmpeg 里面并没有直接使用pthread_create() 之类的linux专属的api函数，所以 用MinGW 还是MSVC 都可以编译ffmpeg 的源码，ffmpeg 的configure 编译脚本根据不同的编译方式执行不同的编译逻辑，例如如果用MinGW的编译器，configure 里面会走 MinGW的那块编译逻辑，如果指定用 MSVC 编译，configure会走另一块逻辑。</p>
+<p>通过在configure前面加 --toolchain=xxx 可以指定不同的编译工具链，例如 --toolchain=msvc 是指定msvc 编译工具链， 如果没指定 --toolchain ，在mingw32环境下，configure会自动选择 MinGW 的方式编译。</p>
+<p>MSYS2 安装完成之后，CMD 进入安装目录 C:\msys64 目录，执行 .\msys2_shell.cmd -mingw32（如果是64位则是-mingw64），打开32位的环境。不要直接点击 mingw32.exe 进入32位环境。尽量用 .\msys2_shell.cmd -mingw32。因为后面会改动一下 msys2_shell.cmd 文件。</p>
+<p>mingw的安装将在下述步骤：</p>
+<br>
+<h2 id="3-安装所需软件">3. 安装所需软件</h2>
+<pre><code># 刷新软件包数据
+pacman -Sy  
+# 安装mingw-w64。
+pacman -S mingw-w64-x86_64-toolchain
+（32位则是pacman -S mingw-w64-i686-toolchain）
+pacman -S git
+pacman -S make
+pacman -S automake 
+pacman -S autoconf
+pacman -S perl
+pacman -S mingw-w64-x86_64-SDL2
+（32位则是pacman -S mingw-w64-i686-SDL2）
+pacman -S libtool
+#32位的cmake跟64位的cmake都装一下，比较保险。
+pacman -S mingw-w64-i686-cmake
+pacman -S mingw-w64-x86_64-cmake
+pacman -S pkg-config 
+pacman -S yasm
+# 编译x264 需要 nasm
+pacman -S nasm
+</code></pre>
+<p>准备工作已经完毕了。<br>
+FFmpeg 这个工程编解码等功能，是需要依赖一些外部库的，例如 x264库，aac库等等。所以编译FFmpeg之前，需要把 x264 ，acc 等项目编译出静态库，然后再把x264静态库，acc静态库等 Link 进去 FFmpeg 的DLL里面。</p>
+<br>
+<h2 id="4-x264-项目编译">4. x264 项目编译：</h2>
+<p>下面的命令请把 /home/user 改成自己的目录。<br>
+编译过程中如果报 final link failed: No space left on device 错误，尝试重启window10。</p>
+<pre><code># 回到用户目录
+cd /home/user
+# 创建ffmpeg目录,build目录，统一管理，如32位命名build32，64位命名build64
+mkdir -p ffmpeg/build32  
+# 进入ffmpeg目录
+cd ffmpeg 
+#下载x264项目代码
+git clone https://github.com/mirror/x264
+# 进入x264项目目录
+cd x264 
+# 32位执行configure
+./configure --prefix=/home/user/ffmpeg/build32/libx264 \
+--host=i686-w64-mingw32 --enable-static \
+--extra-ldflags=-Wl,--output-def=libx264.def  
+# 64位执行configure
+./configure --prefix=/home/user/ffmpeg/build64/libx264 \
+--host=x86_64-w64-mingw32 --enable-static \
+--extra-ldflags=&quot;-Wl,--output-def=libx264.def&quot;  
+make -j8
+make install
+</code></pre>
+<p>如果上面的命令没出错，在 ~/ffmpeg/build32/libx264/lib 目录下会编译出 x264 的静态库 libx264.a。</p>
+<br>
+<h2 id="5-fdk-aac项目编译">5. fdk-aac项目编译：</h2>
+<pre><code># 回到ffmpeg目录
+cd /home/user/ffmpeg 
+git clone --depth 1 https://gitee.com/mirrors/fdk-aac.git
+cd fdk-aac
+./autogen.sh
+# 如果是64位更换下目录即可
+./configure --prefix=/home/user/ffmpeg/build32/libfdk-aac --disable-shared \
+--enable-static
+make -j8
+make install
+</code></pre>
+<p>如果上面的命令没出错，在 ~/ffmpeg/build32/libfdk-aac/lib 目录下会编译出 aac 的静态库 libfdk-aac.a。</p>
+<br>
+<h2 id="6-mp3项目编译">6. mp3项目编译：</h2>
+<p>下面的命令如果报错，请把 &quot;~&quot; 相对目录 改成绝对目录</p>
+<pre><code>cd /home/user/ffmpeg 
+git clone --depth 1 https://gitee.com/hqiu/lame.git
+cd lame
+# 如果是64位更换下目录即可
+./configure --prefix=/home/user/ffmpeg/build32/libmp3lame --disable-frontend \
+--disable-shared --enable-static
+make -j8
+make install
+</code></pre>
+<p>如果上面的命令没出错，在 ~/ffmpeg/build64/libmp3lame/lib 目录下会编译出 mp3 的静态库 libmp3lame.a。</p>
+<br>
+<h2 id="7-libvpx项目编译">7. libvpx项目编译：</h2>
+<pre><code>cd /home/user/ffmpeg 
+git clone --depth 1 https://github.com/webmproject/libvpx.git
+cd libvpx
+# 如果是32位更换下目录即可
+./configure --prefix=/home/user/ffmpeg/build64/libvpx --disable-examples \
+--disable-unit-tests --enable-vp9-highbitdepth --as=yasm
+make -j8
+make install
+</code></pre>
+<p>如果上面的命令没出错，在 ~/ffmpeg/build64/libvpx/lib 目录下会编译出 vpx的静态库 libvpx.a。<br>
+FFmpeg 工程依赖的外部静态库都已经编译出来，下面可以开始编译 FFmpeg 工程了。</p>
+<br>
+<h2 id="8-ffmpeg项目编译">8. FFmpeg项目编译：</h2>
+<pre><code># 如果是64位更换下目录即可
+cd /home/user/ffmpeg/ffmpeg-4.2
+./configure \
+--prefix=/home/user/ffmpeg/build32/ffmepg-4.2 \
+--enable-gpl \
+--enable-sdl2 \
+--enable-zlib \
+--enable-shared \
+--enable-nonfree \
+--enable-libx264 \
+--enable-libfdk-aac \
+--enable-libmp3lame \
+--enable-libvpx \
+--extra-cflags=&quot;-I/home/user/ffmpeg/build32/libfdk-aac/include&quot; \
+--extra-ldflags=&quot;-L/home/user/ffmpeg/build32/libfdk-aac/lib&quot; \
+--extra-cflags=&quot;-I/home/user/ffmpeg/build32/libvpx/include&quot; \
+--extra-ldflags=&quot;-L/home/user/ffmpeg/build32/libvpx/lib&quot; \
+--extra-cflags=&quot;-I/home/user/ffmpeg/build32/libx264/include&quot; \
+--extra-ldflags=&quot;-L/home/user/ffmpeg/build32/libx264/lib&quot; \
+--extra-cflags=&quot;-I/home/user/ffmpeg/build32/libmp3lame/include&quot; \
+--extra-ldflags=&quot;-L/home/user/ffmpeg/build32/libmp3lame/lib&quot;
+  
+make -j8
+make install
+</code></pre>
+<p>默认的编译只会编译ffmpeg和ffmpore，如果需要ffplay，还需要添加上–enable-sdl,<br>
+但是由于我们没有装SDL2库，所以SDL2_CONFIG找不到，所以就会出现：ERROR: sdl2 requested but not found 这种错误，所以我们还需要安装SDL库</p>
+<p>官网下载：https://www.libsdl.org/release/SDL2-2.0.8.tar.gz<br>
+下载完成后拷贝到“/home/source/”目录下，依次执行下列命令：</p>
+<pre><code>tar -zxvf SDL2-2.0.8.tar.gz
+cd SDL2-2.0.8
+./configure \
+--prefix=/home/guo/ffmpeg/build64/SDL2-2.0.8
+make
+make install
+</code></pre>
+<br>
+<br>
+<br>
+<p>官方参考：<br>
+<a href="https://trac.ffmpeg.org/wiki/CompilationGuide#Windows">https://trac.ffmpeg.org/wiki/CompilationGuide#Windows</a></p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#1-%E5%AE%89%E8%A3%85msys2">1. 安装MSYS2</a></li>
+<li><a href="#2-%E6%90%AD%E5%BB%BA%E7%BC%96%E8%AF%91%E7%8E%AF%E5%A2%83">2. 搭建编译环境</a></li>
+<li><a href="#3-%E5%AE%89%E8%A3%85%E6%89%80%E9%9C%80%E8%BD%AF%E4%BB%B6">3. 安装所需软件</a></li>
+<li><a href="#4-x264-%E9%A1%B9%E7%9B%AE%E7%BC%96%E8%AF%91">4. x264 项目编译：</a></li>
+<li><a href="#5-fdk-aac%E9%A1%B9%E7%9B%AE%E7%BC%96%E8%AF%91">5. fdk-aac项目编译：</a></li>
+<li><a href="#6-mp3%E9%A1%B9%E7%9B%AE%E7%BC%96%E8%AF%91">6. mp3项目编译：</a></li>
+<li><a href="#7-libvpx%E9%A1%B9%E7%9B%AE%E7%BC%96%E8%AF%91">7. libvpx项目编译：</a></li>
+<li><a href="#8-ffmpeg%E9%A1%B9%E7%9B%AE%E7%BC%96%E8%AF%91">8. FFmpeg项目编译：</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://hensonguo.github.io/post/webrtc-yuan-ma-bian-yi-sheng-cheng-sln/">
+              <h3 class="post-title">
+                webrtc源码编译+生成sln
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://hensonguo.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

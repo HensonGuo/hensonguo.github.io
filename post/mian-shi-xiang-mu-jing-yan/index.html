@@ -1,0 +1,220 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>面试项目经验 | Icode</title>
+<link rel="shortcut icon" href="https://hensonguo.github.io/favicon.ico?v=1783954340610">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://hensonguo.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="面试项目经验 | Icode - Atom Feed" href="https://hensonguo.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="开播系统
+当时CC直播发展过程中，不同业务线（游戏直播、娱乐秀场、赛事直播）各自建了开播工具，代码相互独立。表面看功能相似，但底层差异很大——有的是基于OBS二次开发，有的是基于FFmpeg自研推流，有的是用Qt原生写的。
+我的整合策略不是..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://hensonguo.github.io">
+  <img class="avatar" src="https://hensonguo.github.io/images/avatar.png?v=1783954340610" alt="">
+  </a>
+  <h1 class="site-title">
+    Icode
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              面试项目经验
+            </h2>
+            <div class="post-info">
+              <span>
+                2026-07-07
+              </span>
+              <span>
+                7 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <h1 id="开播系统">开播系统</h1>
+<p>当时CC直播发展过程中，不同业务线（游戏直播、娱乐秀场、赛事直播）各自建了开播工具，代码相互独立。表面看功能相似，但底层差异很大——有的是基于OBS二次开发，有的是基于FFmpeg自研推流，有的是用Qt原生写的。</p>
+<p>我的整合策略不是“推倒重来”，而是“抽取共性，剥离差异”：</p>
+<ul>
+<li>
+<p>第一步，找共性：所有开播工具都离不开四件事——音视频采集、画面预览、编码推流、状态监控。我把这四件事定义成四个抽象接口层，每个层只暴露必要的输入输出。</p>
+</li>
+<li>
+<p>第二步，剥离差异：不同业务特有的东西（比如游戏直播需要游戏源捕获、娱乐秀场需要美颜滤镜、赛事需要多机位切换）我做成插件机制，按需加载，不塞进核心。</p>
+</li>
+<li>
+<p>第三步，统一配置链路：原来每套系统都有自己的配置存储方式（注册表、JSON、SQLite都有）。我统一成一份配置协议，UI只管读写协议，底层只管解析协议，配置变更时用信号通知各模块刷新。</p>
+</li>
+</ul>
+<p>最终整合后，新增一个业务线的开播工具，开发时间从原来的2-3个月缩短到2-3周。这套架构在我离开前已经支撑了CC直播全部开播场景。</p>
+<p>可能的追问：“整合过程中最大的阻力是什么？怎么解决的？”</p>
+<p>回答：阻力不是技术，是业务方的质疑——“你改我的代码，出了线上问题谁负责？”我的做法是：先不动老代码，在旁边新建一套新架构的Demo，把老系统的核心功能跑通，拿到业务方面前演示。“你看，功能一样，但代码结构是这样的，以后改需求更快。”用事实打消顾虑后，再逐步切换流量。</p>
+<h1 id="梦幻西游赛事反作弊系统">梦幻西游赛事反作弊系统</h1>
+<p>追问方向：想听数据传输的稳定性设计，而不是AI算法本身。</p>
+<p>深化回答：<br>
+反作弊系统的核心挑战不是AI怎么识别，而是在选手可能恶意破坏的环境下，如何把数据安全送出去。</p>
+<p>我负责的是采集端，AI识别由另一个团队负责。我的职责是把数据喂给AI，并保证传输可靠：</p>
+<p>本地双路录制：摄像头和麦克风的数据，一路实时推给AI做判断，一路在本地加密缓存。如果网络中断，本地缓存保留，恢复后续传。</p>
+<p>进程守护：客户端被选手恶意kill掉时，我通过一个独立的守护进程（非常轻量，只做心跳上报）来感知异常，并在下次启动时上报“上次会话异常终止”的事件。</p>
+<p>数据传输：视频帧做了分层压缩——关键帧高码率、非关键帧低码率，在网络抖动时优先丢非关键帧，保证关键帧送达，AI那边不会因为花屏而无法识别。</p>
+<p>可能的追问：“选手如果拔掉摄像头或麦克风，你们怎么防？”</p>
+<p>回答：设备拔插监控是实时上报的。一旦检测到摄像头或麦克风被拔掉，桌面端立刻弹窗提醒裁判，同时把拔插事件的时间戳和系统日志上报服务端，作为违规证据链的一部分。选手如果重新插上，我们也能检测到，但拔插行为本身已经被记录了。</p>
+<h1 id="网易cc直播抓娃娃机上机位系统讲硬件通信稳定性">网易CC直播抓娃娃机上机位系统（讲硬件通信+稳定性）</h1>
+<p>这个项目是我在网易期间做的硬件控制客户端，与灰度科技的设备参数控制软件场景非常相似——同样是QT开发，同样涉及下位机通信（串口/TCP）、指令超时、设备断连和异常重试。</p>
+<p>当时最大的问题是现场环境复杂，机台经常掉线、指令超时，而且运营同事操作时一旦出错就抓不到娃娃，直接影响营收。</p>
+<p>我做了三件事：</p>
+<p>指令状态机：把“发送→等待响应→超时重试→失败上报”做成状态机，而不是简单的if-else，确保每条指令都有明确终态。</p>
+<p>本地日志+远程上报：所有异常操作都记录本地，同时关键错误实时上报服务端，事后可追溯。</p>
+<p>降级方案：如果网络中断，本地缓存最后一次有效状态，恢复后自动同步，避免人工干预。</p>
+<p>这套系统上线后，现场故障处理时间从平均40分钟降到10分钟以内，运营侧反馈很好。</p>
+<h1 id="马兰花开桌面端">马兰花开桌面端</h1>
+<p>我在马兰数字负责桌面开课工具从0到1的落地，团队25人，桌面端3人直管。这个项目最大的挑战不是技术，是方向频繁调整——老板经常在版本中期加需求。</p>
+<p>我的应对是：</p>
+<p>技术上，我把音视频采集、推流、UI交互、配置管理拆成独立模块，每个模块有明确的接口契约。这样即使产品方向变了，我只需要替换UI层或配置层，底层采集推流不用动。</p>
+<p>管理上，我建立了“需求变更影响评估表”——每次老板临时加需求，我算出影响的人天和风险点，用选择题汇报：“A方案加功能，延期3天；B方案不加，按期上线”。把决策权交还给老板，不硬扛也不抱怨。</p>
+<p>最终这套系统支撑了名师讲堂、私域直播等多个业务场景，并且桌面端3人团队在人员未增加的情况下，保持了每2周一个迭代的交付节奏。</p>
+<h1 id="一种基于日志的重现客户端场景的方法">一种基于日志的重现客户端场景的方法</h1>
+<p>好的，这是根据您的专利交底书提炼的300字以内简化版：</p>
+<p><strong>1. 背景</strong>：联网客户端异常（如界面错乱、报错）常由服务端数据触发，此类问题复现与定位困难。</p>
+<p><strong>2. 原有方案问题</strong>：传统依赖手动分析海量通信日志，效率低下；且人工模拟触发过程繁琐易错，难以快速精准重现场景。</p>
+<p><strong>3. 新方案基本流程</strong>：① <strong>记录</strong>：客户端运行时生成含协议号、时间戳、消息实体等详情的日志；② <strong>解析</strong>：调试模式下，工具自动加载并提取日志中的有效消息；③ <strong>模拟</strong>：按需选择模块和时间段，工具按原始时间间隔自动构建并逐条下发服务端消息，驱动客户端重现对应场景。</p>
+<p><strong>4. 创新点及优势</strong>：创新在于将“静态日志分析”转为“动态自动模拟”。优势是大幅降低分析难度，实现场景的快速、精准重现，显著提升问题定位效率。</p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li><a href="#%E5%BC%80%E6%92%AD%E7%B3%BB%E7%BB%9F">开播系统</a></li>
+<li><a href="#%E6%A2%A6%E5%B9%BB%E8%A5%BF%E6%B8%B8%E8%B5%9B%E4%BA%8B%E5%8F%8D%E4%BD%9C%E5%BC%8A%E7%B3%BB%E7%BB%9F">梦幻西游赛事反作弊系统</a></li>
+<li><a href="#%E7%BD%91%E6%98%93cc%E7%9B%B4%E6%92%AD%E6%8A%93%E5%A8%83%E5%A8%83%E6%9C%BA%E4%B8%8A%E6%9C%BA%E4%BD%8D%E7%B3%BB%E7%BB%9F%E8%AE%B2%E7%A1%AC%E4%BB%B6%E9%80%9A%E4%BF%A1%E7%A8%B3%E5%AE%9A%E6%80%A7">网易CC直播抓娃娃机上机位系统（讲硬件通信+稳定性）</a></li>
+<li><a href="#%E9%A9%AC%E5%85%B0%E8%8A%B1%E5%BC%80%E6%A1%8C%E9%9D%A2%E7%AB%AF">马兰花开桌面端</a></li>
+<li><a href="#%E4%B8%80%E7%A7%8D%E5%9F%BA%E4%BA%8E%E6%97%A5%E5%BF%97%E7%9A%84%E9%87%8D%E7%8E%B0%E5%AE%A2%E6%88%B7%E7%AB%AF%E5%9C%BA%E6%99%AF%E7%9A%84%E6%96%B9%E6%B3%95">一种基于日志的重现客户端场景的方法</a></li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://hensonguo.github.io/post/hui-du-ke-ji-er-mian/">
+              <h3 class="post-title">
+                灰度科技二面
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://hensonguo.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

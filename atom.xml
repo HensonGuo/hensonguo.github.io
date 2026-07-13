@@ -1,0 +1,1162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <id>https://hensonguo.github.io</id>
+    <title>Icode</title>
+    <updated>2026-07-13T14:52:24.183Z</updated>
+    <generator>https://github.com/jpmonette/feed</generator>
+    <link rel="alternate" href="https://hensonguo.github.io"/>
+    <link rel="self" href="https://hensonguo.github.io/atom.xml"/>
+    <subtitle>温故而知新</subtitle>
+    <logo>https://hensonguo.github.io/images/avatar.png</logo>
+    <icon>https://hensonguo.github.io/favicon.ico</icon>
+    <rights>All rights reserved 2026, Icode</rights>
+    <entry>
+        <title type="html"><![CDATA[灰度科技三面]]></title>
+        <id>https://hensonguo.github.io/post/hui-du-ke-ji-san-mian/</id>
+        <link href="https://hensonguo.github.io/post/hui-du-ke-ji-san-mian/">
+        </link>
+        <updated>2026-07-13T08:35:57.000Z</updated>
+        <content type="html"><![CDATA[<h1 id="1开场寒暄">1.开场寒暄</h1>
+<h2 id="1来长沙这边路上堵不堵">1.来长沙这边路上堵不堵？</h2>
+<h2 id="2你住岳麓区哪里过来方便吗">2.你住岳麓区哪里？过来方便吗？</h2>
+<p>你的姿态：放松、微笑、自然聊天。这十分钟在建立&quot;这个人好相处&quot;的第一印象。</p>
+<p>如果他聊起&quot;刚出差回来，深圳那边热得要命&quot;，这就是在给氛围加热。你可以自然地接一句：&quot;深圳这个季节确实够呛，长沙这几天也不凉快，办公室空调给力吧？&quot;——这种日常对话能迅速拉近你们的心理距离。</p>
+<h1 id="2聊项目">2.聊项目</h1>
+<h2 id="1xxxx">1.xxxx</h2>
+<p>之前跟您聊的时候我大概了解了，这是一个十来年的设备参数控制软件，代码量比较大，文档偏少，目前主要是内部技术支持在用，维护成本比较高。整体是需求明确、有重构价值的项目。我想等入职后先花一周左右把代码和环境跑起来，然后出一份初步的现状分析和优先级建议，到时候再跟您对齐一下节奏。您觉得这样合适吗？</p>
+<h2 id="2qt5版本的问题">2.qt5版本的问题</h2>
+<p>罗总，我了解过Qt的授权模式。它分LGPL开源版和商业版。商业化闭源软件确实可以用LGPL版，前提是动态链接、声明版权并让用户能替换Qt库。不少大公司也是这么用的。<br>
+我了解下，你们是不是用了</p>
+<ol>
+<li>静态链接、嵌入式设备锁死系统，</li>
+<li>或者使用了GPL模块，就可能需要商业授权了，如Qt Charts图表等。</li>
+</ol>
+<p>首先需要搞清楚，这几百万是怎么算出来的。</p>
+<ol>
+<li>开发人员许可：Qt商业版按开发者数量按年收费，每个桌面开发者许可约3950美元/年。</li>
+<li>设备分发许可：如果软件在嵌入式设备上运行，还需按设备支付授权费，约0.5-3美元/台。</li>
+<li>历史合规费用：如果过去存在不合规使用，可能需要补缴历史授权费</li>
+</ol>
+<p>如果确认合规使用LGPL协议，即可实现零授权费。需要完成以下技术整改：</p>
+<ol>
+<li>强制动态链接：这是LGPL的核心要求。需确保应用程序通过.dll或.so动态库形式调用Qt，并在编译配置中禁用静态链接选项。</li>
+<li>审查并替换GPL模块：需排查并移除Qt Charts（qwt 功能强大，非常适合设备参数控制这类工业软件。）、Qt WebEngine（cef）等GPL协议的模块，可用QCustomPlot等MIT协议的开源库替代。</li>
+<li>完善合规声明：在软件“关于”页面或文档中，须按LGPL要求声明使用了Qt及相关条款。理论上，用户还应能替换Qt库文件。</li>
+</ol>
+<h2 id="3-python-c混合编程">3. python c++混合编程</h2>
+<p>灰度科技当前的软件迭代了十来年，开发效率可能不高。你正好能提供一套用Python加速C++项目开发的成熟方案。</p>
+<p>应对Qt版权费：如果未来考虑用其他开源库替代Qt Charts等收费/高风险模块，Python胶水层能降低切换成本，是一个很有力的潜在解决方案。</p>
+<p>在聊到项目经验或业务痛点时，你可以很自然地抛出下面的观点：</p>
+<p>“我之前在网易做CC直播项目时，也用Python做了一些C++的辅助开发。当时需要支持快速迭代和热更新，所以我设计了一套C++与Python混合的UI框架。正好咱们这边也提到了对Python的要求，我可以具体聊聊这方面的经验。”</p>
+<p>这段话能帮你顺利把话题引导到你的核心优势上。</p>
+<p>具体来说：</p>
+<p>逻辑分层：C++负责底层通信、音视频处理等高性能任务，Python负责界面响应、UI状态管理等高频变更的业务逻辑。<br>
+数据交互：通过boost::python或PyBind11绑定C++核心API供Python调用，并让Python脚本能通过信号槽响应UI事件。<br>
+热更新机制：Python脚本文件单独存放，通过文件监控实现UI逻辑的动态更新，无需重新编译整个客户端。<br>
+结果 (Result)：开发效率显著提升，UI调整无需编译；首次实现了UI逻辑的热更新；降低了开发门槛，前端同事也能参与UI逻辑开发；组件复用，多套UI的共通逻辑被抽成Python库。</p>
+<h1 id="3入职意向">3.入职意向</h1>
+<h2 id="1欧阳总那边你也聊了整体感觉怎么样如果这边发offer你确定会来吗">1.欧阳总那边你也聊了，整体感觉怎么样？如果这边发Offer，你确定会来吗？</h2>
+<p>欧阳总那边聊得挺好的，整体方向我都很认可。我这边没有其他在等的Offer了，如果您这边确定推进，我随时可以配合入职。</p>
+<h1 id="4-确认你的计划和预期">4. 确认你的计划和预期</h1>
+<h2 id="1如果入职了你打算怎么开展工作">1.如果入职了，你打算怎么开展工作?</h2>
+<p>入职后我会先花一两周熟悉现有代码和团队，然后按咱们之前聊的四阶段思路推进。短期内第一优先级是把回归基线建立起来，确保后续重构有锚点。具体的细节等入职后再逐步细化。</p>
+<h1 id="5问你还有什么问题">5.问你还有什么问题</h1>
+<h2 id="1我想确认一下如果我入职了您希望我在前三个月最优先交付的是什么我想对齐一下您的第一优先级">1.我想确认一下，如果我入职了，您希望我在前三个月最优先交付的是什么？我想对齐一下您的第一优先级。</h2>
+<h2 id="2团队的办公时间和节奏大概是怎样的我好提前安排通勤和作息">2.团队的办公时间和节奏大概是怎样的？我好提前安排通勤和作息。</h2>
+<h2 id="3对了罗总我查到您在灰度科技是异步全彩产品的负责人同时也是公司股东-咱们这条产品线未来一两年的核心方向是继续深耕现有市场还是有新的场景要拓展我想了解一下这样在重构的时候可以把扩展性考虑进去避免走弯路">3.“对了罗总，我查到您在灰度科技是异步全彩产品的负责人，同时也是公司股东。咱们这条产品线，未来一两年的核心方向是继续深耕现有市场，还是有新的场景要拓展？我想了解一下，这样在重构的时候可以把扩展性考虑进去，避免走弯路。</h2>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[面试项目经验]]></title>
+        <id>https://hensonguo.github.io/post/mian-shi-xiang-mu-jing-yan/</id>
+        <link href="https://hensonguo.github.io/post/mian-shi-xiang-mu-jing-yan/">
+        </link>
+        <updated>2026-07-07T12:51:55.000Z</updated>
+        <content type="html"><![CDATA[<h1 id="开播系统">开播系统</h1>
+<p>当时CC直播发展过程中，不同业务线（游戏直播、娱乐秀场、赛事直播）各自建了开播工具，代码相互独立。表面看功能相似，但底层差异很大——有的是基于OBS二次开发，有的是基于FFmpeg自研推流，有的是用Qt原生写的。</p>
+<p>我的整合策略不是“推倒重来”，而是“抽取共性，剥离差异”：</p>
+<ul>
+<li>
+<p>第一步，找共性：所有开播工具都离不开四件事——音视频采集、画面预览、编码推流、状态监控。我把这四件事定义成四个抽象接口层，每个层只暴露必要的输入输出。</p>
+</li>
+<li>
+<p>第二步，剥离差异：不同业务特有的东西（比如游戏直播需要游戏源捕获、娱乐秀场需要美颜滤镜、赛事需要多机位切换）我做成插件机制，按需加载，不塞进核心。</p>
+</li>
+<li>
+<p>第三步，统一配置链路：原来每套系统都有自己的配置存储方式（注册表、JSON、SQLite都有）。我统一成一份配置协议，UI只管读写协议，底层只管解析协议，配置变更时用信号通知各模块刷新。</p>
+</li>
+</ul>
+<p>最终整合后，新增一个业务线的开播工具，开发时间从原来的2-3个月缩短到2-3周。这套架构在我离开前已经支撑了CC直播全部开播场景。</p>
+<p>可能的追问：“整合过程中最大的阻力是什么？怎么解决的？”</p>
+<p>回答：阻力不是技术，是业务方的质疑——“你改我的代码，出了线上问题谁负责？”我的做法是：先不动老代码，在旁边新建一套新架构的Demo，把老系统的核心功能跑通，拿到业务方面前演示。“你看，功能一样，但代码结构是这样的，以后改需求更快。”用事实打消顾虑后，再逐步切换流量。</p>
+<h1 id="梦幻西游赛事反作弊系统">梦幻西游赛事反作弊系统</h1>
+<p>追问方向：想听数据传输的稳定性设计，而不是AI算法本身。</p>
+<p>深化回答：<br>
+反作弊系统的核心挑战不是AI怎么识别，而是在选手可能恶意破坏的环境下，如何把数据安全送出去。</p>
+<p>我负责的是采集端，AI识别由另一个团队负责。我的职责是把数据喂给AI，并保证传输可靠：</p>
+<p>本地双路录制：摄像头和麦克风的数据，一路实时推给AI做判断，一路在本地加密缓存。如果网络中断，本地缓存保留，恢复后续传。</p>
+<p>进程守护：客户端被选手恶意kill掉时，我通过一个独立的守护进程（非常轻量，只做心跳上报）来感知异常，并在下次启动时上报“上次会话异常终止”的事件。</p>
+<p>数据传输：视频帧做了分层压缩——关键帧高码率、非关键帧低码率，在网络抖动时优先丢非关键帧，保证关键帧送达，AI那边不会因为花屏而无法识别。</p>
+<p>可能的追问：“选手如果拔掉摄像头或麦克风，你们怎么防？”</p>
+<p>回答：设备拔插监控是实时上报的。一旦检测到摄像头或麦克风被拔掉，桌面端立刻弹窗提醒裁判，同时把拔插事件的时间戳和系统日志上报服务端，作为违规证据链的一部分。选手如果重新插上，我们也能检测到，但拔插行为本身已经被记录了。</p>
+<h1 id="网易cc直播抓娃娃机上机位系统讲硬件通信稳定性">网易CC直播抓娃娃机上机位系统（讲硬件通信+稳定性）</h1>
+<p>这个项目是我在网易期间做的硬件控制客户端，与灰度科技的设备参数控制软件场景非常相似——同样是QT开发，同样涉及下位机通信（串口/TCP）、指令超时、设备断连和异常重试。</p>
+<p>当时最大的问题是现场环境复杂，机台经常掉线、指令超时，而且运营同事操作时一旦出错就抓不到娃娃，直接影响营收。</p>
+<p>我做了三件事：</p>
+<p>指令状态机：把“发送→等待响应→超时重试→失败上报”做成状态机，而不是简单的if-else，确保每条指令都有明确终态。</p>
+<p>本地日志+远程上报：所有异常操作都记录本地，同时关键错误实时上报服务端，事后可追溯。</p>
+<p>降级方案：如果网络中断，本地缓存最后一次有效状态，恢复后自动同步，避免人工干预。</p>
+<p>这套系统上线后，现场故障处理时间从平均40分钟降到10分钟以内，运营侧反馈很好。</p>
+<h1 id="马兰花开桌面端">马兰花开桌面端</h1>
+<p>我在马兰数字负责桌面开课工具从0到1的落地，团队25人，桌面端3人直管。这个项目最大的挑战不是技术，是方向频繁调整——老板经常在版本中期加需求。</p>
+<p>我的应对是：</p>
+<p>技术上，我把音视频采集、推流、UI交互、配置管理拆成独立模块，每个模块有明确的接口契约。这样即使产品方向变了，我只需要替换UI层或配置层，底层采集推流不用动。</p>
+<p>管理上，我建立了“需求变更影响评估表”——每次老板临时加需求，我算出影响的人天和风险点，用选择题汇报：“A方案加功能，延期3天；B方案不加，按期上线”。把决策权交还给老板，不硬扛也不抱怨。</p>
+<p>最终这套系统支撑了名师讲堂、私域直播等多个业务场景，并且桌面端3人团队在人员未增加的情况下，保持了每2周一个迭代的交付节奏。</p>
+<h1 id="一种基于日志的重现客户端场景的方法">一种基于日志的重现客户端场景的方法</h1>
+<p>好的，这是根据您的专利交底书提炼的300字以内简化版：</p>
+<p><strong>1. 背景</strong>：联网客户端异常（如界面错乱、报错）常由服务端数据触发，此类问题复现与定位困难。</p>
+<p><strong>2. 原有方案问题</strong>：传统依赖手动分析海量通信日志，效率低下；且人工模拟触发过程繁琐易错，难以快速精准重现场景。</p>
+<p><strong>3. 新方案基本流程</strong>：① <strong>记录</strong>：客户端运行时生成含协议号、时间戳、消息实体等详情的日志；② <strong>解析</strong>：调试模式下，工具自动加载并提取日志中的有效消息；③ <strong>模拟</strong>：按需选择模块和时间段，工具按原始时间间隔自动构建并逐条下发服务端消息，驱动客户端重现对应场景。</p>
+<p><strong>4. 创新点及优势</strong>：创新在于将“静态日志分析”转为“动态自动模拟”。优势是大幅降低分析难度，实现场景的快速、精准重现，显著提升问题定位效率。</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[灰度科技二面]]></title>
+        <id>https://hensonguo.github.io/post/hui-du-ke-ji-er-mian/</id>
+        <link href="https://hensonguo.github.io/post/hui-du-ke-ji-er-mian/">
+        </link>
+        <updated>2026-07-07T07:52:36.000Z</updated>
+        <content type="html"><![CDATA[<h1 id="开场">开场</h1>
+<h2 id="1自我介绍">1.自我介绍</h2>
+<p>欧阳总没事，正好我也把咱们公司LCD产品线的资料又过了一遍，不耽误。您那边事情处理好了就行，咱们开始吧。</p>
+<p>您好，我叫郭昀霖，37岁，长沙本地人，做了14年C++/Qt客户端开发。此前工作主要有三段经历：</p>
+<ol>
+<li>在网易待了将近10年，做CC直播开播工具，最大的收获是学会了大规模系统的整合重构等。</li>
+<li>在马兰数字做了技术总监，带25人团队，从0到1做了在线教育直播系统，包括一些列功能落地。</li>
+<li>再之前在游戏公司做页游开发，属于打基础的阶段。</li>
+</ol>
+<p>技术栈主要是c++ python qt，然后java和go属于也能写的，平常干活够用<br>
+总的来说，我是个能干活、能带队、也能直接跟业务方沟通的人。</p>
+<p>我跟罗总聊了两轮，主要聊了咱们那个设备参数控制软件的渐进式重构方案。罗总对这块的需求描述得很清晰，我也把我的四阶段思路完整讲了一遍，罗总觉得方向对路。</p>
+<h2 id="2你为什么离开上一家公司">2.你为什么离开上一家公司？</h2>
+<p>原因是比较清晰的——马兰数字成立几年一直没有找到盈利模式，老板是传统行业出身，决策更多凭个人判断而不是市场反馈，产品方向半年内换了好几次，技术团队一直在做‘老板想要的功能’而不是‘用户需要的产品’。马兰数字之前供血的母公司，湖北词源教育受政策的影响，资金链除了问题，进行大规模的战略收缩和优化，也包括现在的马兰，我这个岗位也在调整范围内，包括我直接负责的桌面端的产品线也是全部被砍了。公司跟我坦诚沟通后，我们和平解约，我这边也完成了所有的交接工作，走的时候很完整。</p>
+<h2 id="3你跟罗总聊了几轮了感觉怎么样">3.你跟罗总聊了几轮了？感觉怎么样？</h2>
+<p>“跟罗总聊了两轮了，微信上也沟通过几次。整体感觉特别好——罗总对业务和技术的理解都很务实，问的问题都很到位，不是那种浮在表面的。我们聊了那个十年老软件的重构思路，他给了我很具体的场景和挑战，我也把我的四阶段方案跟他详细讲了，他觉得可行。整体下来我觉得跟罗总配合应该会挺顺畅的，大家做事的风格比较接近，都是务实、看重结果的那一类。”</p>
+<h2 id="4你怎么看待跟罗总的分工">4.你怎么看待跟罗总的分工？</h2>
+<p>“我是这样理解的——罗总作为我的直属上级，他负责方向和决策，比如‘我们今年要做哪几个模块’、‘优先级怎么排’、‘资源怎么分配’。我负责方案和执行，比如‘这个模块具体怎么拆’、‘代码怎么审’、‘团队怎么带’。</p>
+<p>但有一点我会主动做——我会把技术层面的判断和风险，及时、完整地汇报给罗总，让他有足够的信息来做决策。而不是闷头干，等出了问题才说。</p>
+<p>简单来说，罗总决定‘做什么’，我负责‘怎么做’和‘能不能做’的判断。我觉得这种分工是最有效率的。”</p>
+<h2 id="5你现在为什么主动降薪">5.你现在为什么主动降薪”：</h2>
+<p>“上一家公司不盈利做了人员优化，我离开之后也重新审视了自己要什么。我发现在那种的环境里，技术很难沉淀下来。我不想再待在一个‘为了做功能而做功能’的环境里了。所以我这次出来，薪资不是我最看重的，就是想找一个业务方向真实、技术有深度的公司，踏踏实实干三五年。”</p>
+<h1 id="重构方案">重构方案</h1>
+<h2 id="1深挖重构方案上次你说了四阶段重构如果让你来了之后第一个月只做一件事你会做什么">1.深挖重构方案（上次你说了四阶段重构，如果让你来了之后第一个月只做一件事，你会做什么？）</h2>
+<p>回答框架（先给结论，再展开）<br>
+“第一个月我只会做一件事——把现有软件的‘行为标准基线’建立起来。具体来说：</p>
+<ul>
+<li>找测试同事把所有核心功能跑一遍，录屏+记录操作步骤，形成一份手动回归用例清单。</li>
+<li>接入崩溃上报和日志系统，让线上问题从‘用户说有问题’变成‘系统说哪里有异常’。</li>
+<li>把当前能编译通过的代码版本、依赖库版本、环境变量全部用Docker或虚拟机固定下来。</li>
+</ul>
+<p>这一个月我不写一行业务代码，但有了这些基线，后面所有的重构都是有锚点的，不会失控。我觉得这是对项目最负责任的做法。</p>
+<h2 id="2你来了之后打算怎么做">2.你来了之后打算怎么做？</h2>
+<p>回答策略：先给“管理节奏”，再给“技术方向”，让老板觉得你有全盘计划，不是上来就埋头写代码。<br>
+“我的计划是‘前两个月摸底和稳盘，后面按模块推进’。<br>
+第一个月不做代码改动，主要做三件事：</p>
+<ol>
+<li>
+<p>跟测试同事跑通所有核心功能，建立一份回归测试清单；</p>
+</li>
+<li>
+<p>接入崩溃上报和日志，让问题从‘用户说’变成‘系统报’；</p>
+</li>
+<li>
+<p>把当前能编译的代码版本和环境固定下来。</p>
+<p>第二个月开始，先挑一个不重要但常用的功能模块做重构试点，跑通从‘分析→拆分→重构→测试→回归’的完整流程，形成模板。</p>
+<p>后续按模块逐个推进，每2-3周交付一个可用的模块版本，让技术支持同事能持续用上，而不是等全部做完才上线。</p>
+<p>这样做的好处是——风险可控、进度可见、团队能持续产出、大家也能随时看到效果。”</p>
+</li>
+</ol>
+<h2 id="3你对我们公司这个项目了解多少">3.你对我们公司这个项目了解多少？</h2>
+<p>“我跟罗总聊过两轮，我的理解是——贵公司有一个做了十来年的QT客户端软件，用于设备参数控制。核心用户是内部技术支持同事，但代码缺乏维护、没有文档、没有规范的代码审查，测试基本就是靠人工点一点就发版。罗总希望重构，让代码可维护、质量可控、周期可控。</p>
+<p>我的判断是：这是一个典型的‘技术债积累到临界点’的项目——不重构，后面每加一个新功能成本都会越来越高；但直接重写风险又太大。所以我的建议是分阶段、分模块、渐进式重构，而不是推倒重来。这个思路罗总也是认可的。”</p>
+<h2 id="31-你对我们灰度科技的lcd产品了解多少">3.1 你对我们灰度科技的LCD产品了解多少？</h2>
+<p>我了解到，灰度科技最早是做LED控制系统的，后来扩展到了LCD商显控制领域。欧阳总您之前在公开场合提过，LCD商显面临几个行业挑战，灰度提供的解决方案包括全平台信息发布系统‘小灰云’、手机信发APP‘屏掌控’，还有局域网信发软件LCD Player，以及商显专用操作系统Huidu OS。我理解我参与重构的那个桌面端软件，就是这套LCD解决方案体系中的关键一环，直接面向内部技术支持或客户使用。</p>
+<h2 id="4你对这个重构项目的判断是什么">4.你对这个重构项目的判断是什么？</h2>
+<p>“我最大的顾虑不是技术问题，是团队认知对齐的问题。</p>
+<p>这个软件迭代了十来年，现有团队对它有自己的理解和感情。我作为新来的，如果一上来就说‘你们的代码不行，要重写’，很容易引起抵触。所以我的四阶段方案里，第一阶段是摸底而不是动手——先跟团队一起跑流程、加日志、做回归用例，让问题自己暴露出来，而不是我说‘这里有问题’。</p>
+<p>技术上最大的风险是老模块里有隐藏的兼容逻辑——比如某段代码看起来没用，但删了之后某个老设备就连不上了。我的应对是：高风险模块先不动，用适配器模式把它包起来，等摸透了再替换。</p>
+<p>总的来说，我觉得最大的风险是‘人’和‘历史包袱’，而不是技术本身。我的策略是慢一点、稳一点，先对齐再动手。”</p>
+<h2 id="5重构这个软件最终对业务的价值是什么你不仅仅是做技术你最终想交付什么">5.重构这个软件，最终对业务的价值是什么？你不仅仅是做技术，你最终想交付什么？</h2>
+<p>回答框架（拔高到“业务价值”层面） ：<br>
+“技术的最终目的不是让代码变漂亮，而是让业务跑得更快、更稳、成本更低。<br>
+这个软件重构完成后，我想交付两样东西：</p>
+<ul>
+<li>团队可维护性：现在代码只有‘老人’敢动，新人来了半年都不敢下手。重构后，我希望任何一个中等水平的C++开发，拿到文档和代码后，一周内就能独立修Bug。这样团队就不会被某个人员绑定。</li>
+<li>质量可量化：现在‘有没有问题’靠感觉。重构后，我希望有自动化测试、有崩溃率监控、有性能指标，每次发版都能看到质量数据是变好了还是变差了。”</li>
+</ul>
+<p>这个重构的目标，我理解不仅仅是让代码变漂亮——最终目的是让LCD产品线的客户响应速度更快、现场问题更少、交付更稳。比如说，现在改一个参数配置界面的需求可能要花两三天，重构后我希望压缩到半天；现在线上出了问题要找半天日志，重构后我希望崩溃上报和日志系统能直接定位问题。这些都是直接服务产品线的。</p>
+<h2 id="6你觉得这个重构对我们lcd产品线有什么实际价值">6.你觉得这个重构，对我们LCD产品线有什么实际价值？</h2>
+<p>“我理解这个软件是给内部技术支持用的设备参数控制工具。它的质量直接决定了技术支持同事能不能高效服务客户。重构的核心价值有三层：</p>
+<ul>
+<li>
+<p>客户响应更快：现在改需求要花几天，重构后我希望缩短到一天以内，客户提的紧急需求我们能更快给到。</p>
+</li>
+<li>
+<p>现场问题更少：通过代码审查规范和自动化测试，把线上崩溃率降下来，技术支持同事少跑现场处理紧急故障。</p>
+</li>
+<li>
+<p>团队不依赖个人：现在只有几个老同事敢动这块代码，重构后文档和模块边界清晰了，新人也能快速上手，产品线的交付风险就降低了。”</p>
+</li>
+</ul>
+<h1 id="技术问题">技术问题</h1>
+<h2 id="你除了qtc对别的技术栈了解多少">你除了Qt/C++，对别的技术栈了解多少？</h2>
+<p>“我主攻C++和Qt，但平时Go和Java也能写，Python用得比较多，经常用来做自动化脚本和日志分析工具。音视频这块对FFmpeg和OBS的管线有一定理解。</p>
+<p>技术选型上我的观点是：不迷信某一种技术，而是看场景。比如说，如果未来你们想做Web端的管理后台，我不会强行说‘用Qt写’，而会建议用合适的Web框架。但如果是要做设备控制这种对实时性和稳定性要求高的客户端，Qt+C++目前确实是最成熟的选择。</p>
+<p>新东西我可以学，我的学习路径一般是：先看官方文档和社区最佳实践，然后写一个小Demo跑通，再应用到项目里。我在网易的时候，Qt从4升5、引入CI/CD、接入OBS，都是边学边做的。”</p>
+<h1 id="团队管理带人能力">团队管理/带人能力</h1>
+<h2 id="1如果你的团队成员不认同你的重构方案觉得你在瞎折腾你怎么处理">1.“如果你的团队成员不认同你的重构方案，觉得你在瞎折腾，你怎么处理？”</h2>
+<p>回答框架（先共情，再给方法） ：<br>
+“这种情况我见过。技术人有自己的尊严和判断，反对不一定是抵触，更多是担心自己的工作被否定，或者害怕重构后自己的模块被边缘化。</p>
+<p>我的处理方式有三层：</p>
+<ul>
+<li>拉他一起参与方案设计——我会单独请他吃饭或喝咖啡，聊‘你觉得当前代码里最难受的地方是哪里？’让他感觉到自己的意见被尊重，而不是被安排。</li>
+<li>用数据说话——我会拿他负责的模块的历史Bug数量、维护成本给他看，让问题自己说话，而不是我说‘你的代码不行’。</li>
+<li>给他一个‘自留地’——我会把某个他熟悉的模块交给他来主导重构，让他成为这个模块的负责人，而不是被动的执行者。</li>
+</ul>
+<p>大部分人只要感觉到‘这事儿有我一份’、‘我的价值被看见了’，抵触情绪自然就消退了。”</p>
+<h2 id="2-你在前一家公司做技术总监现在过来做高级开发心态上能适应吗">2. 你在前一家公司做技术总监，现在过来做高级开发，心态上能适应吗？</h2>
+<p>这个问题我自己也想得很清楚。‘技术总监’这个title在不同公司含义差别很大——在马兰我带25个人，但业务方向一直不稳定，做的事情杂而不深。我来这边看重的不是title，而是这个重构项目本身的技术深度和长期价值。</p>
+<p>而且我觉得，‘带多少人’和‘做多大事’是两码事。我可以在一个项目里做核心架构设计、代码审查、带两三个新人，也可以参与技术决策——这些事不一定需要‘总监’的title才能做。</p>
+<p>我对自己的定位是：一个能独立搞定复杂问题、同时能帮团队提升的人。叫什么岗位，我不太纠结。</p>
+<h1 id="职业动机稳定性总监最怕招到半年跑路的人">职业动机/稳定性（总监最怕招到“半年跑路”的人）</h1>
+<h2 id="1你在上家公司待了不到两年就走这次如果来我们这边你怎么保证能待得住">1.你在上家公司待了不到两年就走，这次如果来我们这边，你怎么保证能待得住？</h2>
+<p>“马兰数字离职的原因我跟您坦诚说过——业务方向飘忽不定，老板做决策不看市场反馈，技术团队一直在追着新功能跑但没有产品沉淀。这不是我想要的长期环境。</p>
+<p>这次我之所以主动跟您聊这么多，包括自己在网上的一些搜索核实，是因为我判断灰度科技这边的业务场景是真实的、重构需求是明确的，而且经过沟通的这几轮，我能感觉到罗师傅和您是务实的技术管理者。</p>
+<p>我找工作从来不是‘找个地方待着’，而是找一件值得投入三五年的事。如果进来后发现确实如我们聊的这样——目标清晰、决策务实、技术有挑战——我没有理由不好好待着。”</p>
+<h2 id="2你之前是做直播工具和游戏开发的对我们这个lcd行业会不会不太熟悉考察跨界适应能力">2.“你之前是做直播工具和游戏开发的，对我们这个LCD行业会不会不太熟悉？”（考察跨界适应能力）</h2>
+<p>“行业知识我确实需要补课，但我理解欧阳总您需要的不是一个LCD行业专家，而是一个能把客户端软件质量拉起来的人。我在复杂设备控制（直播抓娃娃机上机位系统）和音视频采集传输方面有实际落地经验，这些底层的稳定性、通信、异常处理能力，跟LCD设备控制软件的需求是相通的。行业知识我可以快速补，代码质量管控的经验是我现在就能带过来的。”</p>
+<h1 id="自我认知成长规划判断你有没有自驱力">自我认知/成长规划（判断你有没有自驱力）</h1>
+<h2 id="1你觉得自己现在的技术水平和五年前比最大的变化是什么">1.“你觉得自己现在的技术水平和五年前比，最大的变化是什么？”</h2>
+<p>回答框架（展示成长+认知升级） ：<br>
+“五年前我更关注的是‘这段代码怎么写更优雅’，现在我更关注的是‘这段代码三年后谁维护、怎么维护、出问题了怎么定位’。</p>
+<p>简单来说，我从一个代码写手变成了一个工程设计师。我现在看代码，第一眼看的不是语法，而是：这个模块的边界在哪里、依赖关系是否合理、异常情况有没有被考虑到、新人接手后能不能看懂。</p>
+<p>技术上我还在持续学习，但现在学习的重心已经从‘新框架怎么用’变成了‘系统怎么设计才更稳定、更可维护’。</p>
+<h1 id="反问">反问</h1>
+<ol>
+<li>这个软件重构完成后，您对它的定位是什么？是继续作为内部工具，还是有计划对外商业化？这个会直接影响我们重构时的可扩展性和技术选型。</li>
+<li>我想确认一下，如果我入职了，您希望我在第一个月结束的时候，最核心的交付物是什么？是一份详细的架构分析报告，还是先把编译环境和CI跑通？我想对齐您的第一优先级。</li>
+<li>“您对这次重构的预期时间周期大概是多久？比如说，是希望半年内看到显著改善，还是愿意给两三年时间做一个彻底的新版本？我想了解您的耐心边界，好调整我的推进节奏。”</li>
+<li>我想问一下，您对这个重构项目的最终成功标准是怎么定义的？比如说，是代码质量指标（如崩溃率、Bug数），还是业务指标（如开发效率提升、技术支持时间缩短）？我想对齐一下您心里的‘成功画面’。</li>
+<li>我想了解一下，这个技术团队除了罗总带的这一块，还有别的团队吗？我跟其他团队之间的协作关系大概是怎样的？我想提前有个心理准备。</li>
+<li>“这个软件重构完成后，您希望它在整个LCD产品线中扮演什么样的角色？是作为内部工具提升团队效率，还是未来有可能对外打包成产品的一部分？这个定位会影响我们在重构时对界面和可扩展性的投入。”</li>
+</ol>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[灰度空间面试]]></title>
+        <id>https://hensonguo.github.io/post/hui-du-kong-jian-mian-shi/</id>
+        <link href="https://hensonguo.github.io/post/hui-du-kong-jian-mian-shi/">
+        </link>
+        <updated>2026-07-05T02:49:39.000Z</updated>
+        <content type="html"><![CDATA[<h1 id="开场白">开场白</h1>
+<p>“罗总，下午好，您出差还专门腾出时间，咱们就不搞那些虚的自我介绍了，我再看了一下贵公司发的岗位要求，再加上咱们上次聊的重构需求，我理解您当前最需要的是一个能稳住老系统、同时能带队把代码质量拉起来的人。我之前在网易做过类似的多套开播系统整合，在马兰也带过25人团队从0到1，这两段经历正好能覆盖您这边的情况。我这两天其实一直在琢磨您提的那个‘十年老Qt项目’，脑子里过了好几个拆解的画面，咱们今天可以重点聊聊我那个四阶段重构方案在您那边的落地细节，您看可以吗？”</p>
+<h2 id="重构思路">重构思路</h2>
+<p>第一阶段：摸底（先不动代码）</p>
+<ol>
+<li>各开发认领核心模块，通过加日志、跑流程，梳理出最常用的参数配置路径，还原出一份逻辑流程图。</li>
+<li>先接入日志与崩溃上报，把线上问题从被动发现转为可量化追踪，为后续重构提供数据基准。</li>
+</ol>
+<p>第二阶段：建立review等质量把控</p>
+<ol>
+<li>锁定核心模块的输入输出，作为回归基准；重构后跑通该基准即视为行为未退化。</li>
+<li>仅组长或资深开发拥有合并权限，新增代码必须审查；核心与底层逻辑我重点把关。</li>
+</ol>
+<p>第三阶段：分模块替换<br>
+1.设备通信、底层驱动、历史兼容逻辑等高风险部分，作为“黑盒”保留不动；<br>
+2.业务编排层与界面交互层，按模块逐步替换；<br>
+3.每替换一个模块，必须通过第一阶段梳理的回归用例，通过后方可合并。<br>
+4.老版本并行维护：安排1-2人专职修Bug与日常需求，其余人另开分支专注重构，互不干扰。</p>
+<p>第四阶段：迭代交付与文档沉淀<br>
+1.按模块优先级排期，每个迭代交付一个可用模块，让技术支持同事能持续用上，而不是等全部做完才上线。这样能看到阶段性产出，项目风险也可控。<br>
+2.每完成一个模块，输出精简逻辑结构说明与接口文档（核心逻辑即可），并定期组织内部分享，确保团队整体认知对齐。</p>
+<h1 id="项目经验">项目经验</h1>
+<h2 id="项目经验1-开播系统">项目经验1 开播系统</h2>
+<p>当时CC直播发展过程中，不同业务线（游戏直播、娱乐秀场、赛事直播）各自建了开播工具，代码相互独立。表面看功能相似，但底层差异很大——有的是基于OBS二次开发，有的是基于FFmpeg自研推流，有的是用Qt原生写的。</p>
+<p>我的整合策略不是“推倒重来”，而是“抽取共性，剥离差异”：</p>
+<ul>
+<li>
+<p>第一步，找共性：所有开播工具都离不开四件事——音视频采集、画面预览、编码推流、状态监控。我把这四件事定义成四个抽象接口层，每个层只暴露必要的输入输出。</p>
+</li>
+<li>
+<p>第二步，剥离差异：不同业务特有的东西（比如游戏直播需要游戏源捕获、娱乐秀场需要美颜滤镜、赛事需要多机位切换）我做成插件机制，按需加载，不塞进核心。</p>
+</li>
+<li>
+<p>第三步，统一配置链路：原来每套系统都有自己的配置存储方式（注册表、JSON、SQLite都有）。我统一成一份配置协议，UI只管读写协议，底层只管解析协议，配置变更时用信号通知各模块刷新。</p>
+</li>
+</ul>
+<p>最终整合后，新增一个业务线的开播工具，开发时间从原来的2-3个月缩短到2-3周。这套架构在我离开前已经支撑了CC直播全部开播场景。</p>
+<p>可能的追问：“整合过程中最大的阻力是什么？怎么解决的？”</p>
+<ul>
+<li>回答：阻力不是技术，是业务方的质疑——“你改我的代码，出了线上问题谁负责？”我的做法是：先不动老代码，在旁边新建一套新架构的Demo，把老系统的核心功能跑通，拿到业务方面前演示。“你看，功能一样，但代码结构是这样的，以后改需求更快。”用事实打消顾虑后，再逐步切换流量。</li>
+</ul>
+<h2 id="项目经验2-梦幻西游赛事反作弊系统">项目经验2 梦幻西游赛事反作弊系统</h2>
+<p>追问方向：想听数据传输的稳定性设计，而不是AI算法本身。</p>
+<p>深化回答：<br>
+反作弊系统的核心挑战不是AI怎么识别，而是在选手可能恶意破坏的环境下，如何把数据安全送出去。</p>
+<p>我负责的是采集端，AI识别由另一个团队负责。我的职责是把数据喂给AI，并保证传输可靠：</p>
+<ul>
+<li>
+<p>本地双路录制：摄像头和麦克风的数据，一路实时推给AI做判断，一路在本地加密缓存。如果网络中断，本地缓存保留，恢复后续传。</p>
+</li>
+<li>
+<p>进程守护：客户端被选手恶意kill掉时，我通过一个独立的守护进程（非常轻量，只做心跳上报）来感知异常，并在下次启动时上报“上次会话异常终止”的事件。</p>
+</li>
+<li>
+<p>数据传输：视频帧做了分层压缩——关键帧高码率、非关键帧低码率，在网络抖动时优先丢非关键帧，保证关键帧送达，AI那边不会因为花屏而无法识别。</p>
+</li>
+</ul>
+<p>可能的追问：“选手如果拔掉摄像头或麦克风，你们怎么防？”</p>
+<ul>
+<li>回答：设备拔插监控是实时上报的。一旦检测到摄像头或麦克风被拔掉，桌面端立刻弹窗提醒裁判，同时把拔插事件的时间戳和系统日志上报服务端，作为违规证据链的一部分。选手如果重新插上，我们也能检测到，但拔插行为本身已经被记录了。</li>
+</ul>
+<h2 id="项目经验3-网易cc直播抓娃娃机上机位系统讲硬件通信稳定性">项目经验3 网易CC直播抓娃娃机上机位系统（讲硬件通信+稳定性）</h2>
+<p>这个项目是我在网易期间做的硬件控制客户端，与灰度科技的设备参数控制软件场景非常相似——同样是QT开发，同样涉及下位机通信（串口/TCP）、指令超时、设备断连和异常重试。</p>
+<p>当时最大的问题是现场环境复杂，机台经常掉线、指令超时，而且运营同事操作时一旦出错就抓不到娃娃，直接影响营收。</p>
+<p>我做了三件事：</p>
+<ol>
+<li>
+<p>指令状态机：把“发送→等待响应→超时重试→失败上报”做成状态机，而不是简单的if-else，确保每条指令都有明确终态。</p>
+</li>
+<li>
+<p>本地日志+远程上报：所有异常操作都记录本地，同时关键错误实时上报服务端，事后可追溯。</p>
+</li>
+<li>
+<p>降级方案：如果网络中断，本地缓存最后一次有效状态，恢复后自动同步，避免人工干预。</p>
+</li>
+</ol>
+<p>这套系统上线后，现场故障处理时间从平均40分钟降到10分钟以内，运营侧反馈很好。</p>
+<h2 id="项目经验4-马兰花开桌面端">项目经验4 马兰花开桌面端</h2>
+<p>我在马兰数字负责桌面开课工具从0到1的落地，团队25人，桌面端3人直管。这个项目最大的挑战不是技术，是方向频繁调整——老板经常在版本中期加需求。</p>
+<p>我的应对是：</p>
+<ul>
+<li>
+<p>技术上，我把音视频采集、推流、UI交互、配置管理拆成独立模块，每个模块有明确的接口契约。这样即使产品方向变了，我只需要替换UI层或配置层，底层采集推流不用动。</p>
+</li>
+<li>
+<p>管理上，我建立了“需求变更影响评估表”——每次老板临时加需求，我算出影响的人天和风险点，用选择题汇报：“A方案加功能，延期3天；B方案不加，按期上线”。把决策权交还给老板，不硬扛也不抱怨。</p>
+</li>
+</ul>
+<p>最终这套系统支撑了名师讲堂、私域直播等多个业务场景，并且桌面端3人团队在人员未增加的情况下，保持了每2周一个迭代的交付节奏。</p>
+<h1 id="重构沟通">重构沟通</h1>
+<h2 id="黑盒模块的具体处理">“黑盒模块”的具体处理</h2>
+<p>你提到“设备通信、底层驱动作为黑盒保留”。他会追问：“如果重构时发现这个黑盒有隐藏Bug，导致新业务（如新的参数指令）无法兼容，你怎么办？”</p>
+<p>应对：强调“防腐层”设计。在黑盒外封装适配器，新业务走新接口，通过日志对比新旧指令的输入输出，若发现黑盒异常，临时打补丁或协商原厂商，绝不轻易动黑盒内核。</p>
+<h2 id="无文档如何破局">“无文档”如何破局</h2>
+<p>他说“参数庞大，几乎没有完整文档”。他会问：“测试同事只懂业务操作，不懂代码。你如何从他们口中挖出有效逻辑？”</p>
+<p>应对：提出“业务场景用例化”。让测试同事列出最常用的20个操作场景（如“连接设备-读取参数A-修改参数B-校准”），开发组陪测录制动作为基准用例。逆向推导出的流程图必须能跑通这20个场景，作为重构是否“出轨”的红线。</p>
+<h2 id="人员分工与并行开发冲突">人员分工与并行开发冲突</h2>
+<p>你提到“老版本并行维护”。他会问：“如果老版本紧急线上事故不断，你抽走的人被迫回去救火，重构进度严重滞后，如何兜底？”</p>
+<p>应对：明确“主干开发，特性开关（Feature Toggle）”。重构代码合入主干但默认关闭，通过配置中心动态开启。救火队员只修老分支，修完即时合并到重构分支，保持代码同步，避免后期合并冲突爆炸。</p>
+<h2 id="你上次说的四阶段重构思路不错但如果让你来带我的团队你会先动哪一块为什么">“你上次说的四阶段重构思路不错，但如果让你来带我的团队，你会先动哪一块？为什么？”</h2>
+<p>我会先选一个“最常用但最不关键”的模块作为试点，而不是一上来就啃最难的。比如参数面板中某个业务配置界面——它高频使用，技术支持同事天天点，但即使改出问题也不至于让设备瘫痪。</p>
+<p>选它的原因有三：</p>
+<ol>
+<li>
+<p>建立信任：用它跑通我上面说的“日志摸底→锁定输入输出→重构→回归”全流程，让团队看到这套方法是可行的，也让您看到效果。</p>
+</li>
+<li>
+<p>练兵：让团队里一位中等水平的开发来主写，我来review，借此统一编码规范，比我先讲一套规范管用。</p>
+</li>
+<li>
+<p>确立基线：这个模块重构完成后，它的回归用例和文档模板就沉淀下来，后面所有模块照此执行，标准化就有了抓手。</p>
+</li>
+</ol>
+<h2 id="关于团队管理与代码审查高概率">关于团队管理与代码审查（高概率）</h2>
+<p>“你之前说组长互审，但如果我们现在的团队水平参差不齐，组长自己也写得一般，你怎么兜底？”</p>
+<p>这种情况我见过，在网易整合多套开播系统时也遇到过。我的做法是“先立规矩，再补能力”：</p>
+<ul>
+<li>
+<p>短期兜底：前两个月我会亲自review所有合并请求，不是每行都看，但核心逻辑和接口边界必看。同时我会把发现的问题分类（比如内存泄漏、线程安全、异常处理缺失），每周挑一个典型问题做15分钟短分享，把“点”上的问题变成团队“面”上的认知。</p>
+</li>
+<li>
+<p>中期赋能：我不会让组长一直依赖我。我会设计一套Checklist模板（比如新代码必须回答：异常时怎么处理、资源怎么释放、多线程竞争在哪里），强制组长按清单审查。这不是增加负担，是把隐性经验显性化。</p>
+</li>
+<li>
+<p>长期换血：如果经过两三个月，某位组长确实带不动，我会跟您坦诚沟通，要么调整职责，要么补充人选。但这是最后手段，我会先尽力带人。</p>
+</li>
+</ul>
+<h2 id="你之前说不怕辛苦怕内耗那我们现在的重构项目前几个月肯定会很累你怎么看待">“你之前说‘不怕辛苦怕内耗’，那我们现在的重构项目前几个月肯定会很累，你怎么看待？”</h2>
+<p>我完全理解。重构项目前期就是还技术债，累是必然的，也是合理的。我的态度是：</p>
+<ul>
+<li>
+<p>我可以带头加班，关键节点比如上线前、联调期，我肯定在。</p>
+</li>
+<li>
+<p>但我反对无效加班——比如白天开会晚上写代码、或者需求反复改导致返工。我会做的第一件事就是把需求变更流程卡住，让团队的时间花在刀刃上。</p>
+</li>
+</ul>
+<p>另外，我会把重构拆成小迭代，每2-3周能出一个可见成果，让团队能看到自己的产出，士气就不会垮。</p>
+<h2 id="ui-重构策略">UI 重构策略</h2>
+<p>JD强调Qt界面开发，十年老项目必定界面混乱。他会问：“QWidget界面和业务逻辑严重耦合，你怎么拆？”</p>
+<p>应对：强调MVC/MVVM改造。利用Qt的Model/View框架分离数据与展示；对于复杂自定义控件，先只抽出信号槽接口，界面布局保持不变，重构内部逻辑，最后再重绘UI。</p>
+<h1 id="技术问题">技术问题</h1>
+<h2 id="多线程与稳定性因为你做过高稳定直播推流">多线程与稳定性（因为你做过高稳定直播推流）</h2>
+<p>问：“重构时如何保证设备串口/TCP通信线程不卡UI？你如何处理TCP半包和粘包？弱网下重连机制怎么写？”</p>
+<p>答：强调工作线程 + 事件驱动，串口/TCP数据只负责收原始字节，抛给业务线程池解析；用状态机管理设备连接状态（已连接/认证中/断线重试/熔断）。</p>
+<h2 id="性能与排查jd明确要求wiresharktcpdump">性能与排查（JD明确要求Wireshark/tcpdump）：</h2>
+<p>问：“如果重构后参数加载变慢，你用什么工具定位？Qt自身的QElapsedTimer + Valgrind，还是Windows ETW？”</p>
+<p>答：结合你直播优化的经验，提火焰图（perf/brendangregg）定位CPU热点，以及自定义埋点日志（记录每个关键步骤耗时），打印到带时间戳的循环缓存中，便于线上拉取分析。</p>
+<h2 id="图形图像directxopenglobs经历">图形/图像（DirectX/OpenGL/OBS经历）：</h2>
+<p>虽然重构设备参数软件可能不涉及视频，但他可能会问：“我们的设备会有实时波形图或热力图展示，要求高性能刷新，你怎么在Qt里实现？”</p>
+<p>答：QOpenGLWidget + 着色器或QQuickPaintedItem进行硬件加速渲染，避免用QPainter绘制大量点线导致CPU飙升。</p>
+<h2 id="你用wireshark抓过包吗遇到tcp粘包拆包怎么处理">你用Wireshark抓过包吗？遇到TCP粘包/拆包怎么处理？</h2>
+<ul>
+<li>应用层协议设计：固定包头+包体长度，或者使用分隔符。</li>
+<li>接收端缓冲区的设计（QByteArray累积+解析循环）。</li>
+<li>举例：在抓娃娃机项目中，下位机返回的指令有固定帧头帧尾，我在接收线程里做完整帧拼装，拼好后再抛给业务线程。</li>
+</ul>
+<h2 id="directxopengl你在哪个项目用过渲染效率怎么优化">DirectX/OpenGL，你在哪个项目用过？渲染效率怎么优化？</h2>
+<ul>
+<li>CC直播开播工具里的画面预览用到了DirectX渲染。</li>
+<li>优化点：减少纹理上传次数（使用PBO）、合理控制帧率（不需要60帧时主动限帧）、避免频繁创建销毁资源。</li>
+<li>如果你直接说“我更多是用OBS的渲染管线，底层API调优不是我的主战场，但我能看懂并能定位瓶颈”，这样诚实且有边界感，反而加分。</li>
+</ul>
+<h2 id="你们之前如何做内存泄漏检测">你们之前如何做内存泄漏检测？</h2>
+<p>开发期：使用Visual Studio的诊断工具，或Dr. Memory。</p>
+<p>运行时：重载new/delete，记录分配点；或使用valgrind（Linux）。</p>
+<p>Qt层面：关注QObject父子关系是否被正确析构。</p>
+<h2 id="如果一个老模块没有文档你如何快速理清它的业务逻辑">如果一个老模块没有文档，你如何快速理清它的业务逻辑？</h2>
+<ul>
+<li>加详细日志，跑一条典型流程，还原调用链。</li>
+<li>用Doxygen或Source Insight生成调用图，先看入口和出口。</li>
+</ul>
+<h1 id="管理技能">管理技能</h1>
+<h2 id="如果我老板说重构太慢我要求你4个月完成否则换方案你怎么定计划">“如果我老板说，重构太慢，我要求你4个月完成，否则换方案，你怎么定计划？</h2>
+<p>应对（核心技巧）：采用“绞杀者模式（Strangler Fig）”。不重写全部，只重写高频核心路径（如80%业务使用的参数配置面板），让它跑在新架构上，边缘低频功能继续跑在老代码上。确保第一个迭代（1个月）就能上线一个“焕然一新”的核心入口，让老板看见进度。</p>
+<h2 id="你在管理上绩效怎么打有没有因为绩效跟人闹过矛盾">你在管理上，绩效怎么打？有没有因为绩效跟人闹过矛盾？</h2>
+<ul>
+<li>不用主观打分，用交付承诺达成率+线上Bug密度+代码审查反馈三项量化指标。</li>
+<li>矛盾处理：提前沟通，每月1对1对齐预期，不搞年终秋后算账。</li>
+</ul>
+<h1 id="反问">反问</h1>
+<ul>
+<li>
+<p>罗总，这个重构项目，公司给的时间窗口大概多长？是否允许我们在重构期间，因为对新架构不熟，导致某些非核心Bug短暂复现？</p>
+</li>
+<li>
+<p>您提到的若干C++开发同事，他们的平均年限和当前对这套老代码的熟悉程度如何？我需要判断是‘精兵突击’还是‘以战代练’。“咱们现有的C++团队，大家对这个重构项目的态度是积极、观望、还是抵触？我提前了解一下，方便我到时候调整沟通方式。</p>
+</li>
+<li>
+<p>“除了这个设备控制软件，这个团队后续是否还要承担其他新的产品线开发？（这决定重构完以后，你是留下维护还是继续做新产品）”</p>
+</li>
+<li>
+<p>重构这件事，您这边预期的时间周期和资源投入大概是什么量级？比如是希望半年内完成大版本替换，还是分两年慢慢迭代？我想对齐一下您的预期。</p>
+</li>
+<li>
+<p>“如果这次合作达成，您希望我入职后第一个月解决的最核心的问题是什么？我想优先对齐您的第一优先级。”</p>
+</li>
+<li>
+<p>qt4 qt5</p>
+<h1 id="薪资福利">薪资福利</h1>
+<p>薪资倒挂逻辑：罗清文已经知道你25K期望22K。周日面谈结尾他大概率会最终确认薪资结构。请务必咬死“22K是期望基数”，同时反问“年终奖、项目奖金、公积金缴纳比例”。如果公积金太低，22K实际到手远不如25K高基数，要把这个账算清楚，给自己留谈判空间。</p>
+</li>
+</ul>
+<p>“立即沟通” vs “继续沟通”：两个JD同时存在，说明该岗位非常紧急且缺人，你的议价权（尤其是重构话语权）比预想的大，不要妄自菲薄。</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[openclaw安装]]></title>
+        <id>https://hensonguo.github.io/post/openclaw-an-zhuang/</id>
+        <link href="https://hensonguo.github.io/post/openclaw-an-zhuang/">
+        </link>
+        <updated>2026-03-12T06:08:03.000Z</updated>
+        <content type="html"><![CDATA[<h2 id="1-安装git">1. 安装git</h2>
+<h2 id="2-安装nodejs">2. 安装nodejs</h2>
+<ul>
+<li>网址：https://nodejs.org/en/download</li>
+<li>上方版本可能会变，确保用最新的（LTS）即可</li>
+</ul>
+<h2 id="3-启动powershell">3. 启动powershell</h2>
+<ul>
+<li>点击Win键 或 点击菜单开始键</li>
+<li>搜索Powershell 并用管理员身份运行</li>
+</ul>
+<h2 id="4-安全策略设置">4. 安全策略设置</h2>
+<ul>
+<li>输入：Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser 然后回车</li>
+<li>出现这个后输入大写的 Y 然后回车</li>
+</ul>
+<h2 id="5-安装openclaw">5. 安装openclaw</h2>
+<ul>
+<li>输入：iwr -useb https://openclaw.ai/install.ps1 | iex 然后回车</li>
+</ul>
+<h2 id="6-安装好后回答">6. 安装好后回答</h2>
+<pre><code>I understand this is personal-by-default and shared/multi-user user requires lock-down. continue?
+</code></pre>
+<p>选择Yes</p>
+<h2 id="7model选择">7.model选择</h2>
+<pre><code>Model/auth provider
+MiniMax
+
+MiniMax auth method
+MiniMax M2.5 (CN)
+</code></pre>
+<ul>
+<li>选择model</li>
+</ul>
+<pre><code>How do you want do provide this API key?
+Past API key now
+
+Enter MiniMax China API key
+</code></pre>
+<ul>
+<li>申请model api key：去minimax或Kimi申请apikey，将密钥粘贴拷贝到控制台确认</li>
+<li>设置默认model</li>
+</ul>
+<h2 id="8-申请机器人key">8. 申请机器人key</h2>
+<pre><code>Select channel(QuickStart)
+Telegram (Bot API)
+
+Telegram bot token
+1)Open telegram and chat with @BotFather
+2)Run /newBot (or /mybots)
+3)copy the token (look like 123456@:ABC...)
+Tip: you can also set TELEGRAM_BOT_TOKEN in your env.
+Website: https://openclaw.ai
+......
+</code></pre>
+<ul>
+<li>飞书：https://open.feishu.cn/app?lang=zh-CN</li>
+<li>企微：https://cloud.tencent.com/document/product/1689/128999</li>
+<li>电报：找到@BotFather，选择/newBot，命名好bot，拷贝好token粘贴到控制台</li>
+</ul>
+<h2 id="9-暂跳过其他设置">9. 暂跳过其他设置</h2>
+<pre><code>Web seach
+No
+
+Configure skills now?
+No
+
+Set GOOLE_PLACES_API_KEY for goplaces?
+No
+.....
+</code></pre>
+<h2 id="9-启动控制台">9. 启动控制台</h2>
+<ul>
+<li>查看网关状态</li>
+</ul>
+<pre><code>openclaw gateway status
+</code></pre>
+<ul>
+<li>如果网关存在问题，退出360等，重启网关</li>
+</ul>
+<pre><code>openclaw gateway start
+</code></pre>
+<ul>
+<li>如果还存在问题，通过doctor修复或重装网关</li>
+</ul>
+<pre><code>openclaw gateway uninstall
+openclaw doctor --fix
+openclaw gateway install
+openclaw gateway start
+</code></pre>
+<ul>
+<li>打开控制台</li>
+</ul>
+<pre><code>openclaw dashboard
+</code></pre>
+<p>打开网页时会提醒</p>
+<pre><code>unauthorized: gateway token missing (open the dashboard URL and paste the to
+</code></pre>
+<p>这是因为用户没有使用带终端令牌的链接打开，导致权限认证失败，在终端中运行</p>
+<pre><code>openclaw dashboard --no-open
+</code></pre>
+<h2 id="10重新配置openclaw">10.重新配置openclaw</h2>
+<pre><code>openclaw configure
+</code></pre>
+<h2 id="11安装skill">11.安装skill</h2>
+<ul>
+<li>安装clawhub的cli工具</li>
+</ul>
+<pre><code>npm i -g clawhub
+</code></pre>
+<p>-去clawhub搜索拷贝名称安装</p>
+<pre><code>clawhub install &quot;baidu web search&quot;
+npx skills add https://github.com/JimLiu/baoyu-skills/tree/main/skills/baoyu-post-to-wechat
+</code></pre>
+<h2 id="12卸载小龙虾">12.卸载小龙虾</h2>
+<pre><code>openclaw uninstall --all --yes
+</code></pre>
+<ul>
+<li>--all 参数会删除包括网关服务、本地数据库、配置文件在内的所有数据。</li>
+<li>--yes 参数让整个过程自动确认，无需手动干预。</li>
+</ul>
+<p>删除命令行工具：等待上一条命令执行完毕后，再执行以下命令，彻底移除OpenClaw的命令行工具：</p>
+<pre><code>npm uninstall -g openclaw
+</code></pre>
+<h2 id="13问题">13.问题</h2>
+<p>如果启动gateway失败，尝试</p>
+<pre><code>openclaw gateway --force
+</code></pre>
+<p>关闭360等软件再次安装重试</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[FFMPEG编译]]></title>
+        <id>https://hensonguo.github.io/post/ffmpeg-bian-yi/</id>
+        <link href="https://hensonguo.github.io/post/ffmpeg-bian-yi/">
+        </link>
+        <updated>2024-05-08T02:42:28.000Z</updated>
+        <content type="html"><![CDATA[<h2 id="1-安装msys2">1. 安装MSYS2</h2>
+<p>MSYS2（Minimal SYStem 2）它提供了一个类似于Linux的shell环境。是一个集成了大量的GNU工具链、工具和库的开源软件包集合。可以在Windows系统中编译和运行许多Linux应用程序和工具。</p>
+<p>下面是一些 MSYS2 的特点和功能：</p>
+<ol>
+<li>Linux 终端环境：MSYS2 提供了一个基于 MinGW-w64 的 Shell 环境，类似于 Linux 终端，使用户可以在 Windows 上执行常见的 UNIX 命令和 Shell 脚本。</li>
+<li>包管理器 Pacman：MSYS2 集成了 Pacman 包管理器，类似于 Arch Linux 中的 Pacman。通过 Pacman，用户可以方便地安装、升级和删除软件包，管理系统的软件依赖关系。</li>
+<li>MinGW-w64 工具链：MSYS2 包含了 MinGW-w64 工具链，提供了一组用于 Windows 的 GCC 编译器、binutils、Make 等工具，使开发人员可以在 Windows 上进行 C/C++ 软件开发。</li>
+<li>完整的开发环境：MSYS2 的软件包仓库中包含了各种开发工具、库文件和构建工具，例如编译器、调试器、版本控制工具（如 Git）、文本编辑器（如 Vim、Emacs）等，提供了一个完整的开发环境。</li>
+<li>更新和维护：MSYS2 提供了方便的软件包更新和系统维护机制，使用户能够轻松地保持软件包和系统的最新状态。</li>
+</ol>
+<p>MSYS2安装完后，进入目录查看类似linux的仿真环境，譬如有home/user目录，运行之后可以通过cd进入目录</p>
+<pre><code>cd /home/user
+</code></pre>
+<p>同样ls，ps，等linux命令都可以使用。</p>
+<p>下载地址：https://www.msys2.org/ 或 https://repo.msys2.org/distrib/</p>
+<p>安装好后需要将下载库的地址更换为国内源，否则下载速度可能会极慢，甚至失败。配置文件位于：</p>
+<pre><code>MSYS2\etc\pacman.d中
+</code></pre>
+<p>分别将mirrorlist.mingw32、mirrorlist.mingw64、mirrorlist.msys 三个配置文件的第一个Server的地址更换为清华大学的镜像，这里贴出我修改好的mirrorlist.mingw64</p>
+<pre><code class="language-config">##
+## 64-bit Mingw-w64 repository mirrorlist
+##
+
+## Primary
+## msys2.org
+Server = https://mirrors.tuna.tsinghua.edu.cn/msys2/mingw/x86_64/
+Server = http://mirrors.ustc.edu.cn/msys2/mingw/x86_64/
+Server = https://sourceforge.net/projects/msys2/files/REPOS/MINGW/x86_64/
+Server = https://www2.futureware.at/~nickoe/msys2-mirror/mingw/x86_64/
+Server = https://mirror.yandex.ru/mirrors/msys2/mingw/x86_64/
+Server = http://mirror.bit.edu.cn/msys2/mingw/x86_64/
+Server = https://mirror.selfnet.de/msys2/mingw/x86_64/
+Server = https://mirrors.sjtug.sjtu.edu.cn/msys2/mingw/x86_64/
+Server = https://msys2.nyc3.digitaloceanspaces.com/mingw/x86_64/
+Server = https://mirror.jmu.edu/pub/msys2/mingw/x86_64/
+Server = https://ftp.cc.uoc.gr/mirrors/msys2/mingw/x86_64/
+Server = https://ftp.acc.umu.se/mirror/msys2.org/mingw/x86_64/
+Server = https://mirrors.piconets.webwerks.in/msys2-mirror/mingw/x86_64/
+Server = https://quantum-mirror.hu/mirrors/pub/msys2/mingw/x86_64/
+Server = https://mirrors.dotsrc.org/msys2/mingw/x86_64/ 
+Server = https://mirror.ufro.cl/msys2/mingw/x86_64/
+Server = https://mirror.clarkson.edu/msys2/mingw/x86_64/
+Server = https://ftp.nluug.nl/pub/os/windows/msys2/builds/mingw/x86_64/
+Server = https://download.nus.edu.sg/mirror/msys2/mingw/x86_64/
+Server = https://ftp.osuosl.org/pub/msys2/mingw/x86_64/
+</code></pre>
+<p>之后直接通过 pacman -Syu 一键安装和升级所有的库。</p>
+<br>
+<h2 id="2-搭建编译环境">2. 搭建编译环境</h2>
+<p>window10 环境下 ffmpeg的编译方式主要有以下2种：</p>
+<ol>
+<li>MSYS2 + MinGW</li>
+<li>MSYS2 + MSVC</li>
+</ol>
+<p>由于 window 的原生 CMD 命令行无法执行shell脚本，也没有 make 之类的命令，所以需要装 MSYS2 软件。MinGW 跟 MSVC 是两个不同的编译器：</p>
+<pre><code class="language-c++">/*linux api pthread_create()*/
+#include &lt;stdio.h&gt;
+#include &lt;pthread.h&gt;
+void* PrintHello(void* data)
+{
+    printf(&quot;Hello from new thread\n&quot;);
+    pthread_exit(NULL);
+}
+int main(int argc, char* argv[])
+{
+ 
+   pthread_t  thread_id;
+   pthread_create(&amp;thread_id, NULL, PrintHello, NULL);
+   pthread_exit(NULL);
+}
+</code></pre>
+<p>上面的代码使用了一个 linux 里面 pthread_create() 线程函数，在window 环境是没有这个线程函数的，如果用 MSVC 编译器编译，会报错。但是如果用 MinGW 编译器 就可以在window环境 编译 pthread_create() 的代码。</p>
+<p>ffmpeg 的源代码是 linux ，window 等多平台通用的，ffmpeg 里面并没有直接使用pthread_create() 之类的linux专属的api函数，所以 用MinGW 还是MSVC 都可以编译ffmpeg 的源码，ffmpeg 的configure 编译脚本根据不同的编译方式执行不同的编译逻辑，例如如果用MinGW的编译器，configure 里面会走 MinGW的那块编译逻辑，如果指定用 MSVC 编译，configure会走另一块逻辑。</p>
+<p>通过在configure前面加 --toolchain=xxx 可以指定不同的编译工具链，例如 --toolchain=msvc 是指定msvc 编译工具链， 如果没指定 --toolchain ，在mingw32环境下，configure会自动选择 MinGW 的方式编译。</p>
+<p>MSYS2 安装完成之后，CMD 进入安装目录 C:\msys64 目录，执行 .\msys2_shell.cmd -mingw32（如果是64位则是-mingw64），打开32位的环境。不要直接点击 mingw32.exe 进入32位环境。尽量用 .\msys2_shell.cmd -mingw32。因为后面会改动一下 msys2_shell.cmd 文件。</p>
+<p>mingw的安装将在下述步骤：</p>
+<br>
+<h2 id="3-安装所需软件">3. 安装所需软件</h2>
+<pre><code># 刷新软件包数据
+pacman -Sy  
+# 安装mingw-w64。
+pacman -S mingw-w64-x86_64-toolchain
+（32位则是pacman -S mingw-w64-i686-toolchain）
+pacman -S git
+pacman -S make
+pacman -S automake 
+pacman -S autoconf
+pacman -S perl
+pacman -S mingw-w64-x86_64-SDL2
+（32位则是pacman -S mingw-w64-i686-SDL2）
+pacman -S libtool
+#32位的cmake跟64位的cmake都装一下，比较保险。
+pacman -S mingw-w64-i686-cmake
+pacman -S mingw-w64-x86_64-cmake
+pacman -S pkg-config 
+pacman -S yasm
+# 编译x264 需要 nasm
+pacman -S nasm
+</code></pre>
+<p>准备工作已经完毕了。<br>
+FFmpeg 这个工程编解码等功能，是需要依赖一些外部库的，例如 x264库，aac库等等。所以编译FFmpeg之前，需要把 x264 ，acc 等项目编译出静态库，然后再把x264静态库，acc静态库等 Link 进去 FFmpeg 的DLL里面。</p>
+<br>
+<h2 id="4-x264-项目编译">4. x264 项目编译：</h2>
+<p>下面的命令请把 /home/user 改成自己的目录。<br>
+编译过程中如果报 final link failed: No space left on device 错误，尝试重启window10。</p>
+<pre><code># 回到用户目录
+cd /home/user
+# 创建ffmpeg目录,build目录，统一管理，如32位命名build32，64位命名build64
+mkdir -p ffmpeg/build32  
+# 进入ffmpeg目录
+cd ffmpeg 
+#下载x264项目代码
+git clone https://github.com/mirror/x264
+# 进入x264项目目录
+cd x264 
+# 32位执行configure
+./configure --prefix=/home/user/ffmpeg/build32/libx264 \
+--host=i686-w64-mingw32 --enable-static \
+--extra-ldflags=-Wl,--output-def=libx264.def  
+# 64位执行configure
+./configure --prefix=/home/user/ffmpeg/build64/libx264 \
+--host=x86_64-w64-mingw32 --enable-static \
+--extra-ldflags=&quot;-Wl,--output-def=libx264.def&quot;  
+make -j8
+make install
+</code></pre>
+<p>如果上面的命令没出错，在 ~/ffmpeg/build32/libx264/lib 目录下会编译出 x264 的静态库 libx264.a。</p>
+<br>
+<h2 id="5-fdk-aac项目编译">5. fdk-aac项目编译：</h2>
+<pre><code># 回到ffmpeg目录
+cd /home/user/ffmpeg 
+git clone --depth 1 https://gitee.com/mirrors/fdk-aac.git
+cd fdk-aac
+./autogen.sh
+# 如果是64位更换下目录即可
+./configure --prefix=/home/user/ffmpeg/build32/libfdk-aac --disable-shared \
+--enable-static
+make -j8
+make install
+</code></pre>
+<p>如果上面的命令没出错，在 ~/ffmpeg/build32/libfdk-aac/lib 目录下会编译出 aac 的静态库 libfdk-aac.a。</p>
+<br>
+<h2 id="6-mp3项目编译">6. mp3项目编译：</h2>
+<p>下面的命令如果报错，请把 &quot;~&quot; 相对目录 改成绝对目录</p>
+<pre><code>cd /home/user/ffmpeg 
+git clone --depth 1 https://gitee.com/hqiu/lame.git
+cd lame
+# 如果是64位更换下目录即可
+./configure --prefix=/home/user/ffmpeg/build32/libmp3lame --disable-frontend \
+--disable-shared --enable-static
+make -j8
+make install
+</code></pre>
+<p>如果上面的命令没出错，在 ~/ffmpeg/build64/libmp3lame/lib 目录下会编译出 mp3 的静态库 libmp3lame.a。</p>
+<br>
+<h2 id="7-libvpx项目编译">7. libvpx项目编译：</h2>
+<pre><code>cd /home/user/ffmpeg 
+git clone --depth 1 https://github.com/webmproject/libvpx.git
+cd libvpx
+# 如果是32位更换下目录即可
+./configure --prefix=/home/user/ffmpeg/build64/libvpx --disable-examples \
+--disable-unit-tests --enable-vp9-highbitdepth --as=yasm
+make -j8
+make install
+</code></pre>
+<p>如果上面的命令没出错，在 ~/ffmpeg/build64/libvpx/lib 目录下会编译出 vpx的静态库 libvpx.a。<br>
+FFmpeg 工程依赖的外部静态库都已经编译出来，下面可以开始编译 FFmpeg 工程了。</p>
+<br>
+<h2 id="8-ffmpeg项目编译">8. FFmpeg项目编译：</h2>
+<pre><code># 如果是64位更换下目录即可
+cd /home/user/ffmpeg/ffmpeg-4.2
+./configure \
+--prefix=/home/user/ffmpeg/build32/ffmepg-4.2 \
+--enable-gpl \
+--enable-sdl2 \
+--enable-zlib \
+--enable-shared \
+--enable-nonfree \
+--enable-libx264 \
+--enable-libfdk-aac \
+--enable-libmp3lame \
+--enable-libvpx \
+--extra-cflags=&quot;-I/home/user/ffmpeg/build32/libfdk-aac/include&quot; \
+--extra-ldflags=&quot;-L/home/user/ffmpeg/build32/libfdk-aac/lib&quot; \
+--extra-cflags=&quot;-I/home/user/ffmpeg/build32/libvpx/include&quot; \
+--extra-ldflags=&quot;-L/home/user/ffmpeg/build32/libvpx/lib&quot; \
+--extra-cflags=&quot;-I/home/user/ffmpeg/build32/libx264/include&quot; \
+--extra-ldflags=&quot;-L/home/user/ffmpeg/build32/libx264/lib&quot; \
+--extra-cflags=&quot;-I/home/user/ffmpeg/build32/libmp3lame/include&quot; \
+--extra-ldflags=&quot;-L/home/user/ffmpeg/build32/libmp3lame/lib&quot;
+  
+make -j8
+make install
+</code></pre>
+<p>默认的编译只会编译ffmpeg和ffmpore，如果需要ffplay，还需要添加上–enable-sdl,<br>
+但是由于我们没有装SDL2库，所以SDL2_CONFIG找不到，所以就会出现：ERROR: sdl2 requested but not found 这种错误，所以我们还需要安装SDL库</p>
+<p>官网下载：https://www.libsdl.org/release/SDL2-2.0.8.tar.gz<br>
+下载完成后拷贝到“/home/source/”目录下，依次执行下列命令：</p>
+<pre><code>tar -zxvf SDL2-2.0.8.tar.gz
+cd SDL2-2.0.8
+./configure \
+--prefix=/home/guo/ffmpeg/build64/SDL2-2.0.8
+make
+make install
+</code></pre>
+<br>
+<br>
+<br>
+<p>官方参考：<br>
+<a href="https://trac.ffmpeg.org/wiki/CompilationGuide#Windows">https://trac.ffmpeg.org/wiki/CompilationGuide#Windows</a></p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[webrtc源码编译+生成sln]]></title>
+        <id>https://hensonguo.github.io/post/webrtc-yuan-ma-bian-yi-sheng-cheng-sln/</id>
+        <link href="https://hensonguo.github.io/post/webrtc-yuan-ma-bian-yi-sheng-cheng-sln/">
+        </link>
+        <updated>2023-12-07T08:11:29.000Z</updated>
+        <content type="html"><![CDATA[<h2 id="1下载depot_tools">1.下载depot_tools</h2>
+<p>depot_tools 是用于管理 Chromium、WebRTC 等开源项目的工具集。用于管理 Chromium 等大型项目的开发和构建。它包含了一些常用的工具，如 Git、Python、Ninja 等，并提供了一些自定义的工具，如 gclient、fetch 等，用于管理代码仓库、构建项目等。</p>
+<p>使用 depot_tools 可以方便地获取 Chromium 等项目的源代码，并进行本地开发和构建。</p>
+<h3 id="11-克隆-depot_tools-仓库">1.1 克隆 depot_tools 仓库</h3>
+<pre><code>git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
+</code></pre>
+<p>谷歌git仓库克隆问题：<br>
+1.先在https://chromium.googlesource.com生成password，按照提示操作步骤完成即可<br>
+2.证书问题：unable to get local issuer certificate，采用忽略ssl证书验证</p>
+<pre><code>git config --global http.sslverify false
+</code></pre>
+<h3 id="12-配置环境变量">1.2 配置环境变量</h3>
+<p>将下载的depot_tools路径添加到环境变量中，重启电脑<br>
+在cmd中执行gclient，等待执行成功即可</p>
+<br>
+<h2 id="2下载webrtc源码">2.下载webrtc源码</h2>
+<h3 id="21代码克隆">2.1代码克隆</h3>
+<pre><code>git clone https://webrtc.googlesource.com/src.git
+</code></pre>
+<p>安装依赖项：https://webrtc.googlesource.com/src/+/refs/heads/main/docs/native-code/development/prerequisite-sw</p>
+<h3 id="22代码更新">2.2代码更新</h3>
+<pre><code>gclient sync
+</code></pre>
+<p>可能出现提示错误&quot;Error: client not configured; see 'gclient config'&quot;<br>
+解决方法：</p>
+<pre><code>gclient config https://webrtc.googlesource.com/src.git
+</code></pre>
+<p>这里还会出现各类py错误，多半是环境变量设置的问题，请先进行步骤3环境变量设置再gclient sync</p>
+<br>
+<h2 id="3ninja安装">3.Ninja安装</h2>
+<p>Ninja 是一个用于构建  C/C++  项目的快速、轻量级的工具。</p>
+<p>ninja.exe 是 Ninja 构建系统的可执行文件，它负责解析 Ninja 的构建文件（通常是一个名为“build.ninja”的文件），并根据文件中定义的规则和依赖关系构建项目。通过使用 ninja.exe，开发人员可以在命令行上快速构建和测试他们的代码，而无需手动编写和维护复杂的构建脚本。</p>
+<p>Ninja 可以与许多不同的编译器和构建工具一起使用，例如 GCC、Clang、MSVC、Make 等。它还可以与许多不同的构建系统集成，例如 CMake、Meson、Bazel 等。由于 Ninja 的快速和可靠性，它已经成为许多开源项目的首选构建系统之一。</p>
+<ol>
+<li>首先，你需要下载 Ninja 的可执行文件。你可以在 Ninja 的官方 GitHub 仓库中找到最新版本的可执行文件。下载地址为：https://github.com/ninja-build/ninja/releases。</li>
+<li>下载完成后，你需要将可执行文件添加到系统的 PATH 环境变量中。打开 Windows 的“高级系统设置”窗口，选择“环境变量”，在“系统变量”中找到 PATH 变量，点击“编辑”，在变量值的最后加上 Ninja 可执行文件所在的路径，多个路径之间用分号隔开。例如：C:\ninja。</li>
+<li>点击“确定”保存设置，然后打开命令行窗口，输入 ninja --version 命令，如果能够正确输出 Ninja 的版本信息，说明安装成功。</li>
+</ol>
+<br>
+<h2 id="4设置环境变量">4.设置环境变量</h2>
+<p>告诉depot_tools使用我们本机的VS进行编译<br>
+set DEPOT_TOOLS_WIN_TOOLCHAIN=0<br>
+set GYP_GENERATORS=msvs-ninja,ninja<br>
+set GYP_MSVS_VERSION=2022</p>
+<br>
+<h2 id="5生成-ninja-工程文件">5.生成 Ninja 工程文件</h2>
+<p>WebRTC 目前使用 GN 来生成构建脚本，Ninja 进行构建，因此系统平台均是。<br>
+Ninja 工程文件由 GN 生成，为其选择一个放置的目录中，如 out/Debug 或者 out/Release，这里官方建议选择 out/Default 这样能够放置 debug 和 release，在 src 目录下还行一下命令：</p>
+<pre><code>gn gen out/Default
+</code></pre>
+<p>5.1可能会出现错误提示：&quot;gn.py: Could not find checkout in any parent of the current path. This must be run inside a checkout.&quot;<br>
+此时需要更新下，可能是depot_tools没有正确安装或者初始化</p>
+<pre><code>gclient sync
+</code></pre>
+<p>5.2可能出现错误提示：Exception: Path &quot;C:\Program Files (x86)\Windows Kits\10\include\10.0.22621.0\shared&quot; from environment variable &quot;include&quot; does not exist. Make sure the necessary SDK is installed.<br>
+这需要安装对应版本的windows sdk</p>
+<p>5.3其他参数：</p>
+<pre><code>gn gen --ide=vs out/Default &quot;--args=is_debug=true is_clang=false use_rtti=true use_lld=false rtc_build_tools=false rtc_include_tests=false rtc_build_examples=false target_cpu=\&quot;x86\&quot;&quot;
+</code></pre>
+<ul>
+<li>is_debug=true：生成调试版本的项目。</li>
+<li>is_clang=false：使用 Visual C++ 编译器而不是 Clang 编译器。</li>
+<li>use_rtti=true：启用运行时类型信息。</li>
+<li>use_lld=false：禁用 LLD 链接器。</li>
+<li>rtc_build_tools=false：不编译 WebRTC 工具。</li>
+<li>rtc_include_tests=false：不编译 WebRTC 测试代码。</li>
+<li>rtc_build_examples=false：不编译 WebRTC 示例代码。</li>
+<li>rtc_enable_protobuf=true：启用 protobuf 库。</li>
+<li>enable_iterator_debugging=true：debug模式要打开这个选项，否则_ITERATOR_DEBUG_LEVEL不匹配</li>
+<li>dcheck_always_on=true：始终启用断言检查。</li>
+<li>treat_warnings_as_errors=false：不将警告视为错误。</li>
+<li>target_cpu=&quot;x86&quot;：生成 x86 架构的项目。</li>
+<li>use_custom_libcxx=false：不使用自定义的 libc++ 库</li>
+<li>use_custom_libcxx_for_host=false：不在主机上使用自定义的 libc++ 库。</li>
+<li>rtc_use_h264=true：启用 H.264 编码器</li>
+<li>is_component_ffmpeg=true：构建 FFmpeg 库。</li>
+<li>enable_libaom=false：禁用 libaom 库。</li>
+</ul>
+<p>5.4不建议禁用clang而使用msvc，即is_clang=true<br>
+禁用时编译会提示error C7555: use of designated initializers requires at least '/std:c++20'&quot;<br>
+参考：<a href="">https://groups.google.com/g/discuss-webrtc/c/PBJK6LMzNmU/m/XrUDrYU1BAAJ</a></p>
+<p>建议生成的命令参数：</p>
+<pre><code>gn gen --ide=vs out/Default &quot;--args=is_debug=false use_rtti=true use_lld=false rtc_build_tools=false rtc_include_tests=false rtc_build_examples=false target_cpu=\&quot;x86\&quot; use_custom_libcxx=false use_custom_libcxx_for_host=false treat_warnings_as_errors=false&quot;
+</code></pre>
+<br>
+<h2 id="6其他项目引入webrtc库">6.其他项目引入webrtc库</h2>
+<p>WebRTC编译后会在src\out\Default\obj目录下生成整个WebRTC工程的静态库：webrtc.lib，链接下这个就可以了。</p>
+<pre><code>如果VS应用没配置Clang编译器，链接这个webrtc.lib，生成工程文件时需要配置如下参数：
+gn gen --ide=vs out/Default --args=&quot;is_clang=false use_lld=false&quot;
+禁用clang与lld
+</code></pre>
+<h3 id="61-编译时错误-webrtc-failifmismatch-mismatch-detected-for-runtimelibrary">6.1 编译时错误 webrtc failifmismatch: mismatch detected for 'RuntimeLibrary'</h3>
+<p>如果webrtc静态库是debug的，而引入项目是release的则可能导致这个问题</p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[客户端更新相关问题]]></title>
+        <id>https://hensonguo.github.io/post/ke-hu-duan-geng-xin-xiang-guan-wen-ti/</id>
+        <link href="https://hensonguo.github.io/post/ke-hu-duan-geng-xin-xiang-guan-wen-ti/">
+        </link>
+        <updated>2023-11-28T09:18:37.000Z</updated>
+        <content type="html"><![CDATA[<h3 id="1权限问题">1.权限问题</h3>
+<p>如果用户是非管理员，是无法将文件下载到Program Files文件夹以及子文件下的，因为这是一个受保护的目录，只有管理员或具有管理员权限的用户才能在其中写入文件。</p>
+<p>如果您的程序需要在 Program Files 中写入文件，您可以使用以下方法：</p>
+<ol>
+<li>将文件下载到用户的临时文件夹中，例如 C:\Users\username\AppData\Local\Temp。以管理员身份运行您的应用程序，并将文件复制到 Program Files 目录中。</li>
+<li>将您的应用程序注册为管理员权限，使其能够在 Program Files 目录中写入文件。</li>
+</ol>
+<p>请注意，第两种方法需要您的应用程序能够处理 UAC（用户账户控制）提示。</p>
+<br>
+<h3 id="2复制移动到program-files时的权限">2.复制移动到Program Files时的权限</h3>
+<p>1）以管理员权限启动一个进程进行复制<br>
+已知将文件移动到Program Files需要管理员权限，那么可以新启动一个进程，并将进程设置为管理员权限，如：</p>
+<pre><code class="language-python">SW_HIDE = 0
+ctypes.windll.shell32.ShellExecuteW(
+    None,
+    'runas', #管理员
+    exePath,
+    updateCmd,
+    None,
+    SW_HIDE)
+</code></pre>
+<p>但是如果用户账户控制会对更改程序进行拦截弹窗提示</p>
+<p>2）将目标进程UAC执行级别设置为管理员<br>
+当程序更新文件下载完成后，需要写入Program Files中，我们通常会将写入安装的过程作为一个工程处理，将对应的exe程序的UAC执行级别设置为管理员。</p>
+<p>在属性/链接器/UAC执行级别的选项中进行设置。</p>
+<p>如果非管理员启动这个可执行程序，会提示需要管理员权限</p>
+<br>
+<h3 id="3更新完成启动程序">3.更新完成启动程序</h3>
+<p>如果并未将启动exe拷贝到安装目录下，而且启动exe依赖安装目录下的动态文件，如何处理<br>
+1）通过manifests指定dll的搜索目录<br>
+<a href="https://learn.microsoft.com/en-us/windows/win32/sbscs/application-manifests#file-location">参考1</a><br>
+<a href="https://stackoverflow.com/questions/3832290/altering-dll-search-path-for-static-linked-dll">参考2</a><br>
+2) 通过修改进程的环境变量确定dll的搜索目录</p>
+<pre><code class="language-python">os.environ['PATH'] = os.pathsep.join([appPath, os.environ['PATH']])
+originEnv = dict(os.environ)
+subprocess.Popen(self._params, env=originEnv)
+</code></pre>
+<p>如果有qt依赖，还需要在对应的exe目录创建一个qt.conf文件</p>
+<pre><code class="language-python">qtConfigPath = self.getAppPath(&quot;qt.conf&quot;)
+file = QtCore.QFile(qtConfigPath)
+file.open(QtCore.QIODevice.OpenModeFlag.WriteOnly)
+pluginPath = ccpath.replace(&quot;\\&quot;, &quot;/&quot;)
+file.write(f&quot;[Paths]\nPrefix={pluginPath}/Qt5&quot;.encode('utf-8'))
+file.close()
+</code></pre>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[即时通讯实时视频聊天技术]]></title>
+        <id>https://hensonguo.github.io/post/ji-shi-tong-xun-shi-shi-shi-pin-liao-tian-ji-zhu/</id>
+        <link href="https://hensonguo.github.io/post/ji-shi-tong-xun-shi-shi-shi-pin-liao-tian-ji-zhu/">
+        </link>
+        <updated>2023-10-09T14:23:39.000Z</updated>
+        <content type="html"><![CDATA[<h2 id="1概述">1.概述</h2>
+<h3 id="11-压缩了什么东西">1.1 压缩了什么东西？</h3>
+<p>原始视频压缩的目的是去除冗余信息，可以去除的冗余包括：</p>
+<ul>
+<li>空间冗余：图像相邻像素之间有较强的相关性</li>
+<li>时间冗余：视频序列的相邻图像之间内容相似</li>
+<li>编码冗余：不同像素值出现的概率不同</li>
+<li>视觉冗余：人的视觉系统对某些细节不敏感</li>
+<li>知识冗余：规律性的结构可由先验知识和背景知识得到</li>
+</ul>
+<h3 id="12-数据压缩是怎么分类的">1.2 数据压缩是怎么分类的？</h3>
+<ul>
+<li>无损压缩（Lossless）：压缩前、解压缩后图像完全一致X=X'，压缩比低(2:1~3:1)。典型格式例如：Winzip，JPEG-LS。</li>
+<li>有损压缩（Lossy）：压缩前解压缩后图像不一致X≠X'，压缩比高(10:1~20:1)，利用人的视觉系统的特性。典型格式例如：MPEG-2，H.264/AVC，AVS。</li>
+</ul>
+<h3 id="13-编解码的技术流程和原理">1.3 编解码的技术流程和原理</h3>
+<p><img src="http://www.52im.net/data/attachment/forum/201604/16/131633dhhwn5aj72hw8hja.png" alt="" loading="lazy"><br>
+<img src="http://www.52im.net/data/attachment/forum/201604/16/131639c5cxopo2d6ciqjj2.png" alt="" loading="lazy"></p>
+<h3 id="14-视频编码的标准">1.4 视频编码的标准</h3>
+<h4 id="141-编码标准作用">1.4.1 编码标准作用：</h4>
+<ul>
+<li>兼容：不同厂家生产的编码器压缩的码流能够被不同厂家的解码器解码</li>
+<li>高效：标准编解码器可以进行批量生产，节约成本。</li>
+</ul>
+<h3 id="142-主流的视频编码标准">1.4.2 主流的视频编码标准：</h3>
+<ul>
+<li>MPEG-2</li>
+<li>MPEG-4 Simple Profile</li>
+<li>H.264/AVC</li>
+<li>AVS</li>
+<li>VC-1</li>
+</ul>
+<h3 id="15-视频传输面临的问题">1.5 视频传输面临的问题</h3>
+<p>传输系统不可靠：</p>
+<ul>
+<li>带宽限制</li>
+<li>信号衰减</li>
+<li>噪声干扰</li>
+<li>传输延迟</li>
+</ul>
+<p>视频传输出现的问题：</p>
+<ul>
+<li>不能解码出正确的视频</li>
+<li>视频播放延迟</li>
+</ul>
+<h3 id="16-视频传输差错控制">1.6 视频传输差错控制</h3>
+<p>差错控制（Error Control）解决视频传输过程中由于数据丢失或延迟导致的问题。<br>
+差错控制技术有：</p>
+<ul>
+<li>信道编码差错控制技术</li>
+<li>编码器差错恢复</li>
+<li>解码器差错隐藏</li>
+</ul>
+<br>
+<h2 id="2数字视频介绍">2.数字视频介绍</h2>
+<h3 id="21-什么是图像什么是视频">2.1 什么是图像？什么是视频？</h3>
+<p>图像：是人对视觉感知的物质再现。三维自然场景的对象包括：深度，纹理和亮度信息。二维图像：纹理和亮度信息。<br>
+视频：连续的图像。视频由多幅图像构成，包含对象的运动信息，又称为运动图像。</p>
+<h3 id="22-何为数字视频">2.2 何为数字视频？</h3>
+<p>数字视频可以理解为自然场景空间和时间的数字采样表示。<br>
+空间采样的主要技术指标为：解析度（Resolution）(尺寸)<br>
+<img src="http://www.52im.net/data/attachment/forum/201604/16/133531j11txt22lqrkl2ik.png" alt="" loading="lazy"><br>
+时间采样的主要技术指标为：帧率（帧/秒）<br>
+<img src="http://www.52im.net/data/attachment/forum/201604/16/133400shn3fzexfoyknsef.png" alt="" loading="lazy"></p>
+<h3 id="23-人类视觉系统hvs">2.3 人类视觉系统HVS</h3>
+<p>HVS的构成：<br>
+眼睛、神经、大脑</p>
+<p>HVS特点：</p>
+<ul>
+<li>对高频信息不敏感</li>
+<li>对高对比度更敏感</li>
+<li>对亮度信息比色度信息更敏感</li>
+<li>对运动的信息更敏感</li>
+</ul>
+<h3 id="24-针对hvs的特点数字视频系统的设计应该考虑哪些因素">2.4 针对HVS的特点，数字视频系统的设计应该考虑哪些因素？</h3>
+<ul>
+<li>丢弃高频信息，只编码低频信息</li>
+<li>提高边缘信息的主观质量</li>
+<li>降低色度的解析度</li>
+<li>对感兴趣区域（Region of Interesting，ROI）进行特殊处理<br>
+<img src="http://www.52im.net/data/attachment/forum/201604/16/134008hc66ie7suttjmt6a.png" alt="" loading="lazy"></li>
+</ul>
+<h3 id="25-什么是rgb色彩空间">2.5 什么是RGB色彩空间？</h3>
+<p>三原色分别是红（R），绿（G），蓝（B）。任何颜色都可以通过按一定比例混合三原色产生。<br>
+RGB色度空间：</p>
+<ul>
+<li>由RGB三原色组成</li>
+<li>广泛用于BMP，TIFF，PPM等</li>
+<li>每个色度成分通常用8bit表示[0,255]</li>
+</ul>
+<h3 id="26-什么是yuv色彩空间">2.6. 什么是YUV色彩空间？</h3>
+<p>YUV色彩空间是指，Y：亮度分量，UV：两个色度分量。YUV能更好的反映HVS特点。YUV将颜色的亮度和色度分离开来，这使得在视频编码和传输时更加高效。</p>
+<ul>
+<li>由于YUV将亮度和色度分离，因此在视频压缩时可以对色度进行更多的压缩，从而达到更好的压缩效果。</li>
+<li>YUV主要用于视频编码、传输和解码等领域。</li>
+<li>色彩范围是-128到127。</li>
+</ul>
+<h3 id="27-rgb如何转化到yuv空间">2.7 RGB如何转化到YUV空间？</h3>
+<p>亮度分量Y与三原色有如下关系：<br>
+Y = 0.299R + 0.587G + 0.114B，其中R、G、B分别表示红、绿、蓝三个颜色通道的强度值。这个加权比例是由国际电联（ITU）制定的标准，用于将彩色视频信号转换为黑白视频信号。<br>
+<img src="http://www.52im.net/data/attachment/forum/201604/16/134433gmjcmzeeeaem7xhc.png" alt="" loading="lazy"><br>
+主流的编解码标准的压缩对象都是YUV图像。</p>
+<h3 id="28-何为yuv图像分量采样">2.8 何为YUV图像分量采样？</h3>
+<p>YUV图像可以根据HVS的特点，对色度进行分量采样，可以降低视频数据量。<br>
+根据亮度和色度分量的采样比率，YUV图像通常有以下几种分量方式：<br>
+<img src="https://upload-images.jianshu.io/upload_images/305749-48f6b80a529984bc.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/576/format/webp" alt="" loading="lazy"></p>
+<h3 id="29-通用的yuv图像格式有哪些">2.9 通用的YUV图像格式有哪些？</h3>
+<p>根据YUV图像的亮度、分辨率定义了如下图像格式：<br>
+<img src="https://upload-images.jianshu.io/upload_images/305749-0a5d5514f490a078.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/576/format/webp" alt="" loading="lazy"></p>
+<h3 id="210-如何理解帧和场图像">2.10  如何理解帧和场图像？</h3>
+<p>一帧图像包括两场——顶场，底场：<br>
+<img src="https://upload-images.jianshu.io/upload_images/305749-cc4c4f460dde9e38.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/563/format/webp" alt="" loading="lazy"><br>
+<img src="https://upload-images.jianshu.io/upload_images/305749-df1387f47e94e980.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/576/format/webp" alt="" loading="lazy"></p>
+<h3 id="211-如何理解帧和场图像">2.11  如何理解帧和场图像？</h3>
+<p>逐行图像：一帧图像的两场在同一时间得到，ttop=tbot。<br>
+隔行图像：一帧图像的两场在不同时间得到，ttop≠tbot。<br>
+<img src="https://images.cnblogs.com/cnblogs_com/xkfz007/201207/201207290832396422.png" alt="" loading="lazy"></p>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[H264]]></title>
+        <id>https://hensonguo.github.io/post/h264/</id>
+        <link href="https://hensonguo.github.io/post/h264/">
+        </link>
+        <updated>2023-10-09T12:49:57.000Z</updated>
+        <content type="html"><![CDATA[<h3 id="1什么是h264编码标准">1.什么是h264编码标准？</h3>
+<p>H.264是一种视频压缩标准，也被称为MPEG-4 Part 10，或AVC（Advanced Video Coding）。它是一种高效的压缩算法，可在保持视频质量的同时减少文件大小。</p>
+<br>
+<h3 id="2-h264编码标准的优点是什么">2. h264编码标准的优点是什么？</h3>
+<p>H.264编码标准具有以下优点：</p>
+<ul>
+<li>高压缩比：相对于其他压缩标准，H.264可以在保持视频质量的同时减小文件大小。</li>
+<li>高质量视频：H.264可以提供高质量的视频，最高可以达到1080p分辨率。</li>
+<li>适用于多种应用：H.264可以用于多种应用，包括流媒体、视频会议、移动设备等。</li>
+<li>低延迟：H.264可以提供低延迟的视频传输，适用于实时应用，如视频会议和直播。</li>
+</ul>
+<br>
+<h3 id="3h264编码标准的缺点是什么">3.h264编码标准的缺点是什么？</h3>
+<p>H.264编码标准的缺点包括：</p>
+<ul>
+<li>高算力需求：H.264编码需要大量的计算资源，因此在低端设备上可能会出现性能问题。</li>
+<li>版权问题：H.264是一种专利技术，使用H.264编码需要支付专利费用。</li>
+<li>不适用于低码率：H.264在低码率下的表现不如其他编码标准。</li>
+</ul>
+<br>
+<h3 id="4什么是h264的i帧-p帧和b帧">4.什么是H.264的I帧、P帧和B帧？</h3>
+<p>H.264编码标准使用三种帧类型：</p>
+<ul>
+<li>I帧（Intra Frame）：I帧是一种关键帧，它是视频序列中的第一帧，也是其他帧的参考帧。I帧包含完整的图像信息，不依赖于其他帧。</li>
+<li>P帧（Predictive Frame）：P帧是一种预测帧，它依赖于前一帧的I帧或P帧，并通过运动估计和运动补偿来预测当前帧的图像信息。</li>
+<li>B帧（Bidirectional Frame）：B帧是一种双向预测帧，它依赖于前一帧和后一帧的I帧或P帧，并通过双向运动估计和运动补偿来预测当前帧的图像信息。</li>
+</ul>
+<br>
+<h3 id="5h264编码中的运动估计和运动补偿是什么">5.H.264编码中的运动估计和运动补偿是什么？</h3>
+<p>运动估计和运动补偿是H.264编码中的两个重要概念。运动估计是指通过比较两个帧之间的像素差异来估计当前帧中的运动信息。运动补偿是指通过使用运动估计的结果来对当前帧进行预测，从而减小编码后的数据量。运动补偿可以使用单向预测（P帧）或双向预测（B帧）来实现。通过运动估计和运动补偿，H.264可以在保持视频质量的同时减少数据量。</p>
+<br>
+<h3 id="6什么是x264">6.什么是x264？</h3>
+<ul>
+<li>h264是一种视频编码标准，x264是一种实现h264标准的开源软件库。</li>
+<li>x264相对于其他h264编码器，具有更高的压缩比和更好的视频质量，但需要更高的计算资源。</li>
+<li>x264编码器通过使用先进的压缩算法和优化的编码参数，可以实现高效的视频压缩率。此外，x264还支持多种压缩模式和自适应压缩技术，以进一步提高视频压缩率。</li>
+</ul>
+<br>
+<h3 id="7h264可以硬编码吗">7.h264可以硬编码吗</h3>
+<p>是的，h264可以进行硬件编码，这种编码方式通常使用专门的硬件编码器来完成。硬件编码可以提高编码速度和效率，并减少计算机的负载。许多现代的图形处理器（GPU）和其他硬件设备都支持h264硬件编码。</p>
+<br>
+<h3 id="8x264是软编还是硬编">8.x264是软编还是硬编</h3>
+<p>264是软编，它是一种开源的视频编码库，可以将视频流压缩成H.264/MPEG-4 AVC格式，以实现更高效的视频传输和存储。它不依赖于特定的硬件设备，而是通过软件算法实现视频编码。</p>
+<br>
+<h3 id="9h264和mpeg4的区别">9.h264和mpeg4的区别</h3>
+<p>H.264和MPEG-4都是视频编码标准，它们有以下几点区别：</p>
+<ol>
+<li>压缩效率：H.264比MPEG-4更先进，可以在相同的比特率下提供更高的视频质量，或者在相同的视频质量下减少文件大小。</li>
+<li>处理速度：H.264需要更多的计算资源来进行编码和解码，因此相对于MPEG-4来说，处理速度可能会更慢。</li>
+<li>支持的分辨率：H.264支持更高的分辨率和帧率，可以处理更高清晰度的视频。</li>
+<li>应用场景：H.264适用于需要高质量视频和较小文件大小的应用场景，如高清视频、流媒体和视频会议等；MPEG-4适用于低比特率和较小分辨率的应用场景，如移动设备视频和视频邮件等。</li>
+</ol>
+]]></content>
+    </entry>
+</feed>

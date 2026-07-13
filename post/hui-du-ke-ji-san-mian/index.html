@@ -1,0 +1,248 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>灰度科技三面 | Icode</title>
+<link rel="shortcut icon" href="https://hensonguo.github.io/favicon.ico?v=1783954340610">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://hensonguo.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="灰度科技三面 | Icode - Atom Feed" href="https://hensonguo.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="1.开场寒暄
+1.来长沙这边路上堵不堵？
+2.你住岳麓区哪里？过来方便吗？
+你的姿态：放松、微笑、自然聊天。这十分钟在建立&quot;这个人好相处&quot;的第一印象。
+如果他聊起&quot;刚出差回来，深圳那边热得要命&quot;，这就..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://hensonguo.github.io">
+  <img class="avatar" src="https://hensonguo.github.io/images/avatar.png?v=1783954340610" alt="">
+  </a>
+  <h1 class="site-title">
+    Icode
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              灰度科技三面
+            </h2>
+            <div class="post-info">
+              <span>
+                2026-07-13
+              </span>
+              <span>
+                6 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <h1 id="1开场寒暄">1.开场寒暄</h1>
+<h2 id="1来长沙这边路上堵不堵">1.来长沙这边路上堵不堵？</h2>
+<h2 id="2你住岳麓区哪里过来方便吗">2.你住岳麓区哪里？过来方便吗？</h2>
+<p>你的姿态：放松、微笑、自然聊天。这十分钟在建立&quot;这个人好相处&quot;的第一印象。</p>
+<p>如果他聊起&quot;刚出差回来，深圳那边热得要命&quot;，这就是在给氛围加热。你可以自然地接一句：&quot;深圳这个季节确实够呛，长沙这几天也不凉快，办公室空调给力吧？&quot;——这种日常对话能迅速拉近你们的心理距离。</p>
+<h1 id="2聊项目">2.聊项目</h1>
+<h2 id="1xxxx">1.xxxx</h2>
+<p>之前跟您聊的时候我大概了解了，这是一个十来年的设备参数控制软件，代码量比较大，文档偏少，目前主要是内部技术支持在用，维护成本比较高。整体是需求明确、有重构价值的项目。我想等入职后先花一周左右把代码和环境跑起来，然后出一份初步的现状分析和优先级建议，到时候再跟您对齐一下节奏。您觉得这样合适吗？</p>
+<h2 id="2qt5版本的问题">2.qt5版本的问题</h2>
+<p>罗总，我了解过Qt的授权模式。它分LGPL开源版和商业版。商业化闭源软件确实可以用LGPL版，前提是动态链接、声明版权并让用户能替换Qt库。不少大公司也是这么用的。<br>
+我了解下，你们是不是用了</p>
+<ol>
+<li>静态链接、嵌入式设备锁死系统，</li>
+<li>或者使用了GPL模块，就可能需要商业授权了，如Qt Charts图表等。</li>
+</ol>
+<p>首先需要搞清楚，这几百万是怎么算出来的。</p>
+<ol>
+<li>开发人员许可：Qt商业版按开发者数量按年收费，每个桌面开发者许可约3950美元/年。</li>
+<li>设备分发许可：如果软件在嵌入式设备上运行，还需按设备支付授权费，约0.5-3美元/台。</li>
+<li>历史合规费用：如果过去存在不合规使用，可能需要补缴历史授权费</li>
+</ol>
+<p>如果确认合规使用LGPL协议，即可实现零授权费。需要完成以下技术整改：</p>
+<ol>
+<li>强制动态链接：这是LGPL的核心要求。需确保应用程序通过.dll或.so动态库形式调用Qt，并在编译配置中禁用静态链接选项。</li>
+<li>审查并替换GPL模块：需排查并移除Qt Charts（qwt 功能强大，非常适合设备参数控制这类工业软件。）、Qt WebEngine（cef）等GPL协议的模块，可用QCustomPlot等MIT协议的开源库替代。</li>
+<li>完善合规声明：在软件“关于”页面或文档中，须按LGPL要求声明使用了Qt及相关条款。理论上，用户还应能替换Qt库文件。</li>
+</ol>
+<h2 id="3-python-c混合编程">3. python c++混合编程</h2>
+<p>灰度科技当前的软件迭代了十来年，开发效率可能不高。你正好能提供一套用Python加速C++项目开发的成熟方案。</p>
+<p>应对Qt版权费：如果未来考虑用其他开源库替代Qt Charts等收费/高风险模块，Python胶水层能降低切换成本，是一个很有力的潜在解决方案。</p>
+<p>在聊到项目经验或业务痛点时，你可以很自然地抛出下面的观点：</p>
+<p>“我之前在网易做CC直播项目时，也用Python做了一些C++的辅助开发。当时需要支持快速迭代和热更新，所以我设计了一套C++与Python混合的UI框架。正好咱们这边也提到了对Python的要求，我可以具体聊聊这方面的经验。”</p>
+<p>这段话能帮你顺利把话题引导到你的核心优势上。</p>
+<p>具体来说：</p>
+<p>逻辑分层：C++负责底层通信、音视频处理等高性能任务，Python负责界面响应、UI状态管理等高频变更的业务逻辑。<br>
+数据交互：通过boost::python或PyBind11绑定C++核心API供Python调用，并让Python脚本能通过信号槽响应UI事件。<br>
+热更新机制：Python脚本文件单独存放，通过文件监控实现UI逻辑的动态更新，无需重新编译整个客户端。<br>
+结果 (Result)：开发效率显著提升，UI调整无需编译；首次实现了UI逻辑的热更新；降低了开发门槛，前端同事也能参与UI逻辑开发；组件复用，多套UI的共通逻辑被抽成Python库。</p>
+<h1 id="3入职意向">3.入职意向</h1>
+<h2 id="1欧阳总那边你也聊了整体感觉怎么样如果这边发offer你确定会来吗">1.欧阳总那边你也聊了，整体感觉怎么样？如果这边发Offer，你确定会来吗？</h2>
+<p>欧阳总那边聊得挺好的，整体方向我都很认可。我这边没有其他在等的Offer了，如果您这边确定推进，我随时可以配合入职。</p>
+<h1 id="4-确认你的计划和预期">4. 确认你的计划和预期</h1>
+<h2 id="1如果入职了你打算怎么开展工作">1.如果入职了，你打算怎么开展工作?</h2>
+<p>入职后我会先花一两周熟悉现有代码和团队，然后按咱们之前聊的四阶段思路推进。短期内第一优先级是把回归基线建立起来，确保后续重构有锚点。具体的细节等入职后再逐步细化。</p>
+<h1 id="5问你还有什么问题">5.问你还有什么问题</h1>
+<h2 id="1我想确认一下如果我入职了您希望我在前三个月最优先交付的是什么我想对齐一下您的第一优先级">1.我想确认一下，如果我入职了，您希望我在前三个月最优先交付的是什么？我想对齐一下您的第一优先级。</h2>
+<h2 id="2团队的办公时间和节奏大概是怎样的我好提前安排通勤和作息">2.团队的办公时间和节奏大概是怎样的？我好提前安排通勤和作息。</h2>
+<h2 id="3对了罗总我查到您在灰度科技是异步全彩产品的负责人同时也是公司股东-咱们这条产品线未来一两年的核心方向是继续深耕现有市场还是有新的场景要拓展我想了解一下这样在重构的时候可以把扩展性考虑进去避免走弯路">3.“对了罗总，我查到您在灰度科技是异步全彩产品的负责人，同时也是公司股东。咱们这条产品线，未来一两年的核心方向是继续深耕现有市场，还是有新的场景要拓展？我想了解一下，这样在重构的时候可以把扩展性考虑进去，避免走弯路。</h2>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li><a href="#1%E5%BC%80%E5%9C%BA%E5%AF%92%E6%9A%84">1.开场寒暄</a>
+<ul>
+<li><a href="#1%E6%9D%A5%E9%95%BF%E6%B2%99%E8%BF%99%E8%BE%B9%E8%B7%AF%E4%B8%8A%E5%A0%B5%E4%B8%8D%E5%A0%B5">1.来长沙这边路上堵不堵？</a></li>
+<li><a href="#2%E4%BD%A0%E4%BD%8F%E5%B2%B3%E9%BA%93%E5%8C%BA%E5%93%AA%E9%87%8C%E8%BF%87%E6%9D%A5%E6%96%B9%E4%BE%BF%E5%90%97">2.你住岳麓区哪里？过来方便吗？</a></li>
+</ul>
+</li>
+<li><a href="#2%E8%81%8A%E9%A1%B9%E7%9B%AE">2.聊项目</a>
+<ul>
+<li><a href="#1xxxx">1.xxxx</a></li>
+<li><a href="#2qt5%E7%89%88%E6%9C%AC%E7%9A%84%E9%97%AE%E9%A2%98">2.qt5版本的问题</a></li>
+<li><a href="#3-python-c%E6%B7%B7%E5%90%88%E7%BC%96%E7%A8%8B">3. python c++混合编程</a></li>
+</ul>
+</li>
+<li><a href="#3%E5%85%A5%E8%81%8C%E6%84%8F%E5%90%91">3.入职意向</a>
+<ul>
+<li><a href="#1%E6%AC%A7%E9%98%B3%E6%80%BB%E9%82%A3%E8%BE%B9%E4%BD%A0%E4%B9%9F%E8%81%8A%E4%BA%86%E6%95%B4%E4%BD%93%E6%84%9F%E8%A7%89%E6%80%8E%E4%B9%88%E6%A0%B7%E5%A6%82%E6%9E%9C%E8%BF%99%E8%BE%B9%E5%8F%91offer%E4%BD%A0%E7%A1%AE%E5%AE%9A%E4%BC%9A%E6%9D%A5%E5%90%97">1.欧阳总那边你也聊了，整体感觉怎么样？如果这边发Offer，你确定会来吗？</a></li>
+</ul>
+</li>
+<li><a href="#4-%E7%A1%AE%E8%AE%A4%E4%BD%A0%E7%9A%84%E8%AE%A1%E5%88%92%E5%92%8C%E9%A2%84%E6%9C%9F">4. 确认你的计划和预期</a>
+<ul>
+<li><a href="#1%E5%A6%82%E6%9E%9C%E5%85%A5%E8%81%8C%E4%BA%86%E4%BD%A0%E6%89%93%E7%AE%97%E6%80%8E%E4%B9%88%E5%BC%80%E5%B1%95%E5%B7%A5%E4%BD%9C">1.如果入职了，你打算怎么开展工作?</a></li>
+</ul>
+</li>
+<li><a href="#5%E9%97%AE%E4%BD%A0%E8%BF%98%E6%9C%89%E4%BB%80%E4%B9%88%E9%97%AE%E9%A2%98">5.问你还有什么问题</a>
+<ul>
+<li><a href="#1%E6%88%91%E6%83%B3%E7%A1%AE%E8%AE%A4%E4%B8%80%E4%B8%8B%E5%A6%82%E6%9E%9C%E6%88%91%E5%85%A5%E8%81%8C%E4%BA%86%E6%82%A8%E5%B8%8C%E6%9C%9B%E6%88%91%E5%9C%A8%E5%89%8D%E4%B8%89%E4%B8%AA%E6%9C%88%E6%9C%80%E4%BC%98%E5%85%88%E4%BA%A4%E4%BB%98%E7%9A%84%E6%98%AF%E4%BB%80%E4%B9%88%E6%88%91%E6%83%B3%E5%AF%B9%E9%BD%90%E4%B8%80%E4%B8%8B%E6%82%A8%E7%9A%84%E7%AC%AC%E4%B8%80%E4%BC%98%E5%85%88%E7%BA%A7">1.我想确认一下，如果我入职了，您希望我在前三个月最优先交付的是什么？我想对齐一下您的第一优先级。</a></li>
+<li><a href="#2%E5%9B%A2%E9%98%9F%E7%9A%84%E5%8A%9E%E5%85%AC%E6%97%B6%E9%97%B4%E5%92%8C%E8%8A%82%E5%A5%8F%E5%A4%A7%E6%A6%82%E6%98%AF%E6%80%8E%E6%A0%B7%E7%9A%84%E6%88%91%E5%A5%BD%E6%8F%90%E5%89%8D%E5%AE%89%E6%8E%92%E9%80%9A%E5%8B%A4%E5%92%8C%E4%BD%9C%E6%81%AF">2.团队的办公时间和节奏大概是怎样的？我好提前安排通勤和作息。</a></li>
+<li><a href="#3%E5%AF%B9%E4%BA%86%E7%BD%97%E6%80%BB%E6%88%91%E6%9F%A5%E5%88%B0%E6%82%A8%E5%9C%A8%E7%81%B0%E5%BA%A6%E7%A7%91%E6%8A%80%E6%98%AF%E5%BC%82%E6%AD%A5%E5%85%A8%E5%BD%A9%E4%BA%A7%E5%93%81%E7%9A%84%E8%B4%9F%E8%B4%A3%E4%BA%BA%E5%90%8C%E6%97%B6%E4%B9%9F%E6%98%AF%E5%85%AC%E5%8F%B8%E8%82%A1%E4%B8%9C-%E5%92%B1%E4%BB%AC%E8%BF%99%E6%9D%A1%E4%BA%A7%E5%93%81%E7%BA%BF%E6%9C%AA%E6%9D%A5%E4%B8%80%E4%B8%A4%E5%B9%B4%E7%9A%84%E6%A0%B8%E5%BF%83%E6%96%B9%E5%90%91%E6%98%AF%E7%BB%A7%E7%BB%AD%E6%B7%B1%E8%80%95%E7%8E%B0%E6%9C%89%E5%B8%82%E5%9C%BA%E8%BF%98%E6%98%AF%E6%9C%89%E6%96%B0%E7%9A%84%E5%9C%BA%E6%99%AF%E8%A6%81%E6%8B%93%E5%B1%95%E6%88%91%E6%83%B3%E4%BA%86%E8%A7%A3%E4%B8%80%E4%B8%8B%E8%BF%99%E6%A0%B7%E5%9C%A8%E9%87%8D%E6%9E%84%E7%9A%84%E6%97%B6%E5%80%99%E5%8F%AF%E4%BB%A5%E6%8A%8A%E6%89%A9%E5%B1%95%E6%80%A7%E8%80%83%E8%99%91%E8%BF%9B%E5%8E%BB%E9%81%BF%E5%85%8D%E8%B5%B0%E5%BC%AF%E8%B7%AF">3.“对了罗总，我查到您在灰度科技是异步全彩产品的负责人，同时也是公司股东。咱们这条产品线，未来一两年的核心方向是继续深耕现有市场，还是有新的场景要拓展？我想了解一下，这样在重构的时候可以把扩展性考虑进去，避免走弯路。</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://hensonguo.github.io/post/mian-shi-xiang-mu-jing-yan/">
+              <h3 class="post-title">
+                面试项目经验
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://hensonguo.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>

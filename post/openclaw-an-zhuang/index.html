@@ -1,0 +1,322 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>openclaw安装 | Icode</title>
+<link rel="shortcut icon" href="https://hensonguo.github.io/favicon.ico?v=1783954340610">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@2.3.0/fonts/remixicon.css" rel="stylesheet">
+<link rel="stylesheet" href="https://hensonguo.github.io/styles/main.css">
+<link rel="alternate" type="application/atom+xml" title="openclaw安装 | Icode - Atom Feed" href="https://hensonguo.github.io/atom.xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Droid+Serif:400,700">
+
+
+
+    <meta name="description" content="1. 安装git
+2. 安装nodejs
+
+网址：https://nodejs.org/en/download
+上方版本可能会变，确保用最新的（LTS）即可
+
+3. 启动powershell
+
+点击Win键 或 点击菜单开始键
+搜索Powe..." />
+    <meta name="keywords" content="" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.10.0/katex.min.css">
+    <script src="//cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.5.1/build/highlight.min.js"></script>
+  </head>
+  <body>
+    <div class="main">
+      <div class="main-content">
+        <div class="site-header">
+  <a href="https://hensonguo.github.io">
+  <img class="avatar" src="https://hensonguo.github.io/images/avatar.png?v=1783954340610" alt="">
+  </a>
+  <h1 class="site-title">
+    Icode
+  </h1>
+  <p class="site-description">
+    温故而知新
+  </p>
+  <div class="menu-container">
+    
+      
+        <a href="/" class="menu">
+          首页
+        </a>
+      
+    
+      
+        <a href="/archives" class="menu">
+          归档
+        </a>
+      
+    
+      
+        <a href="/tags" class="menu">
+          标签
+        </a>
+      
+    
+      
+        <a href="/post/about" class="menu">
+          关于
+        </a>
+      
+    
+  </div>
+  <div class="social-container">
+    
+      
+    
+      
+    
+      
+    
+      
+    
+      
+    
+  </div>
+</div>
+
+        <div class="post-detail">
+          <article class="post">
+            <h2 class="post-title">
+              openclaw安装
+            </h2>
+            <div class="post-info">
+              <span>
+                2026-03-12
+              </span>
+              <span>
+                3 min read
+              </span>
+              
+            </div>
+            
+            <div class="post-content-wrapper">
+              <div class="post-content" v-pre>
+                <h2 id="1-安装git">1. 安装git</h2>
+<h2 id="2-安装nodejs">2. 安装nodejs</h2>
+<ul>
+<li>网址：https://nodejs.org/en/download</li>
+<li>上方版本可能会变，确保用最新的（LTS）即可</li>
+</ul>
+<h2 id="3-启动powershell">3. 启动powershell</h2>
+<ul>
+<li>点击Win键 或 点击菜单开始键</li>
+<li>搜索Powershell 并用管理员身份运行</li>
+</ul>
+<h2 id="4-安全策略设置">4. 安全策略设置</h2>
+<ul>
+<li>输入：Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser 然后回车</li>
+<li>出现这个后输入大写的 Y 然后回车</li>
+</ul>
+<h2 id="5-安装openclaw">5. 安装openclaw</h2>
+<ul>
+<li>输入：iwr -useb https://openclaw.ai/install.ps1 | iex 然后回车</li>
+</ul>
+<h2 id="6-安装好后回答">6. 安装好后回答</h2>
+<pre><code>I understand this is personal-by-default and shared/multi-user user requires lock-down. continue?
+</code></pre>
+<p>选择Yes</p>
+<h2 id="7model选择">7.model选择</h2>
+<pre><code>Model/auth provider
+MiniMax
+
+MiniMax auth method
+MiniMax M2.5 (CN)
+</code></pre>
+<ul>
+<li>选择model</li>
+</ul>
+<pre><code>How do you want do provide this API key?
+Past API key now
+
+Enter MiniMax China API key
+</code></pre>
+<ul>
+<li>申请model api key：去minimax或Kimi申请apikey，将密钥粘贴拷贝到控制台确认</li>
+<li>设置默认model</li>
+</ul>
+<h2 id="8-申请机器人key">8. 申请机器人key</h2>
+<pre><code>Select channel(QuickStart)
+Telegram (Bot API)
+
+Telegram bot token
+1)Open telegram and chat with @BotFather
+2)Run /newBot (or /mybots)
+3)copy the token (look like 123456@:ABC...)
+Tip: you can also set TELEGRAM_BOT_TOKEN in your env.
+Website: https://openclaw.ai
+......
+</code></pre>
+<ul>
+<li>飞书：https://open.feishu.cn/app?lang=zh-CN</li>
+<li>企微：https://cloud.tencent.com/document/product/1689/128999</li>
+<li>电报：找到@BotFather，选择/newBot，命名好bot，拷贝好token粘贴到控制台</li>
+</ul>
+<h2 id="9-暂跳过其他设置">9. 暂跳过其他设置</h2>
+<pre><code>Web seach
+No
+
+Configure skills now?
+No
+
+Set GOOLE_PLACES_API_KEY for goplaces?
+No
+.....
+</code></pre>
+<h2 id="9-启动控制台">9. 启动控制台</h2>
+<ul>
+<li>查看网关状态</li>
+</ul>
+<pre><code>openclaw gateway status
+</code></pre>
+<ul>
+<li>如果网关存在问题，退出360等，重启网关</li>
+</ul>
+<pre><code>openclaw gateway start
+</code></pre>
+<ul>
+<li>如果还存在问题，通过doctor修复或重装网关</li>
+</ul>
+<pre><code>openclaw gateway uninstall
+openclaw doctor --fix
+openclaw gateway install
+openclaw gateway start
+</code></pre>
+<ul>
+<li>打开控制台</li>
+</ul>
+<pre><code>openclaw dashboard
+</code></pre>
+<p>打开网页时会提醒</p>
+<pre><code>unauthorized: gateway token missing (open the dashboard URL and paste the to
+</code></pre>
+<p>这是因为用户没有使用带终端令牌的链接打开，导致权限认证失败，在终端中运行</p>
+<pre><code>openclaw dashboard --no-open
+</code></pre>
+<h2 id="10重新配置openclaw">10.重新配置openclaw</h2>
+<pre><code>openclaw configure
+</code></pre>
+<h2 id="11安装skill">11.安装skill</h2>
+<ul>
+<li>安装clawhub的cli工具</li>
+</ul>
+<pre><code>npm i -g clawhub
+</code></pre>
+<p>-去clawhub搜索拷贝名称安装</p>
+<pre><code>clawhub install &quot;baidu web search&quot;
+npx skills add https://github.com/JimLiu/baoyu-skills/tree/main/skills/baoyu-post-to-wechat
+</code></pre>
+<h2 id="12卸载小龙虾">12.卸载小龙虾</h2>
+<pre><code>openclaw uninstall --all --yes
+</code></pre>
+<ul>
+<li>--all 参数会删除包括网关服务、本地数据库、配置文件在内的所有数据。</li>
+<li>--yes 参数让整个过程自动确认，无需手动干预。</li>
+</ul>
+<p>删除命令行工具：等待上一条命令执行完毕后，再执行以下命令，彻底移除OpenClaw的命令行工具：</p>
+<pre><code>npm uninstall -g openclaw
+</code></pre>
+<h2 id="13问题">13.问题</h2>
+<p>如果启动gateway失败，尝试</p>
+<pre><code>openclaw gateway --force
+</code></pre>
+<p>关闭360等软件再次安装重试</p>
+
+              </div>
+              <div class="toc-container">
+                <ul class="markdownIt-TOC">
+<li>
+<ul>
+<li><a href="#1-%E5%AE%89%E8%A3%85git">1. 安装git</a></li>
+<li><a href="#2-%E5%AE%89%E8%A3%85nodejs">2. 安装nodejs</a></li>
+<li><a href="#3-%E5%90%AF%E5%8A%A8powershell">3. 启动powershell</a></li>
+<li><a href="#4-%E5%AE%89%E5%85%A8%E7%AD%96%E7%95%A5%E8%AE%BE%E7%BD%AE">4. 安全策略设置</a></li>
+<li><a href="#5-%E5%AE%89%E8%A3%85openclaw">5. 安装openclaw</a></li>
+<li><a href="#6-%E5%AE%89%E8%A3%85%E5%A5%BD%E5%90%8E%E5%9B%9E%E7%AD%94">6. 安装好后回答</a></li>
+<li><a href="#7model%E9%80%89%E6%8B%A9">7.model选择</a></li>
+<li><a href="#8-%E7%94%B3%E8%AF%B7%E6%9C%BA%E5%99%A8%E4%BA%BAkey">8. 申请机器人key</a></li>
+<li><a href="#9-%E6%9A%82%E8%B7%B3%E8%BF%87%E5%85%B6%E4%BB%96%E8%AE%BE%E7%BD%AE">9. 暂跳过其他设置</a></li>
+<li><a href="#9-%E5%90%AF%E5%8A%A8%E6%8E%A7%E5%88%B6%E5%8F%B0">9. 启动控制台</a></li>
+<li><a href="#10%E9%87%8D%E6%96%B0%E9%85%8D%E7%BD%AEopenclaw">10.重新配置openclaw</a></li>
+<li><a href="#11%E5%AE%89%E8%A3%85skill">11.安装skill</a></li>
+<li><a href="#12%E5%8D%B8%E8%BD%BD%E5%B0%8F%E9%BE%99%E8%99%BE">12.卸载小龙虾</a></li>
+<li><a href="#13%E9%97%AE%E9%A2%98">13.问题</a></li>
+</ul>
+</li>
+</ul>
+
+              </div>
+            </div>
+          </article>
+        </div>
+
+        
+          <div class="next-post">
+            <div class="next">下一篇</div>
+            <a href="https://hensonguo.github.io/post/ffmpeg-bian-yi/">
+              <h3 class="post-title">
+                FFMPEG编译
+              </h3>
+            </a>
+          </div>
+        
+
+        
+
+        <div class="site-footer">
+  Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+  <a class="rss" href="https://hensonguo.github.io/atom.xml" target="_blank">
+    <i class="ri-rss-line"></i> RSS
+  </a>
+</div>
+
+      </div>
+    </div>
+
+    <script>
+      hljs.initHighlightingOnLoad()
+
+      let mainNavLinks = document.querySelectorAll(".markdownIt-TOC a");
+
+      // This should probably be throttled.
+      // Especially because it triggers during smooth scrolling.
+      // https://lodash.com/docs/4.17.10#throttle
+      // You could do like...
+      // window.addEventListener("scroll", () => {
+      //    _.throttle(doThatStuff, 100);
+      // });
+      // Only not doing it here to keep this Pen dependency-free.
+
+      window.addEventListener("scroll", event => {
+        let fromTop = window.scrollY;
+
+        mainNavLinks.forEach((link, index) => {
+          let section = document.getElementById(decodeURI(link.hash).substring(1));
+          let nextSection = null
+          if (mainNavLinks[index + 1]) {
+            nextSection = document.getElementById(decodeURI(mainNavLinks[index + 1].hash).substring(1));
+          }
+          if (section.offsetTop <= fromTop) {
+            if (nextSection) {
+              if (nextSection.offsetTop > fromTop) {
+                link.classList.add("current");
+              } else {
+                link.classList.remove("current");    
+              }
+            } else {
+              link.classList.add("current");
+            }
+          } else {
+            link.classList.remove("current");
+          }
+        });
+      });
+
+    </script>
+  </body>
+</html>
